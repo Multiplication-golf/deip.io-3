@@ -45,10 +45,12 @@
     </style>
   </head>
   <body>
-    <div id='start'>
-      
+    <div id='start'class="container">
+        <h1>Welcome to Deip.io 3!</h1>
+        <input type="text" id="username" placeholder="Enter your username">
+        <button id="playButton">Play</button>
     </div>
-    <div id='game'>
+    <div id='game' style='display:none'>
       <img src='you died.gif' style='width:99.9vw; position:absolute; height:99.9vh; top:0; left:0;  display: none;' id='die'/>
       <div style='overflow: hidden; width:99.9vw; height:99.9vh; top:0; left:0; position:absolute;' id='container'>
       <p id='players' style='z-index:100000000000; position:absolute; top:0; left:0;'>players:0</p>
@@ -68,18 +70,7 @@
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-
-      const username = document.getElementById('username').value;
-      if (username) {
-          // Proceed to the game with the entered username
-          console.log(`Username: ${username}`);
-          alert(`Welcome, ${username}! Let's play!`);
-          // Add logic here to start the game, e.g., redirect to game page
-      } else {
-          alert('Please enter a username.');
-      }
-      });
-      
+      var username = "Unamed tank"
       function ongame() {
         
       
@@ -107,7 +98,7 @@
       const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      document.body.appendChild(canvas);
+      document.getElementById('game').appendChild(canvas);
       canvas.id = 'myCanvas'
       canvas.style.position = 'absolute';
       canvas.style.top = '0';
@@ -137,7 +128,7 @@
       var bodyDamage = 0.6;
       var type = 'basic'
       var bullet_damage = 1.5;
-      var bullet_speed = 4.5;
+      var bullet_speed = 2;
       var bullet_size = 0.18;
       var bullet_pentration = 2;
       var bullet_power = (bullet_speed/5.5)+bullet_damage*(bullet_pentration/10)
@@ -150,6 +141,7 @@
       var mapRight = 2.5 * window.innerWidth;
       var mapTop = -2.5 * window.innerWidth; // Similar to mapLeft, this could be zero
       var mapBottom = 2.5 * window.innerWidth;
+      var score = 0;
       console.log(mapRight,mapBottom/2)
 
       function getMousePos(canvas, evt) {
@@ -167,15 +159,19 @@
 
       socket.on('connect', () => {
         playerId = socket.id;
-        socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
-        socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
+        socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+        setTimeout(function () {
+          socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+        }, 200);
+        
         draw() // Call draw after connecting
       });
       socket.on('playerJoined', (data) => {
         players[data.id] = data;
-        socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
+        setTimeout(function () {
+          socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+        }, 200);
         draw();
-        socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
       });
       socket.on('playerMoved', (data) => {
         players[data.id] = data;
@@ -255,7 +251,7 @@
                             setTimeout(() => {
                               playerY += 1;
                               cavansY += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
                             },(t)*3);
                           }
                         }, 10)
@@ -265,7 +261,7 @@
             }
             setTimeout(() => {
               let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___ });
+              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
             }, 2)
           }
         }
@@ -298,7 +294,7 @@
                             setTimeout(() => {
                               playerY -= 1;
                               cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
                             },(t)*3);
                           }
                         }, 10);
@@ -308,7 +304,7 @@
             }
             setTimeout(() => {
               let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___ });
+              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
             }, 15)
           }
         } 
@@ -341,7 +337,7 @@
                             setTimeout(() => {
                               playerX += 1;
                               cavansX += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
                             },(t)*3);
                           }
                         }, 10)
@@ -351,7 +347,7 @@
             }
             setTimeout(() => {
               let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___ });
+              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
             }, 15);
           }
         }
@@ -384,7 +380,7 @@
                             setTimeout(() => {
                               playerX -= 1;
                               cavansX -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
                             },(t)*3);
                           }
                         }, 10)
@@ -395,7 +391,7 @@
             setTimeout(() => {
               let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
               console.log(__angle___);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___ });
+              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
             }, 15);
           }
         }
@@ -411,14 +407,26 @@
         MouseX_ = mousepos.x;
         MouseY_ = mousepos.y;
         let __angle__ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-        socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle__ });
+        socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle__, score:score, username:username });
       });
 
       document.addEventListener('mousedown', function (evt) {
-          let bullet_distance = (bullet_damage + bullet_speed*8.5) * (bullet_pentration / bullet_size*2);
+          let bullet_distance = (bullet_damage + bullet_speed*8.5) * ((bullet_pentration / bullet_size*2)*3);
           let cannon_length = cannonWidth / 2 + 30; // The 30 offset you have in your fillRect
 
           // Calculate the starting point of the bullet
+
+          for (let i = 0; i < 10; i++) {
+            setTimeout(() => {
+              cannonWidth -= 1
+            },10*i)
+          }
+          for (let i = 0; i < 10; i++) {
+            setTimeout(() => {
+              cannonWidth += 1
+            },10*(i*2))
+          }
+          
           var mouse = getMousePos(canvas,evt);
           mouseX = mouse.x;
           mouseY = mouse.y;
@@ -460,7 +468,7 @@
       document.addEventListener('mousedown', function (evt) {
         if (canFire) {
           // Calculate bullet data only once
-          let bullet_distance = (bullet_damage + bullet_speed * 8.5) * (bullet_pentration / bullet_size * 2);
+          let bullet_distance = (bullet_damage + bullet_speed*8.5)* 2 * ((bullet_pentration / bullet_size*2)*3);
           let cannon_length = cannonWidth / 2 + 30;
 
           var mouse = getMousePos(canvas, evt);
@@ -470,6 +478,17 @@
           let bullet_start_y = playerY + 0 * Math.sin(current_angle);
           let angle = Math.atan2(Math.abs(mouseY) - (248), Math.abs(mouseX) - 511.25);
           var identdfire = Date.now() + Math.random();
+
+          for (let l = 0; l < 10; l++) {
+            setTimeout(() => {
+              cannonWidth -= 1
+            },10*l)
+          }
+          for (let l = 0; l < 10; l++) {
+            setTimeout(() => {
+              cannonWidth += 1
+            },10*(l*2))
+          }
 
           // Fire the bullet
           bullets.push({
@@ -502,12 +521,23 @@
           canFire = false;
           firingInterval = setInterval((event=evt) => {
             // Re-calculate bullet data for each bullet fired
-            let bullet_distance = (bullet_damage + bullet_speed * 8.5) * (bullet_pentration / bullet_size * 2);
+            let bullet_distance = (bullet_damage + bullet_speed*8.5)* 2 * ((bullet_pentration / bullet_size*2)*3);
             let cannon_length = cannonWidth / 2 + 30;
 
             var mouse = getMousePos(canvas, evt);
             mouseX = mouse.x;
             mouseY = mouse.y;
+
+            for (let l = 0; l < 10; l++) {
+              setTimeout(() => {
+                cannonWidth -= 2
+              },10*l)
+            }
+            for (let l = 0; l < 10; l++) {
+              setTimeout(() => {
+                cannonWidth += 2
+              },10*(l*2))
+            }
             
             let bullet_start_x = playerX + 0 * Math.cos(current_angle);
             let bullet_start_y = playerY + 0 * Math.sin(current_angle);
@@ -540,7 +570,7 @@
               id: playerId,
               uniqueid: identdfire
             });
-          }, 400); // Adjust the firing rate as needed
+          }, 500); // Adjust the firing rate as needed
         }
       });
 
@@ -566,6 +596,23 @@
       const radius = 40;
       function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        bullets.forEach((bullet) => {
+          if (bullet.x > 0+cavansX && bullet.x < canvas.width+cavansX && bullet.y-cavansY > 0 && bullet.y < canvas.height+cavansY) {
+          ctx.beginPath();
+          if (bullet.id === playerId) {
+            ctx.fillStyle = 'blue';
+            ctx.strokeStyle = 'darkblue';
+          } else {
+            ctx.fillStyle = 'red';
+            ctx.strokeStyle = 'darkred';
+          }
+          ctx.arc(bullet.x - playerX + canvas.width / 2, bullet.y - playerY + canvas.height / 2, bullet.size * cannonWidth, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.lineWidth = 5;
+          ctx.stroke();
+          ctx.closePath();
+          }
+        });
         try {
           for (let playerId__ in players) {
             if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
@@ -617,6 +664,13 @@
               const healthWidth = (player.health / 100) * 90;
               ctx.fillStyle = 'green';
               ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, healthWidth, 10);
+
+              ctx.fillStyle = 'black';
+              ctx.textAlign = "center";
+              ctx.font = "bold 20px Geneva";
+              ctx.fillText(player.score, (player.x - cavansX), (player.y - cavansY) - 55);
+
+              ctx.fillText(player.username, (player.x - cavansX), (player.y - cavansY) - 75);
 
               // Draw border
               ctx.lineWidth = 1;
@@ -672,6 +726,12 @@
         ctx.fillStyle = 'black';
         ctx.fillRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, 90, 10);
 
+        ctx.textAlign = "center";
+        ctx.font = "bold 20px Geneva";
+        ctx.fillText(score, (canvas.width / 2), (canvas.height / 2) - 55);
+
+        ctx.fillText(username, (canvas.width / 2), (canvas.height / 2) - 75);
+
         // Draw health bar
         const healthWidth = (playerHealth / 100) * 90;
         ctx.fillStyle = 'green';
@@ -681,21 +741,8 @@
         ctx.lineWidth = 1;
         ctx.strokeStyle = 'grey';
         ctx.strokeRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, 90, 10);
-        bullets.forEach((bullet) => {
-          if (bullet.x > 0+cavansX && bullet.x < canvas.width+cavansX && bullet.y-cavansY > 0 && bullet.y < canvas.height+cavansY) {
-          ctx.beginPath();
-          if (bullet.id === playerId) {
-            ctx.fillStyle = 'blue';
-          } else {
-            ctx.fillStyle = 'red';
-          }
-          ctx.arc(bullet.x - playerX + canvas.width / 2, bullet.y - playerY + canvas.height / 2, bullet.size * cannonWidth, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.closePath();
-          }
-        });
         ctx.strokeStyle = 'black'; // Or any color you want
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(mapLeft, mapTop);
         ctx.lineTo(mapRight, mapTop);
@@ -719,6 +766,21 @@
         document.getElementById('players').innerText = `${playerX},${playerY}`;
       }, 100);
       }
+
+      document.getElementById('playButton').addEventListener("mousedown", () => {
+        username = document.getElementById('username').value;
+        if (username) {
+            // Proceed to the game with the entered username
+            document.getElementById('start').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            console.log(`Username: ${username}`,document.getElementById('start').style.display);
+            ongame();
+        } else {
+            alert('Please enter a username.');
+        }
+      });
+      
+      
     </script>
   </body>
 </html>
