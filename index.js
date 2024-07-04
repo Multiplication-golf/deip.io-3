@@ -8,8 +8,39 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let players = {};
 let bullets = [];
+let food_list = [];
+let cors_taken = [];
 
+function getRandomInt(min, max) {
+  const minCeiled = Math.ceil(min);
+  const maxFloored = Math.floor(max);
+  return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
+}
+function between(x, min, max) {
+  return x >= min && x <= max;
+}
 
+/*for (let i = 0; i < getRandomInt(100,200); i++) {
+  var x = getRandomInt(-2700,2700);
+  var y = getRandomInt(-2700,2700);
+  for (let i = 0; cors_taken.length; i++) {
+    if (between(x,cors_taken[i].x-50,cors_taken[i].x+50) && between(y,cors_taken[i].y-50,cors_taken[i].y+50)) {
+      x = getRandomInt(-2700,2700);
+      y = getRandomInt(-2700,2700);
+    }
+  }
+  cors_taken.push({x:x,y:y})
+  let fooditem = {
+    type: "square",
+    health: 10,
+    x: x,
+    y: y,
+    color:"yellow"
+  }
+  food_list.push(fooditem)
+}*/
+
+console.log(food_list)
 
 io.on('connection', (socket) => {
   socket.on('newPlayer', (data) => {
@@ -34,11 +65,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('playerCollided', (data) => {
-    console.log("other", players[data.id_other].health, "self", players[data.id_self].health)
     players[data.id_other].health -= data.damagegiven;
     players[data.id_self].health -= data.damagetaken;
-    console.log(data.damagegiven, data.damagetaken)
-    console.log("other", players[data.id_other].health, "self", players[data.id_self].health)
 
     io.emit('playerDamaged', {
       player1: players[data.id_other], ID1: data.id_other,
@@ -59,7 +87,6 @@ io.on('connection', (socket) => {
       let newX = bullet.x + bullet.speed * Math.cos(bullet.angle);
       let newY = bullet.y + bullet.speed * Math.sin(bullet.angle);
       bullet.distanceTraveled += Math.hypot(newX - bullet.x, newY - bullet.y);
-
       if (bullet.distanceTraveled < bullet.bullet_distance) {
         bullet.x = newX;
         bullet.y = newY;
@@ -68,24 +95,18 @@ io.on('connection', (socket) => {
         return false;
       }
     });
-
     socket.broadcast.emit('bulletUpdate', bullets);
-
     try {
       bullets.forEach((bullet) => {
         for (const playerId in players) {
           const player = players[playerId];
           const distanceX = Math.abs(player.x - bullet.x);
           const distanceY = Math.abs(player.y - bullet.y);
-
           if (distanceX < (player.size * 40 + bullet.size) &&
             distanceY < (player.size * 40 + bullet.size) &&
             bullet.id !== player.id) {
-
             player.health -= bullet.bullet_damage / (player.size / bullet.speed);
             bullet.bullet_distance -= (player.width / (bullet.speed + bullet.bullet_penetration)) - 30;
-
-            console.log(player.health);
             socket.broadcast.emit('bulletDamage', { playerID: player.id, playerHealth: player.health, BULLETS: bullets });
           }
         }
@@ -93,13 +114,14 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.log(error);
     }
-
+  }, 75);
+  setInterval(function() {
     for (const key in players) {
       if (!players[key].hasOwnProperty('id')) {
         delete players[key];
       }
     }
-  }, 50);
+  }, 200)
 
 
 

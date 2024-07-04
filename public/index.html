@@ -42,6 +42,30 @@
       button:hover {
           background-color: #218838;
       }
+      #grid-container {
+          position: relative;
+          width: 100vw;
+          height: 100vh;
+          overflow: hidden;
+      }
+      #grid {
+          width: 500vw;
+          height: 500vw;
+          position: absolute;
+          top: -250vw;
+          left: -250vw;
+          -khtml-user-select: none;
+          -o-user-select: none;
+          -moz-user-select: none;
+          -webkit-user-select: none;
+          user-select: none;
+      }
+      .image-chunk {
+          width: 125vw; /* Adjusted for 16 chunks in total */
+          height: 125vw;
+          background-color: #f0f0f0; /* Placeholder background */
+          position: absolute;
+      }
     </style>
   </head>
   <body>
@@ -54,231 +78,349 @@
       <img src='you died.gif' style='width:99.9vw; position:absolute; height:99.9vh; top:0; left:0;  display: none;' id='die'/>
       <div style='overflow: hidden; width:99.9vw; height:99.9vh; top:0; left:0; position:absolute;' id='container'>
       <p id='players' style='z-index:100000000000; position:absolute; top:0; left:0;'>players:0</p>
-      <img style='
-        width:500vw;
-        height:500vw;
-        position:absolute;
-        top: -250vw;
-        left: -250vw;
-        -khtml-user-select: none;
-        -o-user-select: none;
-        -moz-user-select: none;
-        -webkit-user-select: none;
-        user-select: none;
-        background-image: url("images.png")' id='grid'/>
-      </div>
+        <div id="grid-container">
+            <div id="grid">
+                <!-- Chunks will be dynamically added here -->
+            </div>
+        </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var username = "Unamed tank"
       function ongame() {
-        
-      
-      function disableScroll() {
-        // Get the current page scroll position in the vertical direction
-        scrollTop =
-          window.scrollY || document.documentElement.scrollTop;
 
+        document.addEventListener("DOMContentLoaded", function() {
+            const container = document.getElementById("grid-container");
+            const grid = document.getElementById("grid");
+            const totalChunks = 4; // Total number of chunks per dimension (4x4 grid)
+            const chunkSize = 125; // Size of each chunk in vw units
+            const imageURL = 'images.png'; // Path to the large image
 
-        // Get the current page scroll position in the horizontal direction 
+            let cavansX = 0;
+            let cavansY = 0;
 
-        scrollLeft =
-          window.scrollX || document.documentElement.scrollLeft;
-
-
-        // if any scroll is attempted,
-        // set this to the previous value
-        window.onscroll = function() {
-          window.scrollTo(scrollLeft, scrollTop);
-        };
-      }
-      //disableScroll();
-      const socket = io(); // Connect to the server
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      document.getElementById('game').appendChild(canvas);
-      canvas.id = 'myCanvas'
-      canvas.style.position = 'absolute';
-      canvas.style.top = '0';
-      canvas.style.left = '0';
-      for (let i = 0; i < 125; i++) {
-        for (let j = 0; j < 125; j++) {
-          const div = document.createElement('div');
-          div.style.width = '5vw';
-          div.style.height = '5vw';
-          div.style.backgroundColor = 'white';
-          div.style.border = '1px solid black';
-          document.getElementById("grid").appendChild(div);
-        }  
-      }   
-
-      var players = {};
-      var boardbullets = [];
-      var bullets = [];
-      var playerId;
-      var playerX = canvas.width / 2;
-      var playerY = canvas.height / 2;
-      var cavansX = 0;
-      var cavansY = 0;
-      var playerHealth = 100;
-      var playerSpeed = 10;
-      var playerSize = 1;
-      var bodyDamage = 0.6;
-      var type = 'basic'
-      var bullet_damage = 1.5;
-      var bullet_speed = 2;
-      var bullet_size = 0.18;
-      var bullet_pentration = 2;
-      var bullet_power = (bullet_speed/5.5)+bullet_damage*(bullet_pentration/10)
-      var cannonWidth = 99;
-      var cannonHeight = 30;
-      var current_angle = 0;
-      var MouseX_ = 0;
-      var MouseY_ = 0;
-      var mapLeft = -2.5 * window.innerWidth; // This could be zero if you don't want any margin at the left
-      var mapRight = 2.5 * window.innerWidth;
-      var mapTop = -2.5 * window.innerWidth; // Similar to mapLeft, this could be zero
-      var mapBottom = 2.5 * window.innerWidth;
-      var score = 0;
-      console.log(mapRight,mapBottom/2)
-
-      function getMousePos(canvas, evt) {
-        const rect = canvas.getBoundingClientRect();
-        return {
-          x: evt.clientX - rect.left,
-          y: evt.clientY - rect.top
-        };
-      }
-      document.addEventListener('dblclick', function(evt) {
-        evt.preventDefault();
-      });
-
-
-
-      socket.on('connect', () => {
-        playerId = socket.id;
-        socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
-        setTimeout(function () {
-          socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
-        }, 200);
-        
-        draw() // Call draw after connecting
-      });
-      socket.on('playerJoined', (data) => {
-        players[data.id] = data;
-        setTimeout(function () {
-          socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
-        }, 200);
-        draw();
-      });
-      socket.on('playerMoved', (data) => {
-        players[data.id] = data;
-        draw(); // Call draw to update the canvas
-      });
-      socket.on('playerCannonUpdated', (data) => {
-        players[data.id].cannon_angle = data.cannon_angle;
-        players[data.id].type = data.type;
-        players[data.id].cannonH = data.cannonH;
-        players[data.id].cannonW = data.cannonW;
-        draw();
-      });
-      socket.on('playerLeft', (id) => {
-        delete players[id];
-        draw(); // Call draw to update the canvas
-      });
-      socket.on('playerDamaged', (data) => {
-
-        players[data.ID1].health = data.player1.health;
-        
-        playerHealth = data.player2.health;
-        players[data.ID2].health = data.player2.health;
-        console.log(playerHealth, data.player2.health, data.player1.health)
-        draw(); 
-        socket.emit('damageTaken', data);
-      });
-      socket.on("updateHealth", (data) => {
-        players[data.ID1].health = data.player1.health;
-
-        playerHealth = data.player2.health;
-        players[data.ID2].health = data.player2.health;
-        console.log(playerHealth, data.player2.health, data.player1.health)
-        draw();  // Update player's health
-      });
-      socket.on('bulletUpdate', (data) => {
-        bullets = data;
-      });
-      socket.on('bulletDamage', (data) => {
-        console.log("hit")
-        if (players[data.playerID]) {
-          bullets = data.BULLETS; // Check if the player exists
-          players[data.playerID].health = data.playerHealth;
-          console.log("current-health",players[data.playerID].health)
-          if (data.playerID == playerId) {
-            playerHealth = data.playerHealth;
-          }
-          draw(); 
-        } else {
-          console.warn("Received bulletDamage for an unknown player:", data.playerID);
-        }
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowUp') {
-          if (playerY > mapTop) {
-            playerY -= 1;
-            cavansY -= 1;
-            for (let i = 1; i < playerSpeed; i++) {
-              setTimeout(() => {
-                playerY -= 1;
-                cavansY -= 1;
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-                        players[playerId].health -= player.bodyDamage;
-                      playerHealth -= player.bodyDamage;
-                        socket.emit('playerCollided', {
-                          id_other: playerId_,
-                          damagetaken: player.bodyDamage,
-                          damagegiven: bodyDamage,
-                          speed: i,
-                          health: players[playerId].health,
-                          id_self: playerId,
-                        });
-                        setTimeout(() => {
-                          for (let t = 0; t < i; t++) {
-                            setTimeout(() => {
-                              playerY += 1;
-                              cavansY += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
-                            },(t)*3);
-                          }
-                        }, 10)
-                    }
+            // Create and append placeholder chunks
+            for (let i = 0; i < totalChunks; i++) {
+                for (let j = 0; j < totalChunks; j++) {
+                    const chunk = document.createElement("div");
+                    chunk.className = "image-chunk";
+                    chunk.dataset.row = i;
+                    chunk.dataset.col = j;
+                    chunk.style.top = `${i * chunkSize}vw`;
+                    chunk.style.left = `${j * chunkSize}vw`;
+                    grid.appendChild(chunk);
                 }
-              }, i*3)
             }
-            setTimeout(() => {
-              let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
-            }, 2)
-          }
-        }
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowDown') {
-          if (playerY < mapBottom) {
-            playerY += 1;
-            cavansY += 1;
-            for (let i = 1; i < playerSpeed; i++) {
-              setTimeout(() => {
-                playerY += 1;
+
+            // Create an Intersection Observer to lazy load chunks
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        loadChunk(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                root: container,
+                rootMargin: '0px',
+                threshold: 0.1
+            });
+
+            // Observe each chunk
+            document.querySelectorAll('.image-chunk').forEach(chunk => {
+                observer.observe(chunk);
+            });
+
+            // Function to load the image chunk
+            function loadChunk(chunk) {
+                const row = chunk.dataset.row;
+                const col = chunk.dataset.col;
+                const img = new Image();
+                img.src = `${imageURL}`; // Adjust URL to specify the chunk if needed
+                img.style.position = 'absolute';
+                img.style.width = '500vw';
+                img.style.height = '500vw';
+                img.style.top = `${-250 + row * chunkSize}vw`;
+                img.style.left = `${-250 + col * chunkSize}vw`;
+                img.onload = () => {
+                    chunk.style.backgroundImage = `url(${img.src})`;
+                    chunk.style.backgroundPosition = `${-col * chunkSize}vw ${-row * chunkSize}vw`;
+                    chunk.style.backgroundSize = `500vw 500vw`;
+                };
+            }
+
+            // Update grid position
+            setInterval(() => {
+                grid.style.top = `calc(-250vw - ${cavansY}px)`;
+                grid.style.left = `calc(-250vw - ${cavansX}px)`;
+
+                // Update cavansX and cavansY for demonstration purposes
+                cavansX += 1;
                 cavansY += 1;
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+
+                // Trigger observer to check visibility of chunks
+                document.querySelectorAll('.image-chunk').forEach(chunk => {
+                    observer.observe(chunk);
+                });
+            }, 30);
+        });
+      
+        function disableScroll() {
+          // Get the current page scroll position in the vertical direction
+          scrollTop =
+            window.scrollY || document.documentElement.scrollTop;
+  
+  
+          // Get the current page scroll position in the horizontal direction 
+  
+          scrollLeft =
+            window.scrollX || document.documentElement.scrollLeft;
+  
+  
+          // if any scroll is attempted,
+          // set this to the previous value
+          window.onscroll = function() {
+            window.scrollTo(scrollLeft, scrollTop);
+          };
+        }
+        //disableScroll();
+        const socket = io(); // Connect to the server
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        document.getElementById('game').appendChild(canvas);
+        canvas.id = 'myCanvas'
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+  
+        var players = {};
+        var boardbullets = [];
+        var bullets = [];
+        var playerId;
+        var playerX = canvas.width / 2;
+        var playerY = canvas.height / 2;
+        var cavansX = 0;
+        var cavansY = 0;
+        var playerHealth = 100;
+        var playerSpeed = 10;
+        var playerSize = 1;
+        var bodyDamage = 0.6;
+        var type = 'basic'
+        var bullet_damage = 1.5;
+        var bullet_speed = 8;
+        var bullet_size = 0.18;
+        var bullet_pentration = 2;
+        var bullet_power = (bullet_speed/5.5)+bullet_damage*(bullet_pentration/10)
+        var cannonWidth = 99;
+        var cannonHeight = 30;
+        var current_angle = 0;
+        var MouseX_ = 0;
+        var MouseY_ = 0;
+        var mapLeft = -2.5 * window.innerWidth; // This could be zero if you don't want any margin at the left
+        var mapRight = 2.5 * window.innerWidth;
+        var mapTop = -2.5 * window.innerWidth; // Similar to mapLeft, this could be zero
+        var mapBottom = 2.5 * window.innerWidth;
+        var score = 0;
+        console.log(mapRight,mapBottom/2)
+  
+        function getMousePos(canvas, evt) {
+          const rect = canvas.getBoundingClientRect();
+          return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top
+          };
+        }
+        document.addEventListener('dblclick', function(evt) {
+          evt.preventDefault();
+        });
+  
+  
+  
+        socket.on('connect', () => {
+          playerId = socket.id;
+          socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+          setTimeout(function () {
+            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+          }, 200);
+          
+          draw() // Call draw after connecting
+        });
+        socket.on('playerJoined', (data) => {
+          players[data.id] = data;
+          setTimeout(function () {
+            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+          }, 200);
+          draw();
+        });
+        socket.on('playerMoved', (data) => {
+          players[data.id] = data;
+          draw(); // Call draw to update the canvas
+        });
+        socket.on('playerCannonUpdated', (data) => {
+          players[data.id].cannon_angle = data.cannon_angle;
+          players[data.id].type = data.type;
+          players[data.id].cannonH = data.cannonH;
+          players[data.id].cannonW = data.cannonW;
+          draw();
+        });
+        socket.on('playerLeft', (id) => {
+          delete players[id];
+          draw(); // Call draw to update the canvas
+        });
+        socket.on('playerDamaged', (data) => {
+  
+          players[data.ID1].health = data.player1.health;
+          
+          playerHealth = data.player2.health;
+          players[data.ID2].health = data.player2.health;
+          console.log(playerHealth, data.player2.health, data.player1.health)
+          draw(); 
+          socket.emit('damageTaken', data);
+        });
+        socket.on("updateHealth", (data) => {
+          players[data.ID1].health = data.player1.health;
+  
+          playerHealth = data.player2.health;
+          players[data.ID2].health = data.player2.health;
+          console.log(playerHealth, data.player2.health, data.player1.health)
+          draw();  // Update player's health
+        });
+        socket.on('bulletUpdate', (data) => {
+          bullets = data;
+        });
+        socket.on('bulletDamage', (data) => {
+          console.log("hit")
+          if (players[data.playerID]) {
+            bullets = data.BULLETS; // Check if the player exists
+            players[data.playerID].health = data.playerHealth;
+            console.log("current-health",players[data.playerID].health)
+            if (data.playerID == playerId) {
+              playerHealth = data.playerHealth;
+            }
+            draw(); 
+          } else {
+            console.warn("Received bulletDamage for an unknown player:", data.playerID);
+          }
+        });
+        let keysPressed = {};
+        document.addEventListener('keydown', (event) => {
+          console.log(event.key)
+          keysPressed[event.key] = true;
+          
+          if      (keysPressed['ArrowLeft'] && keysPressed['ArrowUp'] || keysPressed['a'] && keysPressed['w']) {
+            if (playerX > mapLeft) {
+              playerX -= 1;
+              cavansX -= 1;
+              playerY -= 1;
+              cavansY -= 1;
+  
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerX -= 1;
+                  cavansX -= 1;
+                  playerY -= 1;
+                  cavansY -= 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+                          players[playerId].health -= player.bodyDamage;
+                        playerHealth -= player.bodyDamage;
+                          socket.emit('playerCollided', {
+                            id_other: playerId_,
+                            damagetaken: player.bodyDamage,
+                            damagegiven: bodyDamage,
+                            speed: i,
+                            health: players[playerId].health,
+                            id_self: playerId,
+                          });
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerX += 1;
+                                cavansX += 1;
+                                playerY += 1;
+                                cavansY += 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10)
+                      }
+                  }
+                }, i*3)
+              }
+              setTimeout(() => {
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 15);
+            }
+          }
+          else if (keysPressed['ArrowLeft'] && keysPressed['ArrowDown'] || keysPressed['a'] && keysPressed['s']) {
+            if (playerX > mapLeft) {
+              playerX -= 1;
+              cavansX -= 1;
+              playerY += 1;
+              cavansY += 1;
+  
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerX -= 1;
+                  cavansX -= 1;
+                  playerY += 1;
+                  cavansY += 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+                          players[playerId].health -= player.bodyDamage;
+                        playerHealth -= player.bodyDamage;
+                          socket.emit('playerCollided', {
+                            id_other: playerId_,
+                            damagetaken: player.bodyDamage,
+                            damagegiven: bodyDamage,
+                            speed: i,
+                            health: players[playerId].health,
+                            id_self: playerId,
+                          });
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerX += 1;
+                                cavansX += 1;
+                                playerY -= 1;
+                                cavansY -= 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10)
+                      }
+                  }
+                }, i*3)
+              }
+              setTimeout(() => {
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 15);
+            }
+          }
+          else if (keysPressed['ArrowRight'] && keysPressed['ArrowUp'] || keysPressed['d'] && keysPressed['w']) {
+            if (playerX < mapRight) {
+              playerX += 1;
+              cavansX += 1;
+              playerY -= 1;
+              cavansY -= 1;
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerX += 1;
+                  cavansX += 1;
+                  playerY -= 1;
+                  cavansY -= 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
                         players[playerId].health -= player.bodyDamage;
                         playerHealth -= player.bodyDamage;
                         socket.emit('playerCollided', {
@@ -289,41 +431,46 @@
                           health: players[playerId].health,
                           id_self: playerId,
                         });
-                        setTimeout(() => {
-                          for (let t = 0; t < i; t++) {
-                            setTimeout(() => {
-                              playerY -= 1;
-                              cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
-                            },(t)*3);
-                          }
-                        }, 10);
-                    }
-                }
-              }, i*3)
-            }
-            setTimeout(() => {
-              let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
-            }, 15)
-          }
-        } 
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowLeft') {
-          if (playerX > mapLeft) {
-            playerX -= 1;
-            cavansX -= 1;
-            for (let i = 1; i < playerSpeed; i++) {
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerX -= 1;
+                                cavansX -= 1;
+                                playerY -= 1;
+                                cavansY -= 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10)
+                      }
+                  }
+                }, i*3)
+              }
               setTimeout(() => {
-                playerX -= 1;
-                cavansX -= 1;
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                console.log(__angle___);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 15);
+            }
+          }
+          else if (keysPressed['ArrowRight'] && keysPressed['ArrowDown'] || keysPressed['d'] && keysPressed['s']) {
+            if (playerX < mapRight) {
+              playerX += 1;
+              cavansX += 1;
+              playerY += 1;
+              cavansY += 1;
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerX += 1;
+                  cavansX += 1;
+                  playerY += 1;
+                  cavansY += 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
                         players[playerId].health -= player.bodyDamage;
-                      playerHealth -= player.bodyDamage;
+                        playerHealth -= player.bodyDamage;
                         socket.emit('playerCollided', {
                           id_other: playerId_,
                           damagetaken: player.bodyDamage,
@@ -332,218 +479,246 @@
                           health: players[playerId].health,
                           id_self: playerId,
                         });
-                        setTimeout(() => {
-                          for (let t = 0; t < i; t++) {
-                            setTimeout(() => {
-                              playerX += 1;
-                              cavansX += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
-                            },(t)*3);
-                          }
-                        }, 10)
-                    }
-                }
-              }, i*3)
-            }
-            setTimeout(() => {
-              let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
-            }, 15);
-          }
-        }
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowRight') {
-          if (playerX < mapRight) {
-            playerX += 1;
-            cavansX += 1;
-            for (let i = 1; i < playerSpeed; i++) {
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerX -= 1;
+                                cavansX -= 1;
+                                playerY -= 1;
+                                cavansY -= 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10)
+                      }
+                  }
+                }, i*3)
+              }
               setTimeout(() => {
-                playerX += 1;
-                cavansX += 1;
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-                      players[playerId].health -= player.bodyDamage;
-                      playerHealth -= player.bodyDamage;
-                      socket.emit('playerCollided', {
-                        id_other: playerId_,
-                        damagetaken: player.bodyDamage,
-                        damagegiven: bodyDamage,
-                        speed: i,
-                        health: players[playerId].health,
-                        id_self: playerId,
-                      });
-                        setTimeout(() => {
-                          for (let t = 0; t < i; t++) {
-                            setTimeout(() => {
-                              playerX -= 1;
-                              cavansX -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
-                            },(t)*3);
-                          }
-                        }, 10)
-                    }
-                }
-              }, i*3)
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                console.log(__angle___);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 15);
             }
-            setTimeout(() => {
-              let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-              console.log(__angle___);
-              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
-            }, 15);
           }
-        }
-      });
-
-
-      let canW = canvas.width
-      let canH = canvas.height
-      let squareColor = 'grey';
-
-      document.addEventListener('mousemove', function(evt) {
-        var mousepos = getMousePos(document.getElementById("container"), evt);
-        MouseX_ = mousepos.x;
-        MouseY_ = mousepos.y;
-        let __angle__ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-        socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle__, score:score, username:username });
-      });
-
-      document.addEventListener('mousedown', function (evt) {
-          let bullet_distance = (bullet_damage + bullet_speed*8.5) * ((bullet_pentration / bullet_size*2)*3);
-          let cannon_length = cannonWidth / 2 + 30; // The 30 offset you have in your fillRect
-
-          // Calculate the starting point of the bullet
-
-          for (let i = 0; i < 10; i++) {
-            setTimeout(() => {
-              cannonWidth -= 1
-            },10*i)
+          else if (keysPressed['ArrowUp'] || keysPressed['w']) {
+            if (playerY > mapTop) {
+              playerY -= 1;
+              cavansY -= 1;
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerY -= 1;
+                  cavansY -= 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+                          players[playerId].health -= player.bodyDamage;
+                        playerHealth -= player.bodyDamage;
+                          socket.emit('playerCollided', {
+                            id_other: playerId_,
+                            damagetaken: player.bodyDamage,
+                            damagegiven: bodyDamage,
+                            speed: i,
+                            health: players[playerId].health,
+                            id_self: playerId,
+                          });
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerY += 1;
+                                cavansY += 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10)
+                      }
+                  }
+                }, i*3)
+              }
+              setTimeout(() => {
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 2)
+            }
           }
-          for (let i = 0; i < 10; i++) {
-            setTimeout(() => {
-              cannonWidth += 1
-            },10*(i*2))
+          else if (keysPressed['ArrowDown'] || keysPressed['s']) {
+            if (playerY < mapBottom) {
+              playerY += 1;
+              cavansY += 1;
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerY += 1;
+                  cavansY += 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+                          players[playerId].health -= player.bodyDamage;
+                          playerHealth -= player.bodyDamage;
+                          socket.emit('playerCollided', {
+                            id_other: playerId_,
+                            damagetaken: player.bodyDamage,
+                            damagegiven: bodyDamage,
+                            speed: i,
+                            health: players[playerId].health,
+                            id_self: playerId,
+                          });
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerY -= 1;
+                                cavansY -= 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10);
+                      }
+                  }
+                }, i*3)
+              }
+              setTimeout(() => {
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 15)
+            }
+          } 
+          else if (keysPressed['ArrowLeft'] || keysPressed['a']) {
+            if (playerX > mapLeft) {
+              playerX -= 1;
+              cavansX -= 1;
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerX -= 1;
+                  cavansX -= 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+                          players[playerId].health -= player.bodyDamage;
+                        playerHealth -= player.bodyDamage;
+                          socket.emit('playerCollided', {
+                            id_other: playerId_,
+                            damagetaken: player.bodyDamage,
+                            damagegiven: bodyDamage,
+                            speed: i,
+                            health: players[playerId].health,
+                            id_self: playerId,
+                          });
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerX += 1;
+                                cavansX += 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10)
+                      }
+                  }
+                }, i*3)
+              }
+              setTimeout(() => {
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 15);
+            }
           }
-          
-          var mouse = getMousePos(canvas,evt);
-          mouseX = mouse.x;
-          mouseY = mouse.y;
-          let bullet_start_x = playerX + 0 * Math.cos(current_angle);
-          let bullet_start_y = playerY + 0 * Math.sin(current_angle);
-          let angle = Math.atan2(Math.abs(mouseY) - (248), Math.abs(mouseX) - 511.25);
-          var identdfire = Date.now() + Math.random();
-
-          bullets.push({
-              bullet_distance: bullet_distance,
-              speed: bullet_speed,
-              size: bullet_size,
-              angle: angle,
-              bullet_damage: bullet_damage,
-              distanceTraveled: 0,
-              bullet_pentration:bullet_pentration,
-              x: bullet_start_x,
-              y: bullet_start_y,
-              id: playerId,
-              uniqueid:identdfire
-          });
-          socket.emit('bulletFired', {bullet_distance: bullet_distance,
-                                     speed: bullet_speed,
-                                     size: bullet_size,
-                                     angle: angle,
-                                     bullet_damage: bullet_damage,
-                                     distanceTraveled: 0,
-                                     bullet_pentration:bullet_pentration,
-                                     x: bullet_start_x,
-                                     y: bullet_start_y,
-                                     id: playerId,
-                                     uniqueid:identdfire
-                                     }); 
-      });
-
-      let canFire = true;
-      let firingInterval = null; // Store the interval id
-
-      document.addEventListener('mousedown', function (evt) {
-        if (canFire) {
-          // Calculate bullet data only once
-          let bullet_distance = (bullet_damage + bullet_speed*8.5)* 2 * ((bullet_pentration / bullet_size*2)*3);
-          let cannon_length = cannonWidth / 2 + 30;
-
-          var mouse = getMousePos(canvas, evt);
-          mouseX = mouse.x;
-          mouseY = mouse.y;
-          let bullet_start_x = playerX + 0 * Math.cos(current_angle);
-          let bullet_start_y = playerY + 0 * Math.sin(current_angle);
-          let angle = Math.atan2(Math.abs(mouseY) - (248), Math.abs(mouseX) - 511.25);
-          var identdfire = Date.now() + Math.random();
-
-          for (let l = 0; l < 10; l++) {
-            setTimeout(() => {
-              cannonWidth -= 1
-            },10*l)
+          else if (keysPressed['ArrowRight'] || keysPressed['d']) {
+            if (playerX < mapRight) {
+              playerX += 1;
+              cavansX += 1;
+              for (let i = 1; i < playerSpeed; i++) {
+                setTimeout(() => {
+                  playerX += 1;
+                  cavansX += 1;
+                  for (let playerId_ in players) {
+                      var player = players[playerId_];
+                      if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
+                          && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
+                        players[playerId].health -= player.bodyDamage;
+                        playerHealth -= player.bodyDamage;
+                        socket.emit('playerCollided', {
+                          id_other: playerId_,
+                          damagetaken: player.bodyDamage,
+                          damagegiven: bodyDamage,
+                          speed: i,
+                          health: players[playerId].health,
+                          id_self: playerId,
+                        });
+                          setTimeout(() => {
+                            for (let t = 0; t < i; t++) {
+                              setTimeout(() => {
+                                playerX -= 1;
+                                cavansX -= 1;
+                                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              },(t)*3);
+                            }
+                          }, 10)
+                      }
+                  }
+                }, i*3)
+              }
+              setTimeout(() => {
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                console.log(__angle___);
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+              }, 15);
+            }
           }
-          for (let l = 0; l < 10; l++) {
-            setTimeout(() => {
-              cannonWidth += 1
-            },10*(l*2))
-          }
-
-          // Fire the bullet
-          bullets.push({
-            bullet_distance: bullet_distance,
-            speed: bullet_speed,
-            size: bullet_size,
-            angle: angle,
-            bullet_damage: bullet_damage,
-            distanceTraveled: 0,
-            bullet_pentration: bullet_pentration,
-            x: bullet_start_x,
-            y: bullet_start_y,
-            id: playerId,
-            uniqueid: identdfire
-          });
-          socket.emit('bulletFired', {
-            bullet_distance: bullet_distance,
-            speed: bullet_speed,
-            size: bullet_size,
-            angle: angle,
-            bullet_damage: bullet_damage,
-            distanceTraveled: 0,
-            bullet_pentration: bullet_pentration,
-            x: bullet_start_x,
-            y: bullet_start_y,
-            id: playerId,
-            uniqueid: identdfire
-          });
-
-          canFire = false;
-          firingInterval = setInterval((event=evt) => {
-            // Re-calculate bullet data for each bullet fired
+        });
+  
+        document.addEventListener('keyup', (event) => {
+          delete keysPressed[event.key];
+          console.log(event.key)
+        });
+  
+  
+        let canW = canvas.width
+        let canH = canvas.height
+        let squareColor = 'grey';
+  
+        document.addEventListener('mousemove', function(evt) {
+          var mousepos = getMousePos(document.getElementById("container"), evt);
+          MouseX_ = mousepos.x;
+          MouseY_ = mousepos.y;
+          let __angle__ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+          socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle__, score:score, username:username });
+        });
+  
+  
+        let canFire = true;
+        let canFire2 = true;
+        let firingInterval = null; // Store the interval id
+  
+        document.addEventListener('mousedown', function (evt) {
+          console.log(canFire)
+          if (canFire) {
+            canFire = false;
+            // Calculate bullet data only once
             let bullet_distance = (bullet_damage + bullet_speed*8.5)* 2 * ((bullet_pentration / bullet_size*2)*3);
             let cannon_length = cannonWidth / 2 + 30;
-
+  
             var mouse = getMousePos(canvas, evt);
             mouseX = mouse.x;
             mouseY = mouse.y;
-
+            let bullet_start_x = playerX + 0 * Math.cos(current_angle);
+            let bullet_start_y = playerY + 0 * Math.sin(current_angle);
+            let angle = Math.atan2(Math.abs(mouseY) - (248), Math.abs(mouseX) - 511.25);
+            var identdfire = Date.now() + Math.random();
+  
             for (let l = 0; l < 10; l++) {
               setTimeout(() => {
-                cannonWidth -= 2
+                cannonWidth -= 1
               },10*l)
             }
             for (let l = 0; l < 10; l++) {
               setTimeout(() => {
-                cannonWidth += 2
+                cannonWidth += 1
               },10*(l*2))
             }
-            
-            let bullet_start_x = playerX + 0 * Math.cos(current_angle);
-            let bullet_start_y = playerY + 0 * Math.sin(current_angle);
-            let angle = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-            var identdfire = Date.now() + Math.random();
-
+  
+            // Fire the bullet
             bullets.push({
               bullet_distance: bullet_distance,
               speed: bullet_speed,
@@ -570,201 +745,258 @@
               id: playerId,
               uniqueid: identdfire
             });
-          }, 500); // Adjust the firing rate as needed
-        }
-      });
-
-      document.addEventListener('mouseup', function (evt) {
-        if (firingInterval) {
-          clearInterval(firingInterval);
-          firingInterval = null;
-          canFire = true; // Allow firing again
-        }
-      });
-      
-      
-
-      // Function to update bullet positions
-
-      // Function to draw the bullet
-
-      setInterval(() => {
-        document.getElementById("grid").style.top = `calc(-250vw - ${cavansY}px)`;
-        document.getElementById("grid").style.left = `calc(-250vw - ${cavansX}px)`;
-      }, 4);
-
-      const radius = 40;
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        bullets.forEach((bullet) => {
-          if (bullet.x > 0+cavansX && bullet.x < canvas.width+cavansX && bullet.y-cavansY > 0 && bullet.y < canvas.height+cavansY) {
-          ctx.beginPath();
-          if (bullet.id === playerId) {
-            ctx.fillStyle = 'blue';
-            ctx.strokeStyle = 'darkblue';
-          } else {
-            ctx.fillStyle = 'red';
-            ctx.strokeStyle = 'darkred';
-          }
-          ctx.arc(bullet.x - playerX + canvas.width / 2, bullet.y - playerY + canvas.height / 2, bullet.size * cannonWidth, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.lineWidth = 5;
-          ctx.stroke();
-          ctx.closePath();
+            setInterval(() => {
+              canFire = true;
+            }, 1000);
           }
         });
-        try {
-          for (let playerId__ in players) {
-            if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
-
-              let player = players[playerId__];
-
-
-              let r = Math.PI / 180;
-              ctx.fillStyle = squareColor;
-
-              // Save the current transformation matrix
-              ctx.save();
-
-
-
-              // Translate to the center of the square
-              ctx.translate(player.x-cavansX, player.y-cavansY);
-
-              // Calculate the angle to rotate the square to face the mouse pointer
-
-              let angle = player.cannon_angle;
-
-              ctx.rotate(angle);
-
-              // Draw the square
-              ctx.fillRect((-player.cannonW / 2)+30, (-player.cannonH / 2), player.cannonW, player.cannonH);
-
-              // Add a border to the cannon
-              ctx.strokeStyle = 'lightgrey'; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.strokeRect((-player.cannonW / 2)+30, (-player.cannonH / 2), player.cannonW, player.cannonH); // Draw the border
-
-              // Restore the previous transformation matrix
-              ctx.restore();
-
-              ctx.beginPath();
-              ctx.arc(player.x - cavansX, player.y - cavansY, player.size * 40, 0, 2 * Math.PI, false);
-              ctx.fillStyle = 'red';
-              ctx.fill();
-              ctx.lineWidth = 5;
-              ctx.strokeStyle = 'darkred';
-              ctx.stroke();
-
-              // Draw background bar
-              ctx.fillStyle = 'black';
-              ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
-
-              // Draw health bar
-              const healthWidth = (player.health / 100) * 90;
-              ctx.fillStyle = 'green';
-              ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, healthWidth, 10);
-
-              ctx.fillStyle = 'black';
-              ctx.textAlign = "center";
-              ctx.font = "bold 20px Geneva";
-              ctx.fillText(player.score, (player.x - cavansX), (player.y - cavansY) - 55);
-
-              ctx.fillText(player.username, (player.x - cavansX), (player.y - cavansY) - 75);
-
-              // Draw border
-              ctx.lineWidth = 1;
-              ctx.strokeStyle = 'grey';
-              ctx.strokeRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
-
-
+        document.addEventListener('mousedown', (evt) => {
+          firingInterval = setInterval((event=evt) => {
+            canFire2 = false;
+            // Re-calculate bullet data for each bullet fired
+            let bullet_distance = (bullet_damage + bullet_speed*8.5)*2*((bullet_pentration/bullet_size*2)*3);
+            let cannon_length = cannonWidth / 2 + 30;
+  
+            var mouse = getMousePos(canvas, evt);
+            mouseX = mouse.x;
+            mouseY = mouse.y;
+  
+            for (let l = 0; l < 10; l++) {
+              setTimeout(() => {
+                cannonWidth -= 2
+              },10*l)
             }
+            for (let l = 0; l < 10; l++) {
+              setTimeout(() => {
+                cannonWidth += 2
+              },10*(l*2))
+            }
+  
+            let bullet_start_x = playerX + 0 * Math.cos(current_angle);
+            let bullet_start_y = playerY + 0 * Math.sin(current_angle);
+            let angle = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+            var identdfire = Date.now() + Math.random();
+  
+            bullets.push({
+              bullet_distance: bullet_distance,
+              speed: bullet_speed,
+              size: bullet_size,
+              angle: angle,
+              bullet_damage: bullet_damage,
+              distanceTraveled: 0,
+              bullet_pentration: bullet_pentration,
+              x: bullet_start_x,
+              y: bullet_start_y,
+              id: playerId,
+              uniqueid: identdfire
+            });
+            socket.emit('bulletFired', {
+              bullet_distance: bullet_distance,
+              speed: bullet_speed,
+              size: bullet_size,
+              angle: angle,
+              bullet_damage: bullet_damage,
+              distanceTraveled: 0,
+              bullet_pentration: bullet_pentration,
+              x: bullet_start_x,
+              y: bullet_start_y,
+              id: playerId,
+              uniqueid: identdfire
+            });
+          }, 500);
+        })
+  
+        document.addEventListener('mouseup', function (evt) {
+          if (firingInterval) {
+            clearInterval(firingInterval);
+            firingInterval = null;
+            canFire2 = true;
           }
-        } catch(e) {
-          console.error("error:",e)
+        });
+        
+        
+  
+        // Function to update bullet positions
+  
+        // Function to draw the bullet
+  
+        setInterval(() => {
+          document.getElementById("grid").style.top = `calc(-250vw - ${cavansY}px)`;
+          document.getElementById("grid").style.left = `calc(-250vw - ${cavansX}px)`;
+        }, 30);
+  
+        const radius = 40;
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          bullets.forEach((bullet) => {
+            if (bullet.x > 0+cavansX && bullet.x < canvas.width+cavansX && bullet.y-cavansY > 0 && bullet.y < canvas.height+cavansY) {
+            ctx.beginPath();
+            if (bullet.id === playerId) {
+              ctx.fillStyle = 'blue';
+              ctx.strokeStyle = 'darkblue';
+            } else {
+              ctx.fillStyle = 'red';
+              ctx.strokeStyle = 'darkred';
+            }
+            ctx.arc(bullet.x - playerX + canvas.width / 2, bullet.y - playerY + canvas.height / 2, bullet.size * cannonWidth, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+            }
+          });
+          try {
+            for (let playerId__ in players) {
+              if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
+  
+                let player = players[playerId__];
+  
+  
+                let r = Math.PI / 180;
+                ctx.fillStyle = squareColor;
+  
+                // Save the current transformation matrix
+                ctx.save();
+  
+  
+  
+                // Translate to the center of the square
+                ctx.translate(player.x-cavansX, player.y-cavansY);
+  
+                // Calculate the angle to rotate the square to face the mouse pointer
+  
+                let angle = player.cannon_angle;
+  
+                ctx.rotate(angle);
+  
+                // Draw the square
+                ctx.fillRect((-player.cannonW / 2)+30, (-player.cannonH / 2), player.cannonW, player.cannonH);
+  
+                // Add a border to the cannon
+                ctx.strokeStyle = 'lightgrey'; // Set border color
+                ctx.lineWidth = 3; // Set border width
+                ctx.strokeRect((-player.cannonW / 2)+30, (-player.cannonH / 2), player.cannonW, player.cannonH); // Draw the border
+  
+                // Restore the previous transformation matrix
+                ctx.restore();
+  
+                ctx.beginPath();
+                ctx.arc(player.x - cavansX, player.y - cavansY, player.size * 40, 0, 2 * Math.PI, false);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = 'darkred';
+                ctx.stroke();
+  
+                // Draw background bar
+                ctx.fillStyle = 'black';
+                ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
+  
+                // Draw health bar
+                const healthWidth = (player.health / 100) * 90;
+                ctx.fillStyle = 'green';
+                ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, healthWidth, 10);
+  
+                ctx.fillStyle = 'black';
+                ctx.textAlign = "center";
+                ctx.font = "bold 20px Geneva";
+                ctx.fillText(player.score, (player.x - cavansX), (player.y - cavansY) - 55);
+  
+                ctx.fillText(player.username, (player.x - cavansX), (player.y - cavansY) - 75);
+  
+                // Draw border
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'grey';
+                ctx.strokeRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
+  
+  
+              }
+            }
+          } catch(e) {
+            console.error("error:",e)
+          }
+  
+          let r = Math.PI / 180;
+          ctx.fillStyle = squareColor;
+  
+          // Save the current transformation matrix
+          ctx.save();
+  
+  
+  
+          // Translate to the center of the square
+          ctx.translate((canW / 2), (canH / 2));
+  
+          // Calculate the angle to rotate the square to face the mouse pointer
+  
+          let angle = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25); // Fixed line
+  
+          // Rotate the canvas
+          ctx.rotate(angle);
+  
+          // Draw the square
+          ctx.fillRect((-cannonWidth / 2)+30, (-cannonHeight / 2), cannonWidth, cannonHeight);
+  
+          // Add a border to the cannon
+          ctx.strokeStyle = 'lightgrey'; // Set border color
+          ctx.lineWidth = 3; // Set border width
+          ctx.strokeRect((-cannonWidth / 2)+30, (-cannonHeight / 2), cannonWidth, cannonHeight); // Draw the border
+  
+          // Restore the previous transformation matrix
+          ctx.restore();
+  
+  
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, canvas.height / 2, playerSize * 40, 0, 2 * Math.PI, false);
+          ctx.fillStyle = 'blue';
+          ctx.fill();
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = 'darkblue';
+          ctx.stroke();
+  
+          // Draw background bar
+          ctx.fillStyle = 'black';
+          ctx.fillRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, 90, 10);
+  
+          ctx.textAlign = "center";
+          ctx.font = "bold 20px Geneva";
+          ctx.fillText(score, (canvas.width / 2), (canvas.height / 2) - 55);
+  
+          ctx.fillText(username, (canvas.width / 2), (canvas.height / 2) - 75);
+  
+          // Draw health bar
+          const healthWidth = (playerHealth / 100) * 90;
+          ctx.fillStyle = 'green';
+          ctx.fillRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, healthWidth, 10);
+  
+          // Draw border
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'grey';
+          ctx.strokeRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, 90, 10);
+          ctx.strokeStyle = 'black'; // Or any color you want
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(mapLeft, mapTop);
+          ctx.lineTo(mapRight, mapTop);
+          ctx.lineTo(mapRight, mapBottom);
+          ctx.lineTo(mapLeft, mapBottom);
+          ctx.lineTo(mapLeft, mapTop);
+          ctx.stroke();
+  
+  
+          requestAnimationFrame(draw);
         }
-
-        let r = Math.PI / 180;
-        ctx.fillStyle = squareColor;
-
-        // Save the current transformation matrix
-        ctx.save();
-
-
-
-        // Translate to the center of the square
-        ctx.translate((canW / 2), (canH / 2));
-
-        // Calculate the angle to rotate the square to face the mouse pointer
-
-        let angle = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25); // Fixed line
-
-        // Rotate the canvas
-        ctx.rotate(angle);
-
-        // Draw the square
-        ctx.fillRect((-cannonWidth / 2)+30, (-cannonHeight / 2), cannonWidth, cannonHeight);
-
-        // Add a border to the cannon
-        ctx.strokeStyle = 'lightgrey'; // Set border color
-        ctx.lineWidth = 3; // Set border width
-        ctx.strokeRect((-cannonWidth / 2)+30, (-cannonHeight / 2), cannonWidth, cannonHeight); // Draw the border
-
-        // Restore the previous transformation matrix
-        ctx.restore();
-
-
-        ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height / 2, playerSize * 40, 0, 2 * Math.PI, false);
-        ctx.fillStyle = 'blue';
-        ctx.fill();
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = 'darkblue';
-        ctx.stroke();
-
-        // Draw background bar
-        ctx.fillStyle = 'black';
-        ctx.fillRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, 90, 10);
-
-        ctx.textAlign = "center";
-        ctx.font = "bold 20px Geneva";
-        ctx.fillText(score, (canvas.width / 2), (canvas.height / 2) - 55);
-
-        ctx.fillText(username, (canvas.width / 2), (canvas.height / 2) - 75);
-
-        // Draw health bar
-        const healthWidth = (playerHealth / 100) * 90;
-        ctx.fillStyle = 'green';
-        ctx.fillRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, healthWidth, 10);
-
-        // Draw border
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = 'grey';
-        ctx.strokeRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, 90, 10);
-        ctx.strokeStyle = 'black'; // Or any color you want
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(mapLeft, mapTop);
-        ctx.lineTo(mapRight, mapTop);
-        ctx.lineTo(mapRight, mapBottom);
-        ctx.lineTo(mapLeft, mapBottom);
-        ctx.lineTo(mapLeft, mapTop);
-        ctx.stroke();
-
-
-        requestAnimationFrame(draw);
-      }
-      
-      setInterval(() => {
-        if (playerHealth <= 0) {
-          socket.emit('playerDied', {id: playerId});
-          document.getElementById('die').style.display = 'block';
-          document.getElementById('container').style.display = 'none';
-          document.getElementById('myCanvas').style.display = 'none';
-          console.log(document.getElementById('die').style.display)
-        }
-        document.getElementById('players').innerText = `${playerX},${playerY}`;
-      }, 100);
+        
+        setInterval(() => {
+          if (playerHealth <= 0) {
+            socket.emit('playerDied', {id: playerId});
+            document.getElementById('die').style.display = 'block';
+            document.getElementById('container').style.display = 'none';
+            document.getElementById('myCanvas').style.display = 'none';
+            console.log(document.getElementById('die').style.display)
+          }
+          document.getElementById('players').innerText = `${playerX},${playerY}`;
+        }, 100);
       }
 
       document.getElementById('playButton').addEventListener("mousedown", () => {
