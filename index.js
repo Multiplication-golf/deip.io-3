@@ -21,73 +21,178 @@ function between(x, min, max) {
   return x >= min && x <= max;
 }
 
-for (let i = 0; i < getRandomInt(300,400); i++) {
-  var x = getRandomInt(-3500,3500);
-  var y = getRandomInt(-3500,3500);
+function calculateTriangleVertices(x, y, size, angle) {
+  const height = (Math.sqrt(3) / 2) * size; // Height of an equilateral triangle
+  const halfSize = size / 2;
+
+  // Define vertices relative to the center
+  let vertices = [
+    { x: -halfSize, y: height / 3 }, // Bottom-left
+    { x: halfSize, y: height / 3 }, // Bottom-right
+    { x: 0, y: (-2 * height) / 3 }, // Top
+  ];
+
+  // Rotate vertices by the given angle
+  const angleRad = angle * (Math.PI / 180);
+  vertices = vertices.map((vertex) => {
+    const rotatedX =
+      vertex.x * Math.cos(angleRad) - vertex.y * Math.sin(angleRad);
+    const rotatedY =
+      vertex.x * Math.sin(angleRad) + vertex.y * Math.cos(angleRad);
+    return { x: rotatedX + x, y: rotatedY + y };
+  });
+
+  return vertices;
+}
+
+// Example usage for the fooditem object:
+
+
+
+for (let i = 0; i < getRandomInt(300, 400); i++) {
+  var x = getRandomInt(-3500, 3500);
+  var y = getRandomInt(-3500, 3500);
   for (let i = 0; i < cors_taken.length; i++) {
     if (between(x, cors_taken[i].x - 50, cors_taken[i].x + 50) && between(y, cors_taken[i].y - 50, cors_taken[i].y + 50)) {
       x = getRandomInt(-3500, 3500);
       y = getRandomInt(-3500, 3500);
     }
   }
-  cors_taken.push({x:x,y:y})
-  let valueOp = (getRandomInt(0,2) === 1)
-  var type = valueOp ? "triangle" : "square" 
-  var color = valueOp ? "Darkred" : "Gold" 
-  var health_max = valueOp ? 15 : 10 
+  cors_taken.push({ x: x, y: y })
+  let valueOp = (getRandomInt(0, 2) === 1)
+  var type = valueOp ? "triangle" : "square"
+  var color = valueOp ? "red" : "Gold"
+  var health_max = valueOp ? 15 : 10
   let fooditem = {
     type: type,
     health: health_max,
     maxhealth: health_max,
     size: 50,
-    angle: getRandomInt(0,180),
+    angle: getRandomInt(0, 180),
     x: x,
     y: y,
-    color:color,
+    vertices: null,
+    color: color,
     score_add: health_max,
-    randomID: (Math.random()*i*Date.now())
+    randomID: (Math.random() * i * Date.now())
   }
+  if (type === "triangle") {
+    rawvertices = calculateTriangleVertices(
+      fooditem.x,
+      fooditem.y,
+      fooditem.size,
+      fooditem.angle,
+    );
+    const transformedArray = rawvertices.map(({ x, y }) => [x, y]);
+    fooditem.vertices = rawvertices
+  }
+
   food_squares.push(fooditem)
 }
 
 function hasDuplicates(array) {
-    var valuesSoFar = [];
-    for (var i = 0; i < array.length; ++i) {
-        var value = array[i];
-        if (valuesSoFar.indexOf(value) !== -1) {
+  var valuesSoFar = [];
+  for (var i = 0; i < array.length; ++i) {
+    var value = array[i];
+    if (valuesSoFar.indexOf(value) !== -1) {
+      return true;
+    }
+    valuesSoFar.push(value);
+  }
+  return false;
+}
+
+
+function rotatePoint(px, py, ox, oy, angle) {
+  const s = Math.sin(angle);
+  const c = Math.cos(angle);
+  px -= ox;
+  py -= oy;
+  return {
+    x: px * c - py * s + ox,
+    y: px * s + py * c + oy
+  };
+}
+
+function checkCircleSquareCollision(circle, square) {
+  const { x: cx, y: cy, size: cr } = circle;
+  const { x: sx, y: sy, size: sw, angle: sa } = square;
+
+  const localC = rotatePoint(cx, cy, sx, sy, -sa * (Math.PI / 180));  // Convert angle to radians
+
+  const halfW = sw / 2;
+  const halfH = sw / 2;  // Assuming square, so width = height
+  const dx = Math.max(Math.abs(localC.x - sx) - halfW, 0);
+  const dy = Math.max(Math.abs(localC.y - sy) - halfH, 0);
+
+  return (dx * dx + dy * dy) <= (cr * cr);
+}
+function rotatePoint(px, py, ox, oy, angle) {
+  const s = Math.sin(angle);
+  const c = Math.cos(angle);
+  px -= ox;
+  py -= oy;
+  return {
+    x: px * c - py * s + ox,
+    y: px * s + py * c + oy
+  };
+}
+
+function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
+  const b1 = sign(px, py, ax, ay, bx, by) < 0.0;
+  const b2 = sign(px, py, bx, by, cx, cy) < 0.0;
+  const b3 = sign(px, py, cx, cy, ax, ay) < 0.0;
+  return ((b1 === b2) && (b2 === b3));
+}
+
+function sign(px, py, ax, ay, bx, by) {
+  return (px - bx) * (ay - by) - (ax - bx) * (py - by);
+}
+
+function distanceSquared(x1, y1, x2, y2) {
+  return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+}
+
+function checkCircleTriangleCollision(circle, triangle) {
+    const cx = circle.x, cy = circle.y, cr = circle.size*4;
+    const tx = triangle.x, ty = triangle.y, ta = triangle.angle * (Math.PI / 180);
+    const vertices = triangle.vertices;
+    const sin_ta = Math.sin(-ta);
+    const cos_ta = Math.cos(-ta);
+    const rotatedC = rotatePoint(cx, cy, tx, ty, -ta);
+    const rotatedVertices = vertices.map(vertex => {
+        const vx = vertex.x - tx;
+        const vy = vertex.y - ty;
+        return {
+            x: vx * cos_ta - vy * sin_ta + tx,
+            y: vx * sin_ta + vy * cos_ta + ty
+        };
+    });
+    const [ax, ay] = [rotatedVertices[0].x, rotatedVertices[0].y];
+    const [bx, by] = [rotatedVertices[1].x, rotatedVertices[1].y];
+    const [cx1, cy1] = [rotatedVertices[2].x, rotatedVertices[2].y];
+    if (pointInTriangle(rotatedC.x, rotatedC.y, ax, ay, bx, by, cx1, cy1)) {
+        return true;
+    }
+    for (let i = 0; i < 3; i++) {
+        const [x1, y1] = [rotatedVertices[i].x, rotatedVertices[i].y];
+        const [x2, y2] = [rotatedVertices[(i + 1) % 3].x, rotatedVertices[(i + 1) % 3].y];
+        const distSq = distanceSquared(x1, y1, rotatedC.x, rotatedC.y);
+        if (distSq <= cr * cr) {
             return true;
         }
-        valuesSoFar.push(value);
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const projection = ((rotatedC.x - x1) * dx + (rotatedC.y - y1) * dy) / (dx * dx + dy * dy);
+        if (projection >= 0 && projection <= 1) {
+            const projx = x1 + projection * dx;
+            const projy = y1 + projection * dy;
+            if (distanceSquared(projx, projy, rotatedC.x, rotatedC.y) <= cr * cr) {
+                return true;
+            }
+        }
     }
     return false;
-}
-console.log(hasDuplicates(food_squares))
-
-function rotatePoint(x, y, cx, cy, angle) {
-  const radians = angle * Math.PI / 180;
-  const cos = Math.cos(radians);
-  const sin = Math.sin(radians);
-
-  const nx = cos * (x - cx) - sin * (y - cy) + cx;
-  const ny = sin * (x - cx) + cos * (y - cy) + cy;
-
-  return { x: nx, y: ny };
-}
-
-
-function RectCircleColliding(circle,rect){
-    var distX = Math.abs(circle.x - rect.x-rect.size/2);
-    var distY = Math.abs(circle.y - rect.y-rect.size/2);
-
-    if (distX > (rect.size/2 + circle.size)) { return false; }
-    if (distY > (rect.size/2 + circle.size)) { return false; }
-
-    if (distX <= (rect.size/2)) { return true; } 
-    if (distY <= (rect.size/2)) { return true; }
-
-    var dx=distX-rect.size/2;
-    var dy=distY-rect.size/2;
-    return (dx*dx+dy*dy<=(circle.size*circle.size));
 }
 
 function removeItemOnce(arr, id) {
@@ -128,14 +233,11 @@ io.on('connection', (socket) => {
     try {
       players[data.id_other].health -= data.damagegiven; // Swap damagegiven and damagetaken
       players[data.id_self].health -= data.damagetaken; // Swap damagegiven and damagetaken
-      console.log("id_other",players[data.id_other].health, // Swap damagegiven and damagetaken
-                 "self",players[data.id_self].health)
     } catch (error) {
       console.log(error);
     }
-    
 
-    console.log(data.id_self, data.id_other)
+
     io.emit('playerDamaged', {
       player1: players[data.id_other],
       ID1: data.id_other,
@@ -151,91 +253,114 @@ io.on('connection', (socket) => {
   });
   // Initialize the bullets array
 
+  // Path: server.js
+
+  const UPDATE_INTERVAL = 75;
+
   setInterval(() => {
+    // Filter and update bullets
     bullets = bullets.filter(bullet => {
       let newX = bullet.x + bullet.speed * Math.cos(bullet.angle);
       let newY = bullet.y + bullet.speed * Math.sin(bullet.angle);
       bullet.distanceTraveled += Math.hypot(newX - bullet.x, newY - bullet.y);
+
       if (bullet.distanceTraveled < bullet.bullet_distance) {
         bullet.x = newX;
         bullet.y = newY;
         return true;
-      } else {
-        return false;
       }
+      return false;
     });
+
+    // Emit updated bullet positions
     io.emit('bulletUpdate', bullets);
+
     try {
       bullets.forEach((bullet) => {
+        // Player collision detection
         for (const playerId in players) {
           const player = players[playerId];
           const distanceX = Math.abs(player.x - bullet.x);
           const distanceY = Math.abs(player.y - bullet.y);
+
           if (distanceX < (player.size * 40 + bullet.size) &&
-            distanceY < (player.size * 40 + bullet.size) &&
-            bullet.id !== player.id) {
-            player.health -= (bullet.bullet_damage-0.3) / (player.size / bullet.speed);
+              distanceY < (player.size * 40 + bullet.size) &&
+              bullet.id !== player.id) {
+            player.health -= (bullet.bullet_damage - 0.3) / (player.size / bullet.speed);
             bullet.bullet_distance -= (player.width / (bullet.speed + bullet.bullet_penetration)) - 30;
+
             io.emit('bulletDamage', { playerID: player.id, playerHealth: player.health, BULLETS: bullets });
           }
         }
-        for (let i = 0; i < food_squares.length; i++) {
-          const item = food_squares[i];
-          if (RectCircleColliding(bullet, item)) {
-            var damage = bullet.bullet_damage*4 / (item.size / bullet.speed);
-            if (damage > item.health) {
-              food_squares = removeItemOnce(food_squares, food_squares[i].randomID)
-              console.log("item remove")
-              players[bullet.id].score += item.score_add;
-              io.emit('playerScore', {bulletId:bullet.id,socrepluse:item.score_add});
-              var x = getRandomInt(-3500,3500);
-              var y = getRandomInt(-3500,3500);
-              for (let i = 0; i < cors_taken.length; i++) {
-                if (between(x, cors_taken[i].x - 50, cors_taken[i].x + 50) && between(y, cors_taken[i].y - 50, cors_taken[i].y + 50)) {
+
+        // Food collision detection
+        food_squares = food_squares.filter((item, index) => {
+          const distanceX = Math.abs(item.x - bullet.x);
+          const distanceY = Math.abs(item.y - bullet.y);
+
+          if (distanceX < 200 && distanceY < 200) {
+            const collisionCheck = (item.type === "square")
+              ? checkCircleSquareCollision(bullet, item)
+              : checkCircleTriangleCollision(bullet, item);
+
+            if (collisionCheck) {
+              const damage = bullet.bullet_damage * 4 / (item.size / bullet.speed);
+
+              if (damage > item.health) {
+                players[bullet.id].score += item.score_add;
+                io.emit('playerScore', { bulletId: bullet.id, socrepluse: item.score_add });
+
+                let x, y;
+                do {
                   x = getRandomInt(-3500, 3500);
                   y = getRandomInt(-3500, 3500);
-                }
+                } while (cors_taken.some(c => between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)));
+
+                cors_taken.push({ x, y });
+
+                const isTriangle = getRandomInt(0, 2) === 1;
+                const newItem = {
+                  type: isTriangle ? "triangle" : "square",
+                  health: isTriangle ? 15 : 10,
+                  maxhealth: isTriangle ? 15 : 10,
+                  size: 50,
+                  angle: getRandomInt(0, 180),
+                  x,
+                  y,
+                  color: isTriangle ? "Darkred" : "Gold",
+                  score_add: isTriangle ? 15 : 10,
+                  randomID: Math.random() * index * Date.now()
+                };
+
+                food_squares.push(newItem);
+                bullet.bullet_distance -= item.size - 200;
+
+                io.emit('bulletUpdate', bullets);
+                io.emit('FoodUpdate', food_squares);
+
+                return false;
+              } else {
+                item.health -= damage;
+                bullet.bullet_distance -= item.size - 200;
+                io.emit('FoodUpdate', food_squares);
               }
-              cors_taken.push({x:x,y:y})
-              let valueOp = (getRandomInt(0,2) === 1)
-              var type = valueOp ? "triangle" : "square" 
-              var color = valueOp ? "Darkred" : "Gold" 
-              var health_max = valueOp ? 15 : 10 
-              let fooditem = {
-                type: type,
-                health: health_max,
-                maxhealth: health_max,
-                size: 50,
-                angle: getRandomInt(0,180),
-                x: x,
-                y: y,
-                color:color,
-                score_add: health_max,
-                randomID: (Math.random()*i*Date.now())
-              }
-              food_squares.push(fooditem)
-            } else {
-              item.health -= damage;
-              console.log("item damaged",item.health)
             }
-            bullet.bullet_distance -= (item.size) - 200;
-            io.emit('bulletUpdate', bullets);
-            io.emit('FoodUpdate', food_squares);
-            console.log("squares hit")
           }
-        }
+          return true;
+        });
       });
     } catch (error) {
       console.log(error);
     }
-  }, 75);
+  }, UPDATE_INTERVAL);
+
   setInterval(function() {
     for (const key in players) {
       if (!players[key].hasOwnProperty('id')) {
         delete players[key];
       }
     }
-  }, 200)
+  }, 200);
   socket.on('removeBullet', (data) => {
     const bulletIndex = bullets.findIndex(b => b.uniqueid === data.bullet.uniqueid);
     if (bulletIndex !== -1) {
