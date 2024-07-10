@@ -40,7 +40,7 @@ for (let i = 0; i < getRandomInt(300,400); i++) {
     health: health_max,
     maxhealth: health_max,
     size: 50,
-    angle: getRandomInt(0,360),
+    angle: getRandomInt(0,180),
     x: x,
     y: y,
     color:color,
@@ -197,14 +197,20 @@ io.on('connection', (socket) => {
                 }
               }
               cors_taken.push({x:x,y:y})
+              let valueOp = (getRandomInt(0,2) === 1)
+              var type = valueOp ? "triangle" : "square" 
+              var color = valueOp ? "Darkred" : "Gold" 
+              var health_max = valueOp ? 15 : 10 
               let fooditem = {
-                type: "square",
-                health: 10,
+                type: type,
+                health: health_max,
+                maxhealth: health_max,
                 size: 50,
-                angle: getRandomInt(0,360),
+                angle: getRandomInt(0,180),
                 x: x,
                 y: y,
-                color:"Gold",
+                color:color,
+                score_add: health_max,
                 randomID: (Math.random()*i*Date.now())
               }
               food_squares.push(fooditem)

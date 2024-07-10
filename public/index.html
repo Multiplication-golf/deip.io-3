@@ -805,33 +805,41 @@
         function draw() {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           food_list.forEach((item) => {
-            if (item.x > 0+cavansX && item.x < canvas.width+cavansX && item.y-cavansY > 0 && item.y < canvas.height+cavansY) {
+            if (item.x > 0+cavansX && item.x < canvas.width+cavansX && item.y-cavansY > 0 &&
+                item.y < canvas.height+cavansY) {
               if (item.type === 'square') {
                 ctx.save();
   
                 // Translate to the center of the square
-                ctx.translate(item.x - cavansX, item.y - cavansY);
+                
   
-                ctx.rotate(item.angle);
-                ctx.beginPath();
+                
+                ctx.translate(item.x - cavansX, item.y - cavansY);
+
+                ctx.rotate(item.angle * Math.PI / 180);
+                
                 ctx.fillStyle = item.color;
-                ctx.fillRect(item.x - cavansX, item.y - cavansY, item.size, item.size);
-                ctx.closePath();
+                ctx.fillRect(-item.size, -item.size, item.size, item.size);
+                
+                
                 ctx.strokeStyle = 'GoldenRod'; // Set border color
                 ctx.lineWidth = 5; // Set border width
-                ctx.strokeRect(item.x - cavansX, item.y - cavansY, item.size, item.size);
+                ctx.strokeRect(-item.size, -item.size, item.size, item.size);
                 
-                ctx.restore();
+                
+                ctx.fillStyle = 'black';
+                ctx.rotate((-item.angle) * Math.PI / 180);
                 if (item.health < 10) {
                   
                   ctx.fillStyle = 'black';
-                  ctx.fillRect((item.x - cavansX) - 25, (item.y - cavansY) + 55, 90, 10);
+                  ctx.fillRect((-item.size) - 25, (-item.size) + 55, 90, 10);
   
                   // Draw health bar
                   const healthWidth = (item.health / 10) * 90;
                   ctx.fillStyle = 'green';
-                  ctx.fillRect((item.x - cavansX) - 25, (item.y - cavansY) + 55, healthWidth, 10);
+                  ctx.fillRect((-item.size) - 25, (-item.size) + 55, healthWidth, 10);
                 }
+                ctx.restore()
               }
               if (item.type === 'triangle') {
                 ctx.save();
@@ -839,19 +847,19 @@
                 // Translate to the center of the square
                 ctx.translate(item.x - cavansX, item.y - cavansY);
 
-                ctx.rotate(item.angle);
+                ctx.rotate(item.angle * Math.PI / 180);
                 ctx.beginPath();
                 ctx.fillStyle = item.color;
-                ctx.moveTo((item.x - cavansX), (item.y - cavansY));
-                ctx.lineTo((item.x - cavansX) + item.size, (item.y - cavansY));
-                ctx.lineTo((item.x - cavansX) + item.size / 2, (item.y - cavansY) - (Math.sqrt(3) * item.size) / 2);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0 + item.size, 0);
+                ctx.lineTo(0 + item.size / 2, 0 - (Math.sqrt(3) * item.size) / 2);
                 ctx.closePath();
                 ctx.fill();
                 ctx.beginPath();
                 ctx.strokeStyle = 'red';
-                ctx.moveTo((item.x - cavansX), (item.y - cavansY));
-                ctx.lineTo((item.x - cavansX) + item.size, (item.y - cavansY));
-                ctx.lineTo((item.x - cavansX) + item.size / 2, (item.y - cavansY) - (Math.sqrt(3) * item.size) / 2);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0 + item.size, 0);
+                ctx.lineTo(0 + item.size / 2, 0 - (Math.sqrt(3) * item.size) / 2);
                 ctx.closePath();
                 ctx.stroke();
 
