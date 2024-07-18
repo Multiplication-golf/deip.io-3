@@ -1,0 +1,22 @@
+{
+  "basic": {
+    "size-m": 1,
+    "speed-m": 1,
+    "damage-m": 1,
+    "health-m": 1,
+    "BodyDamage-m": 1,
+    "reaload-m": 1,
+    "turrets":  [
+                  {
+                  "type": "basicCannon",
+                  "cannon-width": 90,
+                  "cannon-height": 30,
+                  "offSet-x": 0,
+                  "offSet-y": 0,
+                  "bulletSize": 0.18,
+                  "bulletSpeed": 0.5,
+                  "bullet_pentration": 2,
+                  }
+                ]
+  }
+}

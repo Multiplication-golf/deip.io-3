@@ -84,6 +84,20 @@
           grid-gap: 0px;
           width:10000px;height:10000px;position:absolute; top: -5000px; left: -5000px;' id='grid'></div>
         </div>
+      <style>
+        @keyframes move {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(15vw);
+            opacity: 1;
+          }
+        }
+      </style>
+      <div id='tanktiles' style='width: 15vw; height: 15vw; position: absolute; top: 0; left: -10vw; display: none; z-index:2000;'>
+        
+      </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -127,14 +141,112 @@
         canvas.height = window.innerHeight;
         document.getElementById('game').appendChild(canvas);
         canvas.id = 'myCanvas'
+        canvas.style["z-index"] = "5";
         canvas.style.position = 'absolute';
         canvas.style.top = '0';
         canvas.style.left = '0';
-  
+
+        // 0.() values decrease
+        // delay which cannon fires first
+        // reloed 0.() values increase
+        var tankmeta = {
+          "basic": {
+            "size-m": 1,
+            "speed-m": 1,
+            "damage-m": 1,
+            "health-m": 1,
+            "BodyDamage-m": 1,
+            "reaload-m": 1,
+            "upgradeLevel": 15,
+            "upgrades": {
+              "twin":1,
+              "sniper":2,
+              "flank":3,
+              "mechiane gun":4
+            },
+            "cannons":  [
+                          {
+                          "type": "basicCannon",
+                          "cannon-width": 90,
+                          "cannon-height": 30,
+                          "offSet-x": 0,
+                          "offSet-y": 0,
+                          "offset-angle": 0,
+                          "bulletSize": 1,
+                          "bulletSpeed": 0.5,
+                          "delay": 0,
+                          "bullet_pentration": 1,
+                          }
+                        ]
+          },
+          "twin": {
+            "size-m": 1,
+            "speed-m": 0.95,
+            "damage-m": 1,
+            "health-m": 1,
+            "BodyDamage-m": 1,
+            "reaload-m": 1.3,
+            "upgradeLevel": 30,
+            "upgrades": [
+              "twin",
+              "sniper"
+            ],
+            "cannons":  [
+                          {
+                          "type": "basicCannon",
+                          "cannon-width": 90,
+                          "cannon-height": 30,
+                          "offSet-x": 0,
+                          "offSet-y": -20,
+                          "offset-angle": 0,
+                          "bulletSize": 1,
+                          "bulletSpeed": 0.5,
+                          "delay": 0,
+                          "bullet_pentration": 0.9,
+                          },
+                          {
+                          "type": "basicCannon",
+                          "cannon-width": 90,
+                          "cannon-height": 30,
+                          "offSet-x": 0,
+                          "offSet-y": 20,
+                          "offset-angle": 0,
+                          "bulletSize": 1,
+                          "bulletSpeed": 0.5,
+                          "delay": 0.5,
+                          "bullet_pentration": 0.9,
+                          }
+                        ]
+          },
+          "sniper": {
+            "size-m": 1.05,
+            "speed-m": 0.90,
+            "damage-m": 1,
+            "health-m": 0.95,
+            "BodyDamage-m": 1,
+            "reaload-m": 1.5,
+            "cannons":  [
+                          {
+                          "type": "basicCannon",
+                          "cannon-width": 120,
+                          "cannon-height": 30,
+                          "offSet-x": 0,
+                          "offSet-y": 0,
+                          "offset-angle": 0,
+                          "bulletSize": 1,
+                          "bulletSpeed": 1.5,
+                          "delay": 0,
+                          "bullet_pentration": 1.6,
+                          }
+                        ]
+          }
+        }
         var players = {};
         var boardbullets = [];
         var bullets = [];
         var food_list = [];
+        var level = 0;
+        var xp = 0;
         var playerId;
         var playerX = canvas.width / 2;
         var playerY = canvas.height / 2;
@@ -146,12 +258,11 @@
         var bodyDamage = 3;
         var type = 'basic'
         var bullet_damage = 1.5;
-        var bullet_speed = 8;
-        var bullet_size = 0.18;
+        var bullet_speed = 3;
+        var bullet_size = 15;
         var bullet_pentration = 2;
         var bullet_power = (bullet_speed/5.5)+bullet_damage*(bullet_pentration/10)
-        var cannonWidth = 99;
-        var cannonHeight = 30;
+        var cannonWidth = [];
         var current_angle = 0;
         var MouseX_ = 0;
         var MouseY_ = 0;
@@ -162,14 +273,33 @@
         var playerMovementX = 0; 
         var playerMovementY = 0; 
         var score = 0;
-        console.log(mapRight,mapBottom/2)
+        var barWidth = 600;
+        var barHeight = 30;
+        var borderRadius = 10;
+        var progress = 0.0;
+        var levels = {'level0': 11.0, 'level1': 17.0, 'level2': 29.0, 'level3': 47.0,
+                      'level4': 71.0, 'level5': 103.0, 'level6': 144.0, 'level7': 193.0,
+                      'level8': 253.0, 'level9': 323.0, 'level10': 405.0, 'level11': 501.0,
+                      'level12': 611.0, 'level13': 737.0, 'level14': 880.0, 'level15': 1043.0,
+                      'level16': 1228.0, 'level17': 1436.0, 'level18': 1669.0, 'level19': 1931.0,
+                      'level20': 2224.0, 'level21': 2552.0, 'level22': 2917.0, 'level23': 3323.0,
+                      'level24': 3776.0, 'level25': 4278.0, 'level26': 4836.0, 'level27': 5455.0,
+                      'level28': 6140.0, 'level29': 6899.0, 'level30': 7739.0, 'level31': 8668.0,
+                      'level32': 9695.0, 'level33': 10829.0, 'level34': 12082.0, 'level35': 13465.0,
+                      'level36': 14992.0, 'level37': 16676.0, 'level38': 18534.0, 'level39': 20582.0,
+                      'level40': 22840.0, 'level41': 25329.0, 'level42': 28072.0, 'level43': 31095.0,
+                      'level44': 34424.0, 'level45': 38092.0, 'level46': 42131.0, 'level47': 46579.0,
+                      'level48': 51477.0, 'level49': 56869.0, 'level50': 62806.0, 'level51': 69342.0,
+                      'level52': 76536.0, 'level53': 84455.0, 'level54': 93170.0, 'level55': 102762.0,
+                      'level56': 113318.0, 'level57': 124935.0, 'level58': 137719.0, 'level59': 151786.0,
+                      'level60': 167264.0, 'level61': 100000000000000000000000000000000000000000000000000}
         
 
         // Update grid position
         setInterval(() => {
             grid.style.top = `calc(-5000px - ${cavansY}px)`;
             grid.style.left = `calc(-5000px - ${cavansX}px)`;
-        }, 10);
+        }, 15);
   
         function getMousePos(canvas, evt) {
           const rect = canvas.getBoundingClientRect();
@@ -178,17 +308,15 @@
             y: evt.clientY - rect.top
           };
         }
-        document.addEventListener('dblclick', function(evt) {
-          evt.preventDefault();
-        });
+
   
   
   
         socket.on('connect', () => {
           playerId = socket.id;
-          socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+          socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level });
           setTimeout(function () {
-            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level });
           }, 200);
           
           draw() // Call draw after connecting
@@ -196,7 +324,7 @@
         socket.on('playerJoined', (data) => {
           players[data.id] = data;
           setTimeout(function () {
-            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username, level:level });
           }, 200);
         });
         socket.on('playerMoved', (data) => {
@@ -212,7 +340,6 @@
           delete players[id];
         });
         socket.on('playerDamaged', (data) => {
-          console.log("self:",players[data.player1.id].health,"other:",players[data.player2.id].health)
           players[data.player1.id].health = data.player1.health;
           if (data.player2.id === playerId) {
             playerHealth = data.player2.health;
@@ -226,25 +353,69 @@
           bullets = data;
         });
         socket.on('playerScore', (data) => {
-          console.log(players[data["bulletId"]],data)
           players[data["bulletId"]].score += data["socrepluse"];
           if (data["bulletId"] === playerId) {
             score = players[data["bulletId"]].score;
           }
-          //console.log("data",players[data].score)
-        })
+          tonextlevel = levels["level"+level]-levels["level"+(level-1)]
+          progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+          if ((score/levels["level"+level]) >= 1) {  // Add transition property
+
+            let tankdata = tankmeta[type]
+            console.log(level >= tankdata["upgradeLevel"])
+            if (level >= tankdata["upgradeLevel"]) {
+                var tankstiles = document.getElementById('tanktiles')
+                tankstiles.style.display = 'block';
+                tankstiles.style.left = 0;
+                tankstiles.style.animation = '2s 1 move';
+                var upgrade = tankdata["upgrades"]
+
+                for (let i = 0; i < Object.keys(upgrade).length; i++) {
+
+                  var img__ = document.createElement("img")
+                  var tileImg = Object.keys(upgrade)[i];
+                  tankstiles.appendChild(img__);
+                  console.log(Object.keys(upgrade));
+                  img__.src = "tanktiles/"+tileImg+".png";
+                  img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
+                  
+
+
+                  img__.addEventListener("click", function() {
+                    event.stopPropagation()
+                    tankstiles.style.display = 'none';
+                    type = Object.keys(upgrade)[i]
+                    players[playerId].type = type;
+                    playerSpeed *= tankdata["speed-m"]
+                    playerHealth *= tankdata["health-m"]
+                    playerSize *= tankdata["size-m"]
+                    bodyDamage *= tankdata["damage-m"]
+                    bullet_damage *= tankdata["BodyDamage-m"]
+                    
+                  });
+              }    
+            }
+            level += 1;
+            tonextlevel = levels["level"+level]-levels["level"+(level-1)]
+            progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+            playerSize += playerSize*0.005
+            while ((score/levels["level"+level]) >= 1) {
+              level += 1;
+              playerSize += playerSize*0.005
+              progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+            }
+          }
+        });
         socket.emit('getFood', {});
         socket.on('FoodUpdate', (data) => {
           food_list = data;
-          console.log("food_list",food_list.length)
         });
+        
         socket.on('bulletDamage', (data) => {
-          console.log(players)
-          console.log("hit")
           if (players[data.playerID]) {
             bullets = data.BULLETS; // Check if the player exists
             players[data.playerID].health = data.playerHealth;
-            console.log("current-health",players[data.playerID].health)
+
             if (data.playerID == playerId) {
               playerHealth = data.playerHealth;
             }
@@ -254,9 +425,52 @@
         });
         let keysPressed = {};
         document.addEventListener('keydown', (event) => {
-          console.log(event.key)
           keysPressed[event.key] = true;
-          
+          if (keysPressed['k']) {
+            players[playerId].score += 15;
+            score = players[playerId].score;
+            tonextlevel = levels["level"+level]-levels["level"+(level-1)]
+            progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+            if ((score/levels["level"+level]) >= 1) {  // Add transition property
+              
+              let tankdata = tankmeta[type]
+              console.log(level >= tankdata["upgradeLevel"])
+              if (level >= tankdata["upgradeLevel"]) {
+                  var tankstiles = document.getElementById('tanktiles')
+                  tankstiles.style.display = 'block';
+                  tankstiles.style.left = 0;
+                  tankstiles.style.animation = '2s 1 move';
+                  var upgrade = tankdata["upgrades"]
+                
+                  for (let i = 0; i < Object.keys(upgrade).length; i++) {
+                    
+                    var img__ = document.createElement("img")
+                    var tileImg = Object.keys(upgrade)[i];
+                    tankstiles.appendChild(img__);
+                    console.log(Object.keys(upgrade));
+                    img__.src = "tanktiles/"+tileImg+".png";
+                    img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
+
+                    
+                    img__.addEventListener("click", function() {
+                      event.stopPropagation()
+                      tankstiles.style.display = 'none';
+                      type = Object.keys(upgrade)[i]
+                      players[playerId].type = type;
+                    });
+                }    
+              }
+              level += 1;
+              tonextlevel = levels["level"+level]-levels["level"+(level-1)]
+              progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+              playerSize += playerSize*0.005
+              while ((score/levels["level"+level]) >= 1) {
+                level += 1;
+                playerSize += playerSize*0.005
+                progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+              }
+            }
+          }
           if      (keysPressed['ArrowLeft'] && keysPressed['ArrowUp'] || keysPressed['a'] && keysPressed['w']) {
             if (playerX > mapLeft && playerY > mapTop) {
               playerMovementX += -(11); 
@@ -296,14 +510,14 @@
                               cavansX += 1;
                               playerY += 1;
                               cavansY += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth-(player.bodyDamage/t), speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth-(player.bodyDamage/t), speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         }, 1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
           }
@@ -347,14 +561,14 @@
                               cavansX += 1;
                               playerY -= 1;
                               cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         }, 1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
           }
@@ -395,15 +609,14 @@
                               cavansX -= 1;
                               playerY -= 1;
                               cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         },1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                console.log(__angle___);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
           }
@@ -444,15 +657,14 @@
                               cavansX -= 1;
                               playerY -= 1;
                               cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         }, 1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                console.log(__angle___);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
           }
@@ -487,14 +699,14 @@
                             setTimeout(() => {
                               playerY += 1;
                               cavansY += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         }, 1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, playerSpeed*10)
             }
           }
@@ -529,14 +741,14 @@
                             setTimeout(() => {
                               playerY -= 1;
                               cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         }, 1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, playerSpeed*10)
             }
           } 
@@ -571,14 +783,14 @@
                             setTimeout(() => {
                               playerX += 1;
                               cavansX += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         }, 1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, playerSpeed*10);
             }
           }
@@ -613,15 +825,14 @@
                             setTimeout(() => {
                               playerX -= 1;
                               cavansX -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:current_angle, score:score, username:username });
+                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
                             },(t)*10);
                           }
                         }, 1);
                     }
                 }
                 let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                console.log(__angle___);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle___, score:score, username:username });
+                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, playerSpeed*10);
             }
           }
@@ -629,7 +840,6 @@
   
         document.addEventListener('keyup', (event) => {
           delete keysPressed[event.key];
-          console.log(event.key)
           if (event.key === 'ArrowUp' || event.key === 'w') {
             playerMovementY = 0;
           }
@@ -648,144 +858,134 @@
         let canW = canvas.width
         let canH = canvas.height
         let squareColor = 'grey';
-  
+
+        var container = document.getElementById("container")
         document.addEventListener('mousemove', function(evt) {
-          var mousepos = getMousePos(document.getElementById("container"), evt);
+          var mousepos = getMousePos(container, evt);
           MouseX_ = mousepos.x;
           MouseY_ = mousepos.y;
-          let __angle__ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-          socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: cannonHeight, type: type, cannon_angle:__angle__, score:score, username:username });
+          let __angle__ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize));
+          socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle__, score:score, username:username,  level:level });
         });
   
   
         let canFire = true;
         let canFire2 = true;
-        let firingInterval = null; // Store the interval id
-  
+        let firingInterval = null;
+
         document.addEventListener('mousedown', function (evt) {
-          console.log(canFire)
-          if (canFire) {
-            canFire = false;
-            // Calculate bullet data only once
-            let bullet_distance = (bullet_damage + bullet_speed*8.5) * ((bullet_pentration / bullet_size*2));
-            console.log((bullet_damage + bullet_speed*8.5) * ((bullet_pentration / bullet_size*2)))
-            let cannon_length = cannonWidth / 2 + 30;
-  
-            var mouse = getMousePos(canvas, evt);
-            mouseX = mouse.x;
-            mouseY = mouse.y;
-            let bullet_start_x = playerX + 0 * Math.cos(current_angle);
-            let bullet_start_y = playerY + 0 * Math.sin(current_angle);
-            let angle = Math.atan2(Math.abs(mouseY) - (248), Math.abs(mouseX) - 511.25);
-            var identdfire = Date.now() + Math.random();
-  
-            for (let l = 0; l < 10; l++) {
-              setTimeout(() => {
-                cannonWidth -= 1
-              },10*l)
-            }
-            for (let l = 0; l < 10; l++) {
-              setTimeout(() => {
-                cannonWidth += 1
-              },10*(l*2))
-            }
-  
-            // Fire the bullet
-            bullets.push({
-              bullet_distance: bullet_distance,
-              speed: bullet_speed,
-              size: bullet_size,
-              angle: angle,
-              bullet_damage: bullet_damage,
-              distanceTraveled: 0,
-              bullet_pentration: bullet_pentration,
-              x: bullet_start_x,
-              y: bullet_start_y,
-              xstart:  cavansX,
-              ystart:  cavansY,
-              id: playerId,
-              uniqueid: identdfire
-            });
-            socket.emit('bulletFired', {
-              bullet_distance: bullet_distance,
-              speed: bullet_speed,
-              size: bullet_size,
-              angle: angle,
-              bullet_damage: bullet_damage,
-              distanceTraveled: 0,
-              bullet_pentration: bullet_pentration,
-              x: bullet_start_x,
-              y: bullet_start_y,
-              xstart:  cavansX,
-              ystart:  cavansY,
-              id: playerId,
-              uniqueid: identdfire
-            });
+          if (!canFire) return;
+
+          canFire = false;
+          let tankdata = tankmeta[type];
+          let tankdatacannon = tankdata.cannons;
+          let mouse = getMousePos(canvas, evt);
+          let mouseX = mouse.x;
+          let mouseY = mouse.y;
+          let angle = Math.atan2(Math.abs(mouseY) - (canvas.height / 2 - playerSize), Math.abs(mouseX) - (canvas.width / 2 - playerSize));
+
+          // Fire all cannons
+          tankdatacannon.forEach((cannon, i) => {
             setTimeout(() => {
-              canFire = true;
-            }, 500);
-          }
+              bullet_size_l = bullet_size * cannon["bulletSize"]
+              var xxx = (cannon["cannon-width"]-bullet_size_l*1.5)
+              var yyy = (cannon["cannon-height"]-bullet_size_l*2)
+              let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle) - (cannon["offSet-y"]+yyy) * Math.sin(angle);
+              let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle) + (cannon["offSet-y"]+yyy) * Math.cos(angle);
+              let bullet_start_x = playerX + rotated_offset_x;
+              let bullet_start_y = playerY + rotated_offset_y;
+              console.log(rotated_offset_x,rotated_offset_y)
+              let identdfire = Date.now() + Math.random();
+              let bullet_speed__ = bullet_speed * cannon["bulletSpeed"];
+
+              // Recoil effect
+              cannonWidth[i] = cannonWidth[i] || 0;
+              for (let l = 0; l < 10; l++) {
+                setTimeout(() => { cannonWidth[i] -= 1; }, 10 * l);
+                setTimeout(() => { cannonWidth[i] += 1; }, 20 * l); // Updated to prevent overlap
+              }
+
+              let bullet = {
+                bullet_distance: (bullet_speed__ * 100) * (bullet_size / 6),
+                speed: bullet_speed__,
+                size: bullet_size_l,
+                angle: angle + cannon["offset-angle"],
+                bullet_damage: bullet_damage * cannon["bulletSize"],
+                distanceTraveled: 0,
+                bullet_pentration: bullet_pentration * cannon["bullet_pentration"],
+                x: bullet_start_x,
+                y: bullet_start_y,
+                xstart: playerX,
+                ystart: playerY,
+                id: playerId,
+                uniqueid: identdfire
+              };
+
+              // Emit bullet data
+              console.log("fired",Date.now())
+              socket.emit('bulletFired', bullet);
+            }, cannon.delay * 1000);
+          });
+
+          // Reset fire ability after reload time
+          setTimeout(() => {
+            canFire = true;
+          }, 500 * tankdata["reaload-m"]);
         });
+
         document.addEventListener('mousedown', (evt) => {
-          firingInterval = setInterval((event=evt) => {
+          let tankdata = tankmeta[type];
+          let tankdatacannon = tankdata["cannons"];
+          firingInterval = setInterval(() => {
             canFire2 = false;
-            // Re-calculate bullet data for each bullet fired
-            let bullet_distance = (bullet_damage + bullet_speed*8.5) * ((bullet_pentration/(bullet_size)));
-            let cannon_length = cannonWidth / 2 + 30;
-  
             var mouse = getMousePos(canvas, evt);
             mouseX = mouse.x;
             mouseY = mouse.y;
-  
-            for (let l = 0; l < 10; l++) {
+            let angle = Math.atan2(Math.abs(mouseY) - (canvas.height/2-playerSize), Math.abs(mouseX) - (canvas.width/2-playerSize))
+
+            tankdatacannon.forEach((cannon, i) => {
+              let tankdatacannondata = tankdatacannon[i];
               setTimeout(() => {
-                cannonWidth -= 2
-              },10*l)
-            }
-            for (let l = 0; l < 10; l++) {
-              setTimeout(() => {
-                cannonWidth += 2
-              },10*(l*2))
-            }
-  
-            let bullet_start_x = playerX + 0 * Math.cos(current_angle);
-            let bullet_start_y = playerY + 0 * Math.sin(current_angle);
-            let angle = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-            var identdfire = Date.now() + Math.random();
-  
-            bullets.push({
-              bullet_distance: bullet_distance,
-              speed: bullet_speed,
-              size: bullet_size,
-              angle: angle,
-              bullet_damage: bullet_damage,
-              distanceTraveled: 0,
-              bullet_pentration: bullet_pentration,
-              x: bullet_start_x,
-              y: bullet_start_y,
-              xstart:  cavansX,
-              ystart:  cavansY,
-              id: playerId,
-              uniqueid: identdfire
+                var xxx = (cannon["cannon-width"]-bullet_size_l*1.5)
+                var yyy = (cannon["cannon-height"]-bullet_size_l*2)
+                let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle) - (cannon["offSet-y"]+yyy) * Math.sin(angle);
+                let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle) + (cannon["offSet-y"]+yyy) * Math.cos(angle);
+                let bullet_start_x = playerX + rotated_offset_x;
+                let bullet_start_y = playerY + rotated_offset_y;
+                let identdfire = Date.now() + Math.random();
+                let bullet_speed__ = bullet_speed * cannon["bulletSpeed"];
+
+                // Recoil effect
+                cannonWidth[i] = cannonWidth[i] || 0;
+                for (let l = 0; l < 10; l++) {
+                  setTimeout(() => { cannonWidth[i] -= 1; }, 10 * l);
+                  setTimeout(() => { cannonWidth[i] += 1; }, 20 * l); // Updated to prevent overlap
+                }
+
+                let bullet = {
+                  bullet_distance: (bullet_speed__ * 100) * (bullet_size / 6),
+                  speed: bullet_speed__,
+                  size: bullet_size * cannon["bulletSize"],
+                  angle: angle + cannon["offset-angle"],
+                  bullet_damage: bullet_damage * cannon["bulletSize"],
+                  distanceTraveled: 0,
+                  bullet_pentration: bullet_pentration * cannon["bullet_pentration"],
+                  x: bullet_start_x,
+                  y: bullet_start_y,
+                  xstart: playerX,
+                  ystart: playerY,
+                  id: playerId,
+                  uniqueid: identdfire
+                };
+
+                // Emit bullet data
+                 console.log("fired",Date.now())
+                socket.emit('bulletFired', bullet);
+              }, (tankdatacannondata["delay"] * 1000));
             });
-            socket.emit('bulletFired', {
-              bullet_distance: bullet_distance,
-              speed: bullet_speed,
-              size: bullet_size,
-              angle: angle,
-              bullet_damage: bullet_damage,
-              distanceTraveled: 0,
-              bullet_pentration: bullet_pentration,
-              x: bullet_start_x,
-              y: bullet_start_y,
-              xstart:  cavansX,
-              ystart:  cavansY,
-              id: playerId,
-              uniqueid: identdfire
-            });
-          }, 500);
+          }, 500 * tankdata["reaload-m"]);
         });
-  
+
         document.addEventListener('mouseup', function (evt) {
           if (firingInterval) {
             clearInterval(firingInterval);
@@ -793,6 +993,7 @@
             canFire2 = true;
           }
         });
+
         
         
   
@@ -811,7 +1012,7 @@
                 // Drawing the square
                 ctx.save();
                 ctx.translate(item.x - cavansX, item.y - cavansY);
-                ctx.rotate(item.angle * Math.PI / 180);
+                ctx.rotate(item.angle);
                 ctx.fillStyle = item.color;
                 ctx.fillRect(-item.size / 2, -item.size / 2, item.size, item.size);  // Center the square
                 ctx.strokeStyle = 'GoldenRod';
@@ -819,10 +1020,10 @@
                 ctx.strokeRect(-item.size / 2, -item.size / 2, item.size, item.size);  // Center the stroke
 
                 ctx.fillStyle = 'black';
-                ctx.rotate((-item.angle) * Math.PI / 180);
+                ctx.rotate((-item.angle));
                 if (item.health < 10) {
                     ctx.fillRect(-45, 35, 90, 10);  // Adjusted for centered square
-                    const healthWidth = (item.health / 10) * 90;
+                    const healthWidth = (item.health / item.maxhealth) * 90;
                     ctx.fillStyle = 'green';
                     ctx.fillRect(-45, 35, healthWidth, 10);  // Adjusted for centered square
                 }
@@ -831,35 +1032,47 @@
               if (item.type === 'triangle') {
                 ctx.save();
 
-                // Translate to the center of the square
+                // Translate to the center of the triangle
                 ctx.translate(item.x - cavansX, item.y - cavansY);
 
+                // Rotate the triangle
                 ctx.rotate(item.angle * Math.PI / 180);
+
+                // Calculate the height of the equilateral triangle
+                var h = item.size * Math.sqrt(3) / 2;
+
+                // Draw the triangle
                 ctx.beginPath();
+                ctx.lineWidth = 5;
                 ctx.fillStyle = item.color;
-                ctx.moveTo(0, 0);
-                ctx.lineTo(0 + item.size, 0);
-                ctx.lineTo(0 + item.size / 2, 0 - (Math.sqrt(3) * item.size) / 2);
-                ctx.closePath();
-                ctx.fill();
-                ctx.beginPath();
                 ctx.strokeStyle = 'Darkred';
-                ctx.moveTo(0, 0);
-                ctx.lineTo(0 + item.size, 0);
-                ctx.lineTo(0 + item.size / 2, 0 - (Math.sqrt(3) * item.size) / 2);
-                ctx.closePath();
+
+                // Move to the top vertex
+                ctx.moveTo(0, -h / 2);
+                // Draw to the bottom-left vertex
+                ctx.lineTo(-item.size / 2, h / 2);
+                // Draw to the bottom-right vertex
+                ctx.lineTo(item.size / 2, h / 2);
+                // Close the path to the top vertex
+                ctx.lineTo(0, -h / 2);
+
+                // Fill and stroke the triangle
+                ctx.fill();
                 ctx.stroke();
+                ctx.closePath();
 
                 ctx.restore();
-                if (item.health < 10) {
 
+                // Draw the health bar if health is below 15
+                if (item.health < 15) {
+                  // Draw the health bar background
                   ctx.fillStyle = 'black';
-                  ctx.fillRect((item.x - cavansX) - 25, (item.y - cavansY) + 55, 90, 10);
+                  ctx.fillRect((item.x - cavansX) - 45, (item.y - cavansY) + 30, 90, 10);
 
-                  // Draw health bar
-                  const healthWidth = (item.health / 10) * 90;
+                  // Draw the health bar
+                  const healthWidth = (item.health / item.maxhealth) * 90;
                   ctx.fillStyle = 'green';
-                  ctx.fillRect((item.x - cavansX) - 25, (item.y - cavansY) + 55, healthWidth, 10);
+                  ctx.fillRect((item.x - cavansX) - 45, (item.y - cavansY) + 30, healthWidth, 10);
                 }
               }
             }
@@ -874,129 +1087,141 @@
               ctx.fillStyle = 'red';
               ctx.strokeStyle = 'darkred';
             }
-            /*console.log(bullet.xstart,bullet.ystart)
-            if (bullet.xstart-cavansX > 0) {
-              var x___ = (Math.abs(bullet.xstart-cavansX))
-            } else if (bullet.xstart-cavansX < 0) {
-              var x___ = (Math.abs(bullet.xstart-cavansX))
-            } else {
-              var x___ = cavansX
-            }
-            if (bullet.ystart-cavansY > 0) {
-              var y___ = (bullet.xstart + Math.abs(bullet.ystart-cavansY))
-            } else if (bullet.ystart-cavansY < 0) {
-              var y___ = (Math.abs(bullet.ystart-cavansY))
-            } else {
-              var y___ = cavansY
-            }*/
+            
             ctx.arc(bullet.x - (bullet.xstart-(bullet.xstart-cavansX)), 
                     bullet.y - (bullet.ystart-(bullet.ystart-cavansY)), 
-                    bullet.size * cannonWidth, 0, 2 * Math.PI);
+                    bullet.size, 0, 2 * Math.PI);
             ctx.fill();
             ctx.lineWidth = 5;
             ctx.stroke();
             ctx.closePath();
             }
           });
-          try {
-            for (let playerId__ in players) {
-              if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
-  
-                let player = players[playerId__];
-  
-  
-                let r = Math.PI / 180;
-                ctx.fillStyle = squareColor;
-  
-                // Save the current transformation matrix
-                ctx.save();
-  
-  
-  
-                // Translate to the center of the square
-                ctx.translate(player.x-cavansX, player.y-cavansY);
-  
-                // Calculate the angle to rotate the square to face the mouse pointer
-  
+          for (let playerId__ in players) {
+            if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
+
+              let player = players[playerId__];
+
+
+              let r = Math.PI / 180;
+              ctx.fillStyle = squareColor;
+
+              // Save the current transformation matrix
+              ctx.save();
+
+
+
+              // Translate to the center of the square
+              ctx.translate(player.x-cavansX, player.y-cavansY);
+
+              // Calculate the angle to rotate the square to face the mouse pointer
+
+              let tankdata = tankmeta[player.type]
+
+              let tankdatacannon = tankdata["cannons"]
+
+              for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
+                let tankdatacannondata = tankdatacannon[i]
                 let angle = player.cannon_angle;
-  
-                ctx.rotate(angle);
-  
+
+                var angle_offset = tankdatacannondata["offset-angle"]
+                ctx.rotate(angle+angle_offset);
                 // Draw the square
-                ctx.fillRect((-player.cannonW / 2)+30, (-player.cannonH / 2), player.cannonW, player.cannonH);
+                let basex = (((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"])-player.cannonW[i];
+                let basey = ((-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"])
+                
+                ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
+                  
   
                 // Add a border to the cannon
                 ctx.strokeStyle = 'lightgrey'; // Set border color
                 ctx.lineWidth = 3; // Set border width
-                ctx.strokeRect((-player.cannonW / 2)+30, (-player.cannonH / 2), player.cannonW, player.cannonH); // Draw the border
-  
+                ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]); // Draw the border
                 // Restore the previous transformation matrix
                 ctx.restore();
-  
-                ctx.beginPath();
-                ctx.arc(player.x - cavansX, player.y - cavansY, player.size * 40, 0, 2 * Math.PI, false);
-                ctx.fillStyle = 'red';
-                ctx.fill();
-                ctx.lineWidth = 5;
-                ctx.strokeStyle = 'darkred';
-                ctx.stroke();
-  
-                // Draw background bar
-                ctx.fillStyle = 'black';
-                ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
-  
-                // Draw health bar
-                const healthWidth = (player.health / 100) * 90;
-                ctx.fillStyle = 'green';
-                ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, healthWidth, 10);
-  
-                ctx.fillStyle = 'black';
-                ctx.textAlign = "center";
-                ctx.font = "bold 20px Geneva";
-                ctx.fillText(player.score, (player.x - cavansX), (player.y - cavansY) - 55);
-  
-                ctx.fillText(player.username, (player.x - cavansX), (player.y - cavansY) - 75);
-  
-                // Draw border
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = 'grey';
-                ctx.strokeRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
-  
-  
               }
+
+              ctx.beginPath();
+              ctx.arc(player.x - cavansX, player.y - cavansY, player.size * 40, 0, 2 * Math.PI, false);
+              ctx.fillStyle = 'red';
+              ctx.fill();
+              ctx.lineWidth = 5;
+              ctx.strokeStyle = 'darkred';
+              ctx.stroke();
+
+              // Draw background bar
+              ctx.fillStyle = 'black';
+              ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
+
+              // Draw health bar
+              const healthWidth = (player.health / 100) * 90;
+              ctx.fillStyle = 'green';
+              ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, healthWidth, 10);
+
+              ctx.fillStyle = 'black';
+              ctx.textAlign = "center";
+              ctx.font = "bold 20px Geneva";
+              ctx.fillText(player.score, (player.x - cavansX), (player.y - cavansY) - 55);
+
+              ctx.fillText(player.username, (player.x - cavansX), (player.y - cavansY) - 75);
+
+              // Draw border
+              ctx.lineWidth = 1;
+              ctx.strokeStyle = 'grey';
+              ctx.strokeRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
+
+
             }
-          } catch(e) {
-            console.error("error:",e)
           }
   
           let r = Math.PI / 180;
           ctx.fillStyle = squareColor;
   
           // Save the current transformation matrix
-          ctx.save();
-  
-  
-  
-          // Translate to the center of the square
-          ctx.translate((canW / 2), (canH / 2));
+          
   
           // Calculate the angle to rotate the square to face the mouse pointer
   
-          let angle = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25); // Fixed line
+          let angle = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize)); // Fixed line
   
           // Rotate the canvas
-          ctx.rotate(angle);
-  
-          // Draw the square
-          ctx.fillRect((-cannonWidth / 2)+30, (-cannonHeight / 2), cannonWidth, cannonHeight);
-  
-          // Add a border to the cannon
-          ctx.strokeStyle = 'lightgrey'; // Set border color
-          ctx.lineWidth = 3; // Set border width
-          ctx.strokeRect((-cannonWidth / 2)+30, (-cannonHeight / 2), cannonWidth, cannonHeight); // Draw the border
-  
-          // Restore the previous transformation matrix
-          ctx.restore();
+          /*ctx.rotate(angle);
+
+          if (type === 'basic') {
+            // Draw the square
+            ctx.fillRect((-cannonWidth / 2)+30, (-0 / 2), cannonWidth, 0);
+    
+            // Add a border to the cannon
+            ctx.strokeStyle = 'lightgrey'; // Set border color
+            ctx.lineWidth = 3; // Set border width
+            ctx.strokeRect((-cannonWidth / 2)+30, (-0 / 2), cannonWidth, 0); // Draw the border
+    
+            // Restore the previous transformation matrix
+          }
+          ctx.restore();*/
+          
+          let tankdata = tankmeta[type]
+
+          let tankdatacannon = tankdata["cannons"]
+
+          for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
+            ctx.save();
+            // Translate to the center of the square
+            ctx.translate((canW / 2), (canH / 2));
+            let tankdatacannondata = tankdatacannon[i]
+            var angle_offset = tankdatacannondata["offset-angle"]
+            ctx.rotate(angle+angle_offset);
+            // Draw the square
+            let basex = ((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"]-cannonWidth[i];
+            let basey = (-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"]
+            ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
+            // Add a border to the cannon
+            ctx.strokeStyle = 'lightgrey'; // Set border color
+            ctx.lineWidth = 3; // Set border width
+            ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]); // Draw the border
+            // Restore the previous transformation matrix
+            ctx.restore();
+          }
   
   
           ctx.beginPath();
@@ -1035,6 +1260,65 @@
           ctx.lineTo(mapLeft, mapBottom);
           ctx.lineTo(mapLeft, mapTop);
           ctx.stroke();
+
+          function drawRoundedLevelBar(ctx, x, y, width, height, radius, progress) {
+            // Full bar
+            ctx.fillStyle = '#ddd';
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+
+            // Filled bar (progress)
+            const filledWidth = width * progress;
+            ctx.fillStyle = '#00f';
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            if (filledWidth > radius) {
+              ctx.lineTo(x + filledWidth - radius, y);
+              if (filledWidth < width - radius) {
+                ctx.quadraticCurveTo(x + filledWidth, y, x + filledWidth, y + radius);
+                ctx.lineTo(x + filledWidth, y + height - radius);
+                ctx.quadraticCurveTo(x + filledWidth, y + height, x + filledWidth - radius, y + height);
+              } else {
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + filledWidth - radius, y + height);
+              }
+              ctx.lineTo(x + radius, y + height);
+              ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+              ctx.lineTo(x, y + radius);
+              ctx.quadraticCurveTo(x, y, x + radius, y);
+            } else {
+              ctx.quadraticCurveTo(x + filledWidth, y, x + filledWidth, y + radius);
+              ctx.lineTo(x + filledWidth, y + height - radius);
+              ctx.quadraticCurveTo(x + filledWidth, y + height, x + filledWidth - radius, y + height);
+              ctx.lineTo(x, y + height);
+              ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+              ctx.lineTo(x, y + radius);
+              ctx.quadraticCurveTo(x, y, x + radius, y);
+            }
+            ctx.closePath();
+            
+            ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.textAlign = "center";
+            ctx.font = "bold 40px Courier New";
+            ctx.fillText(level, canvas.width/2, canvas.height-40);
+          }
+
+          // Call the function to draw the level bar
+          drawRoundedLevelBar(ctx, canvas.width/2-barWidth/2, canvas.height-40, barWidth, barHeight, borderRadius, progress+0.05);
   
   
           requestAnimationFrame(draw);
@@ -1046,7 +1330,6 @@
             document.getElementById('die').style.display = 'block';
             document.getElementById('container').style.display = 'none';
             document.getElementById('myCanvas').style.display = 'none';
-            console.log(document.getElementById('die').style.display)
           }
           document.getElementById('players').innerText = `${playerX},${playerY}`;
         }, 100);
@@ -1056,10 +1339,13 @@
         username = document.getElementById('username').value;
         if (username) {
             // Proceed to the game with the entered username
-            document.getElementById('start').style.display = 'none';
-            document.getElementById('game').style.display = 'block';
-            console.log(`Username: ${username}`,document.getElementById('start').style.display);
-            ongame();
+            setTimeout(() => {
+              document.getElementById('start').style.display = 'none';
+              document.getElementById('game').style.display = 'block';
+              console.log(`Username: ${username}`,document.getElementById('start').style.display);
+              ongame();
+            }, 100);
+            
         } else {
             alert('Please enter a username.');
         }
