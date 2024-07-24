@@ -20,6 +20,8 @@ function between(x, min, max) {
   return x >= min && x <= max;
 }
 
+const Math180R = Math.PI / 180;
+
 function calculateTriangleVertices(x, y, size, angle) {
   const height = (Math.sqrt(3) / 2) * size; // Height of an equilateral triangle
   const halfSize = size / 2;
@@ -34,10 +36,8 @@ function calculateTriangleVertices(x, y, size, angle) {
   // Rotate vertices by the given angle
   const angleRad = angle * (Math.PI / 180);
   vertices = vertices.map((vertex) => {
-    const rotatedX =
-      vertex.x * Math.cos(angleRad) - vertex.y * Math.sin(angleRad);
-    const rotatedY =
-      vertex.x * Math.sin(angleRad) + vertex.y * Math.cos(angleRad);
+    const rotatedX = vertex.x * Math.cos(angleRad) - vertex.y * Math.sin(angleRad);
+    const rotatedY = vertex.x * Math.sin(angleRad) + vertex.y * Math.cos(angleRad);
     return { x: rotatedX + x, y: rotatedY + y };
   });
 
@@ -45,23 +45,20 @@ function calculateTriangleVertices(x, y, size, angle) {
 }
 
 // Example usage for the fooditem object:
-
-
-
 for (let i = 0; i < getRandomInt(300, 400); i++) {
-  var x = getRandomInt(-3500, 3500);
-  var y = getRandomInt(-3500, 3500);
-  for (let i = 0; i < cors_taken.length; i++) {
-    if (between(x, cors_taken[i].x - 50, cors_taken[i].x + 50) && between(y, cors_taken[i].y - 50, cors_taken[i].y + 50)) {
+  let x = getRandomInt(-3500, 3500);
+  let y = getRandomInt(-3500, 3500);
+  for (let j = 0; j < cors_taken.length; j++) {
+    if (between(x, cors_taken[j].x - 50, cors_taken[j].x + 50) && between(y, cors_taken[j].y - 50, cors_taken[j].y + 50)) {
       x = getRandomInt(-3500, 3500);
       y = getRandomInt(-3500, 3500);
     }
   }
-  cors_taken.push({ x: x, y: y })
-  let valueOp = (getRandomInt(0, 2) === 1)
-  var type = valueOp ? "triangle" : "square"
-  var color = valueOp ? "red" : "Gold"
-  var health_max = valueOp ? 15 : 10
+  cors_taken.push({ x: x, y: y });
+  const valueOp = (getRandomInt(0, 2) === 1);
+  const type = valueOp ? "triangle" : "square";
+  const color = valueOp ? "red" : "Gold";
+  const health_max = valueOp ? 15 : 10;
   let fooditem = {
     type: type,
     health: health_max,
@@ -78,33 +75,19 @@ for (let i = 0; i < getRandomInt(300, 400); i++) {
     color: color,
     score_add: health_max,
     randomID: (Math.random() * i * Date.now())
-  }
+  };
   if (type === "triangle") {
-    rawvertices = calculateTriangleVertices(
+    const rawvertices = calculateTriangleVertices(
       fooditem.x,
       fooditem.y,
       fooditem.size,
       fooditem.angle,
     );
-    const transformedArray = rawvertices.map(({ x, y }) => [x, y]);
-    fooditem.vertices = rawvertices
+    fooditem.vertices = rawvertices;
   }
 
-  food_squares.push(fooditem)
+  food_squares.push(fooditem);
 }
-
-function hasDuplicates(array) {
-  var valuesSoFar = [];
-  for (var i = 0; i < array.length; ++i) {
-    var value = array[i];
-    if (valuesSoFar.indexOf(value) !== -1) {
-      return true;
-    }
-    valuesSoFar.push(value);
-  }
-  return false;
-}
-
 
 function rotatePoint(px, py, ox, oy, angle) {
   const s = Math.sin(angle);
@@ -121,24 +104,14 @@ function checkCircleSquareCollision(circle, square) {
   const { x: cx, y: cy, size: cr } = circle;
   const { x: sx, y: sy, size: sw, angle: sa } = square;
 
-  const localC = rotatePoint(cx, cy, sx, sy, -sa * (Math.PI / 180));  // Convert angle to radians
+  const localC = rotatePoint(cx, cy, sx, sy, -sa * Math180R);
 
   const halfW = sw / 2;
-  const halfH = sw / 2;  // Assuming square, so width = height
+  const halfH = sw / 2; // Assuming square, so width = height
   const dx = Math.max(Math.abs(localC.x - sx) - halfW, 0);
   const dy = Math.max(Math.abs(localC.y - sy) - halfH, 0);
 
   return (dx * dx + dy * dy) <= (cr * cr);
-}
-function rotatePoint(px, py, ox, oy, angle) {
-  const s = Math.sin(angle);
-  const c = Math.cos(angle);
-  px -= ox;
-  py -= oy;
-  return {
-    x: px * c - py * s + ox,
-    y: px * s + py * c + oy
-  };
 }
 
 function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
@@ -156,19 +129,9 @@ function distanceSquared(x1, y1, x2, y2) {
   return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
 }
 
-function rotatePoint(px, py, cx, cy, angle) {
-
-  const s = Math.sin(angle);
-  const c = Math.cos(angle);
-  const xnew = (px - cx) * c - (py - cy) * s + cx;
-  const ynew = (px - cx) * s + (py - cy) * c + cy;
-  return { x: xnew, y: ynew };
-}
-
 function checkCircleTriangleCollision(circle, triangle) {
-  const cx = circle.x, cy = circle.y, cr = circle.size;
-  const tx = triangle.x, ty = triangle.y, ta = triangle.angle;
-  const vertices = triangle.vertices;
+  const { x: cx, y: cy, size: cr } = circle;
+  const { x: tx, y: ty, angle: ta, vertices } = triangle;
 
   // Rotate circle center to triangle's local coordinates
   const rotatedC = rotatePoint(cx, cy, tx, ty, -ta);
@@ -208,13 +171,16 @@ function checkCircleTriangleCollision(circle, triangle) {
     }
 
     // Check the distances from the circle center to the vertices
-    if (distanceSquared(rotatedC.x, rotatedC.y, x1, y1) <= cr * cr) {
+    if (distanceSquared(rotatedC.x, rotatedC.y, x1, y1) <= cr * cr || 
+        distanceSquared(rotatedC.x, rotatedC.y, x2, y2) <= cr * cr) {
       return true;
     }
   }
 
   return false;
 }
+
+
 
 function removeItemOnce(arr, id) {
   return arr.filter(obj => obj.randomID !== id);
@@ -228,8 +194,8 @@ var angle = 0;
 io.on('connection', (socket) => {
   socket.on('newPlayer', (data) => {
     players[socket.id] = data;
-    socket.emit('playerJoined', data)
-    socket.emit('FoodUpdate', food_squares)
+    io.emit('playerJoined', data)
+    io.emit('FoodUpdate', food_squares)
   });
 
   socket.on('getFood', (data) => {
@@ -275,7 +241,7 @@ io.on('connection', (socket) => {
   // Path: server.js
 
   const UPDATE_INTERVAL = 85;
-  let speed = 0.00000006;
+  let speed = 0.000006;
 
 
   setInterval(() => {
@@ -296,6 +262,23 @@ io.on('connection', (socket) => {
 
     // Emit updated bullet positions
     io.emit('bulletUpdate', bullets);
+    
+    for (const gkg_ in food_squares) {
+      var item = food_squares[gkg_]
+      item.x = item.centerX + item.scalarX * Math.cos(angle);
+      item.y = item.centerY + item.scalarY * Math.sin(angle);
+      angle += speed;
+      if (item.type === "triangle") {
+        const rawvertices = calculateTriangleVertices(
+          item.x,
+          item.y,
+          item.size,
+          item.angle,
+        );
+        item.vertices = rawvertices;
+      }
+      
+    };
     
 
     try {
@@ -321,9 +304,6 @@ io.on('connection', (socket) => {
         food_squares = food_squares.filter((item, index) => {
           const distanceX = Math.abs(item.x - bullet.x);
           const distanceY = Math.abs(item.y - bullet.y);
-          item.x = item.centerX + item.scalarX * Math.cos(angle);
-          item.y = item.centerY + item.scalarY * Math.sin(angle);
-          angle += speed;
 
           if (distanceX < 200 && distanceY < 200) {
             const collisionCheck = (item.type === "square")
@@ -346,18 +326,34 @@ io.on('connection', (socket) => {
                 cors_taken.push({ x, y });
 
                 const isTriangle = getRandomInt(0, 2) === 1;
+                let type = isTriangle ? "triangle" : "square";
+                const color = isTriangle ? "red" : "Gold";
+                const health_max = isTriangle ? 15 : 10;
                 const newItem = {
-                  type: isTriangle ? "triangle" : "square",
-                  health: isTriangle ? 15 : 10,
-                  maxhealth: isTriangle ? 15 : 10,
+                  type: type,
+                  health: health_max,
+                  maxhealth: health_max,
                   size: 50,
                   angle: getRandomInt(0, 180),
                   x: x,
                   y: y,
-                  color: isTriangle ? "Darkred" : "Gold",
-                  score_add: isTriangle ? 15 : 10,
-                  randomID: Math.random() * index * Date.now()
+                  centerX: x,
+                  centerY: y,
+                  scalarX: getRandomInt(-100, 100),
+                  scalarY: getRandomInt(-100, 100),
+                  vertices: null,
+                  color: color,
+                  score_add: health_max,
+                  randomID: (Math.random() * index * Date.now())
                 };
+                rawvertices = calculateTriangleVertices(
+                  newItem.x,
+                  newItem.y,
+                  newItem.size,
+                  newItem.angle,
+                  );
+                newItem.vertices = rawvertices
+                
 
                 food_squares.push(newItem);
                 bullet.bullet_distance /= (3/bullet.bullet_pentration);
@@ -372,7 +368,6 @@ io.on('connection', (socket) => {
                 if (bullet.bullet_pentration > item.size) {
                   if (bullet.type === "triangle") {
                     bullet.angle *= 5;
-                    console.log(56)
                   }
                 }
                 io.emit('FoodUpdate', food_squares);
@@ -396,19 +391,22 @@ io.on('connection', (socket) => {
       }
     }
   }, 200);
-  socket.on('removeBullet', (data) => {
-    const bulletIndex = bullets.findIndex(b => b.uniqueid === data.bullet.uniqueid);
-    if (bulletIndex !== -1) {
-      bullets.splice(bulletIndex, 1);
-    }
-    io.emit('bulletUpdate', bullets); // Broadcast to all clients
-  });
   socket.on("playerDied", (data) => {
-    delete players[data.id];
+    players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+      if (key !== data.id) {
+        newPlayers[key] = value;
+      }
+      return newPlayers;
+    }, {});
     io.emit('playerLeft', data.id);
   });
   socket.on('disconnect', () => {
-    delete players[socket.id];
+    players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+      if (key !== socket.id) {
+        newPlayers[key] = value;
+      }
+      return newPlayers;
+    }, {});
     io.emit('playerLeft', socket.id); // Inform everyone of the departure
   });
 });

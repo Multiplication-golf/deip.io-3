@@ -239,6 +239,35 @@
                           "bullet_pentration": 1.6,
                           }
                         ]
+          },
+          "mechiane gun": {
+            "size-m": 1.05,
+            "speed-m": 1,
+            "damage-m": 1,
+            "health-m": 1,
+            "BodyDamage-m": 1,
+            "reaload-m": 0.75,
+            "upgradeLevel": 30,
+            "upgrades": {
+              "twin":1,
+              "sniper":2,
+              "flank":3,
+              "mechiane gun":4
+            },
+            "cannons":  [
+                          {
+                          "type": "trapezoid",
+                          "cannon-width": 80,
+                          "cannon-height": 30,
+                          "offSet-x": 0,
+                          "offSet-y": 0,
+                          "offset-angle": 0,
+                          "bulletSize": 1.05,
+                          "bulletSpeed": 1,
+                          "delay": 0,
+                          "bullet_pentration": 0.9,
+                          }
+                        ]
           }
         }
         var players = {};
@@ -262,7 +291,7 @@
         var bullet_size = 15;
         var bullet_pentration = 2;
         var bullet_power = (bullet_speed/5.5)+bullet_damage*(bullet_pentration/10)
-        var cannonWidth = [];
+        var cannonWidth = [0];
         var current_angle = 0;
         var MouseX_ = 0;
         var MouseY_ = 0;
@@ -296,10 +325,12 @@
         
 
         // Update grid position
+        var gridstyle = grid.style;
         setInterval(() => {
-            grid.style.top = `calc(-5000px - ${cavansY}px)`;
-            grid.style.left = `calc(-5000px - ${cavansX}px)`;
-        }, 15);
+          gridstyle.top = `calc(-5000px - ${cavansY}px)`;
+          gridstyle.left = `calc(-5000px - ${cavansX}px)`;
+        }, 75)
+
   
         function getMousePos(canvas, evt) {
           const rect = canvas.getBoundingClientRect();
@@ -315,17 +346,11 @@
         socket.on('connect', () => {
           playerId = socket.id;
           socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level });
-          setTimeout(function () {
-            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level });
-          }, 200);
           
           draw() // Call draw after connecting
         });
         socket.on('playerJoined', (data) => {
           players[data.id] = data;
-          setTimeout(function () {
-            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username, level:level });
-          }, 200);
         });
         socket.on('playerMoved', (data) => {
           players[data.id] = data;
@@ -337,7 +362,12 @@
           players[data.id].cannonW = data.cannonW;
         });
         socket.on('playerLeft', (id) => {
-          delete players[id];
+          players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+            if (key !== id) {
+              newPlayers[key] = value;
+            }
+            return newPlayers;
+          }, {});
         });
         socket.on('playerDamaged', (data) => {
           players[data.player1.id].health = data.player1.health;
@@ -447,7 +477,8 @@
                     var img__ = document.createElement("img")
                     var tileImg = Object.keys(upgrade)[i];
                     tankstiles.appendChild(img__);
-                    console.log(Object.keys(upgrade));
+                    console.log(tileImg);
+                    
                     img__.src = "tanktiles/"+tileImg+".png";
                     img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
 
@@ -457,6 +488,11 @@
                       tankstiles.style.display = 'none';
                       type = Object.keys(upgrade)[i]
                       players[playerId].type = type;
+                      var tankdatacannon__ = tankdata['cannons']
+                      cannonWidth = []
+                      for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                        cannonWidth.push(0);
+                      }
                     });
                 }    
               }
@@ -516,7 +552,7 @@
                         }, 1);
                     }
                 }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
                 socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
@@ -567,7 +603,7 @@
                         }, 1);
                     }
                 }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
                 socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
@@ -615,7 +651,7 @@
                         },1);
                     }
                 }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
                 socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
@@ -663,7 +699,7 @@
                         }, 1);
                     }
                 }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
                 socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, 15);
             }
@@ -705,7 +741,7 @@
                         }, 1);
                     }
                 }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
                 socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, playerSpeed*10)
             }
@@ -747,7 +783,7 @@
                         }, 1);
                     }
                 }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
+                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
                 socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
               }, playerSpeed*10)
             }
@@ -930,15 +966,16 @@
           // Reset fire ability after reload time
           setTimeout(() => {
             canFire = true;
-          }, 500 * tankdata["reaload-m"]);
+          }, 750 * tankdata["reaload-m"]);
         });
 
         document.addEventListener('mousedown', (evt) => {
           let tankdata = tankmeta[type];
           let tankdatacannon = tankdata["cannons"];
-          firingInterval = setInterval(() => {
+          firingInterval = setInterval((event=evt) => {
             canFire2 = false;
-            var mouse = getMousePos(canvas, evt);
+            var mouse = getMousePos(canvas, event);
+            console.log(mouse)
             mouseX = mouse.x;
             mouseY = mouse.y;
             let angle = Math.atan2(Math.abs(mouseY) - (canvas.height/2-playerSize), Math.abs(mouseX) - (canvas.width/2-playerSize))
@@ -946,6 +983,7 @@
             tankdatacannon.forEach((cannon, i) => {
               let tankdatacannondata = tankdatacannon[i];
               setTimeout(() => {
+                
                 var xxx = (cannon["cannon-width"]-bullet_size_l*1.5)
                 var yyy = (cannon["cannon-height"]-bullet_size_l*2)
                 let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle) - (cannon["offSet-y"]+yyy) * Math.sin(angle);
@@ -954,7 +992,9 @@
                 let bullet_start_y = playerY + rotated_offset_y;
                 let identdfire = Date.now() + Math.random();
                 let bullet_speed__ = bullet_speed * cannon["bulletSpeed"];
-
+                
+                let recoilX = bullet.x + bullet.speed * Math.cos(bullet.angle);
+                let recoilY = bullet.y + bullet.speed * Math.sin(bullet.angle);
                 // Recoil effect
                 cannonWidth[i] = cannonWidth[i] || 0;
                 for (let l = 0; l < 10; l++) {
@@ -977,13 +1017,10 @@
                   id: playerId,
                   uniqueid: identdfire
                 };
-
-                // Emit bullet data
-                 console.log("fired",Date.now())
                 socket.emit('bulletFired', bullet);
               }, (tankdatacannondata["delay"] * 1000));
             });
-          }, 500 * tankdata["reaload-m"]);
+          }, 750 * tankdata["reaload-m"]);
         });
 
         document.addEventListener('mouseup', function (evt) {
@@ -1002,80 +1039,63 @@
         // Function to draw the bullet
   
         const radius = 40;
+        for (il in cannonWidth) {
+          cannonWidth[il] = cannonWidth[il] || 0;
+        }
         
         function draw() {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           food_list.forEach((item) => {
-            if (item.x > 0+cavansX && item.x < canvas.width+cavansX && item.y-cavansY > 0 &&
-                item.y < canvas.height+cavansY && item.health > 0) {
-              if (item.type === 'square') {
-                // Drawing the square
-                ctx.save();
-                ctx.translate(item.x - cavansX, item.y - cavansY);
-                ctx.rotate(item.angle);
-                ctx.fillStyle = item.color;
-                ctx.fillRect(-item.size / 2, -item.size / 2, item.size, item.size);  // Center the square
-                ctx.strokeStyle = 'GoldenRod';
-                ctx.lineWidth = 5;
-                ctx.strokeRect(-item.size / 2, -item.size / 2, item.size, item.size);  // Center the stroke
+              if (item.x > 0 + cavansX && item.x < canvas.width + cavansX && item.y - cavansY > 0 &&
+                  item.y < canvas.height + cavansY && item.health > 0) {
+                  ctx.save();
+                  ctx.translate(item.x - cavansX, item.y - cavansY);
+                  ctx.rotate(item.angle * Math.PI / 180);
 
-                ctx.fillStyle = 'black';
-                ctx.rotate((-item.angle));
-                if (item.health < 10) {
-                    ctx.fillRect(-45, 35, 90, 10);  // Adjusted for centered square
-                    const healthWidth = (item.health / item.maxhealth) * 90;
-                    ctx.fillStyle = 'green';
-                    ctx.fillRect(-45, 35, healthWidth, 10);  // Adjusted for centered square
-                }
-                ctx.restore();
+                  if (item.type === 'square') {
+                      ctx.fillStyle = item.color;
+                      ctx.fillRect(-item.size / 2, -item.size / 2, item.size, item.size);
+                      ctx.strokeStyle = 'GoldenRod';
+                      ctx.lineWidth = 5;
+                      ctx.strokeRect(-item.size / 2, -item.size / 2, item.size, item.size);
+
+                      ctx.rotate(-item.angle * Math.PI / 180);
+                      if (item.health < 10) {
+                          ctx.fillStyle = 'black';
+                          ctx.fillRect(-45, 35, 90, 10);
+                          const healthWidth = (item.health / item.maxhealth) * 90;
+                          ctx.fillStyle = 'green';
+                          ctx.fillRect(-45, 35, healthWidth, 10);
+                      }
+                  }
+
+                  if (item.type === 'triangle') {
+                      const h = item.size * Math.sqrt(3) / 2;
+
+                      ctx.beginPath();
+                      ctx.moveTo(0, -h / 2);
+                      ctx.lineTo(-item.size / 2, h / 2);
+                      ctx.lineTo(item.size / 2, h / 2);
+                      ctx.closePath();
+
+                      ctx.fillStyle = item.color;
+                      ctx.fill();
+                      ctx.strokeStyle = 'Darkred';
+                      ctx.lineWidth = 5;
+                      ctx.stroke();
+
+                      ctx.rotate(-item.angle * Math.PI / 180);
+                      if (item.health < 15) {
+                          ctx.fillStyle = 'black';
+                          ctx.fillRect(-45, 35, 90, 10);
+                          const healthWidth = (item.health / item.maxhealth) * 90;
+                          ctx.fillStyle = 'green';
+                          ctx.fillRect(-45, 35, healthWidth, 10);
+                      }
+                  }
+
+                  ctx.restore();
               }
-              if (item.type === 'triangle') {
-                ctx.save();
-
-                // Translate to the center of the triangle
-                ctx.translate(item.x - cavansX, item.y - cavansY);
-
-                // Rotate the triangle
-                ctx.rotate(item.angle * Math.PI / 180);
-
-                // Calculate the height of the equilateral triangle
-                var h = item.size * Math.sqrt(3) / 2;
-
-                // Draw the triangle
-                ctx.beginPath();
-                ctx.lineWidth = 5;
-                ctx.fillStyle = item.color;
-                ctx.strokeStyle = 'Darkred';
-
-                // Move to the top vertex
-                ctx.moveTo(0, -h / 2);
-                // Draw to the bottom-left vertex
-                ctx.lineTo(-item.size / 2, h / 2);
-                // Draw to the bottom-right vertex
-                ctx.lineTo(item.size / 2, h / 2);
-                // Close the path to the top vertex
-                ctx.lineTo(0, -h / 2);
-
-                // Fill and stroke the triangle
-                ctx.fill();
-                ctx.stroke();
-                ctx.closePath();
-
-                ctx.restore();
-
-                // Draw the health bar if health is below 15
-                if (item.health < 15) {
-                  // Draw the health bar background
-                  ctx.fillStyle = 'black';
-                  ctx.fillRect((item.x - cavansX) - 45, (item.y - cavansY) + 30, 90, 10);
-
-                  // Draw the health bar
-                  const healthWidth = (item.health / item.maxhealth) * 90;
-                  ctx.fillStyle = 'green';
-                  ctx.fillRect((item.x - cavansX) - 45, (item.y - cavansY) + 30, healthWidth, 10);
-                }
-              }
-            }
           });
           bullets.forEach((bullet) => {
             if (bullet.x > 0+cavansX && bullet.x < canvas.width+cavansX && bullet.y-cavansY > 0 && bullet.y < canvas.height+cavansY) {
@@ -1104,44 +1124,79 @@
 
 
               let r = Math.PI / 180;
-              ctx.fillStyle = squareColor;
-
-              // Save the current transformation matrix
-              ctx.save();
-
-
-
-              // Translate to the center of the square
-              ctx.translate(player.x-cavansX, player.y-cavansY);
-
-              // Calculate the angle to rotate the square to face the mouse pointer
+              
 
               let tankdata = tankmeta[player.type]
 
               let tankdatacannon = tankdata["cannons"]
 
               for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
+                ctx.fillStyle = '#b3b3b3';
                 let tankdatacannondata = tankdatacannon[i]
-                let angle = player.cannon_angle;
-
-                var angle_offset = tankdatacannondata["offset-angle"]
-                ctx.rotate(angle+angle_offset);
-                // Draw the square
-                let basex = (((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"])-player.cannonW[i];
-                let basey = ((-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"])
-                
-                ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
-                  
+                if (tankdatacannondata["type"] === "basicCannon") {
+                  ctx.save();
+                  ctx.translate(player.x-cavansX, player.y-cavansY);
+                  let angle = player.cannon_angle;
   
-                // Add a border to the cannon
-                ctx.strokeStyle = 'lightgrey'; // Set border color
-                ctx.lineWidth = 3; // Set border width
-                ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]); // Draw the border
-                // Restore the previous transformation matrix
-                ctx.restore();
+                  var angle_offset = tankdatacannondata["offset-angle"]
+                  ctx.rotate(angle+angle_offset);
+                  // Draw the square
+                  let basex = (((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"])-player.cannonW[i];
+                  let basey = ((-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"])
+                  
+                  ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
+                    
+    
+                  // Add a border to the cannon
+                  ctx.strokeStyle = 'lightgrey'; // Set border color
+                  ctx.lineWidth = 3; // Set border width
+                  ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]); // Draw the border
+                  // Restore the previous transformation matrix
+                  ctx.restore();
+                } 
+                else if (tankdatacannondata["type"] === "trapezoid") {
+                    ctx.save();
+                    ctx.translate(player.x-cavansX, player.y-cavansY);
+                    let angle = player.cannon_angle;
+
+                    var angle_offset = tankdatacannondata["offset-angle"]
+                    ctx.rotate(angle+angle_offset);
+                    // Draw the square
+                    let basex = (((-tankdatacannondata["cannon-width"] / 2)+
+                                  tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"])-player.cannonW[i];
+                    let basey = ((-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"])
+                  
+                    const cannonHeight = tankdatacannondata["cannon-height"]
+                    const cannonWidth = tankdatacannondata["cannon-width"]
+                    const cannonHeightBy2 = cannonHeight / 2;
+                    const cannonWidthBY2 = cannonWidth/2;
+  
+                    ctx.beginPath();
+                    ctx.moveTo(basex, basey); // Move to the top-left corner
+                    ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
+                    ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + (cannonHeightBy2)));
+                    ctx.lineTo(basex + cannonWidth, basey - (cannonHeightBy2));
+                    ctx.closePath(); // Close the path
+                    ctx.fill();
+
+
+                    // Add a border to the cannon
+                    ctx.strokeStyle = 'lightgrey'; // Set border color
+                    ctx.lineWidth = 3; // Set border width
+                    ctx.beginPath();
+                    ctx.moveTo(basex, basey+ (cannonHeightBy2)); // Move to the top-left corner
+                    ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
+                    ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + (cannonHeightBy2)));
+                    ctx.lineTo(basex + cannonWidth, basey - (cannonHeightBy2));
+                    ctx.closePath(); // Close the path
+                    ctx.stroke(); // Draw the border
+                    // Restore the previous transformation matrix
+                    ctx.restore();
+                  }
               }
 
               ctx.beginPath();
+              ctx.fillStyle = squareColor;
               ctx.arc(player.x - cavansX, player.y - cavansY, player.size * 40, 0, 2 * Math.PI, false);
               ctx.fillStyle = 'red';
               ctx.fill();
@@ -1205,22 +1260,61 @@
           let tankdatacannon = tankdata["cannons"]
 
           for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
-            ctx.save();
-            // Translate to the center of the square
-            ctx.translate((canW / 2), (canH / 2));
+            ctx.fillStyle = '#b3b3b3';
             let tankdatacannondata = tankdatacannon[i]
-            var angle_offset = tankdatacannondata["offset-angle"]
-            ctx.rotate(angle+angle_offset);
-            // Draw the square
-            let basex = ((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"]-cannonWidth[i];
-            let basey = (-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"]
-            ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
-            // Add a border to the cannon
-            ctx.strokeStyle = 'lightgrey'; // Set border color
-            ctx.lineWidth = 3; // Set border width
-            ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]); // Draw the border
-            // Restore the previous transformation matrix
-            ctx.restore();
+            if (tankdatacannondata["type"] === "basicCannon") {
+              ctx.save();
+              // Translate to the center of the square
+              ctx.translate((canW / 2), (canH / 2));
+              var angle_offset = tankdatacannondata["offset-angle"]
+              ctx.rotate(angle+angle_offset);
+              // Draw the square
+              let basex = ((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"]-cannonWidth[i];
+              let basey = (-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"]
+              ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
+              // Add a border to the cannon
+              ctx.strokeStyle = 'lightgrey'; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]); // Draw the border
+              // Restore the previous transformation matrix
+              ctx.restore();
+            }
+            else if (tankdatacannondata["type"] === "trapezoid") {
+              ctx.save();
+              // Translate to the center of the square
+              ctx.translate((canW / 2), (canH / 2));
+              let tankdatacannondata = tankdatacannon[i]
+              var angle_offset = tankdatacannondata["offset-angle"]
+              ctx.rotate(angle+angle_offset);
+              // Draw the square
+              let basex = ((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"]-cannonWidth[i];
+              let basey = (-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"]
+              const cannonHeight = tankdatacannondata["cannon-height"]
+              const cannonWidth_ = tankdatacannondata["cannon-width"]
+              const cannonHeightBy2 = cannonHeight / 2;
+              const cannonWidthBY2 = cannonWidth_/2;
+  
+              ctx.beginPath();
+              ctx.moveTo(basex, basey); // Move to the top-left corner
+              ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
+              ctx.lineTo(basex + cannonWidth_, basey + (cannonHeight + (cannonHeightBy2)));
+              ctx.lineTo(basex + cannonWidth_, basey - (cannonHeightBy2));
+              ctx.closePath(); // Close the path
+              ctx.fill();
+  
+  
+              // Add a border to the cannon
+              ctx.strokeStyle = 'lightgrey'; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.beginPath();
+              ctx.moveTo(basex, basey); // Move to the top-left corner
+              ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
+              ctx.lineTo(basex + cannonWidth_, basey + (cannonHeight + (cannonHeightBy2)));
+              ctx.lineTo(basex + cannonWidth_, basey - (cannonHeightBy2));
+              ctx.closePath(); // Close the path
+              ctx.stroke(); // Draw the border
+              ctx.restore();
+            }
           }
   
   
