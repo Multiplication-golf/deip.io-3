@@ -133,7 +133,17 @@
             window.scrollTo(scrollLeft, scrollTop);
           };
         }
-        //disableScroll();
+        // TODO:
+        // add pentgons [DONE]
+        // add reciol - started
+        // fix level-up bug
+        // add (e) for atuo fire 
+        // add (c) for atuo rotaion
+        // create new 15 level tank
+        // add player shape collsion - started
+        // add shape-shape collsion - lower pryority
+        // create drone tank - lower pryority
+
         const socket = io(); // Connect to the server
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -160,8 +170,8 @@
             "upgradeLevel": 15,
             "upgrades": {
               "twin":1,
-              "sniper":2,
-              "flank":3,
+              "flank":2,
+              "sniper":3,
               "mechiane gun":4
             },
             "cannons":  [
@@ -215,6 +225,45 @@
                           "bulletSpeed": 0.5,
                           "delay": 0.5,
                           "bullet_pentration": 0.9,
+                          }
+                        ]
+          },
+          "flank": {
+            "size-m": 1,
+            "speed-m": 0.98,
+            "damage-m": 1,
+            "health-m": 1,
+            "BodyDamage-m": 1.10,
+            "reaload-m": 1.2,
+            "upgradeLevel": 30,
+            "upgrades": [
+              "twin",
+              "sniper"
+            ],
+            "cannons":  [
+                          {
+                          "type": "basicCannon",
+                          "cannon-width": 90,
+                          "cannon-height": 30,
+                          "offSet-x": 0,
+                          "offSet-y": 0,
+                          "offset-angle": 0,
+                          "bulletSize": 1,
+                          "bulletSpeed": 0.5,
+                          "delay": 0,
+                          "bullet_pentration": 0.8,
+                          },
+                          {
+                          "type": "basicCannon",
+                          "cannon-width": 70,
+                          "cannon-height": 30,
+                          "offSet-x": 0,
+                          "offSet-y": 0,
+                          "offset-angle": 3.14159,
+                          "bulletSize": 1,
+                          "bulletSpeed": 0.5,
+                          "delay": 0,
+                          "bullet_pentration": 0.8,
                           }
                         ]
           },
@@ -286,7 +335,7 @@
         var playerSize = 1;
         var bodyDamage = 3;
         var type = 'basic'
-        var bullet_damage = 1.5;
+        var bullet_damage = 5;
         var bullet_speed = 3;
         var bullet_size = 15;
         var bullet_pentration = 2;
@@ -369,6 +418,23 @@
             return newPlayers;
           }, {});
         });
+        socket.on('playerDied',(data) => {
+          if (data["playerID"] === playerId) {
+            document.getElementById('die').style.display = 'block';
+            document.getElementById('container').style.display = 'none';
+            document.getElementById('myCanvas').style.display = 'none';
+          }
+          else if (data["rewarder"] === playerId) {
+            score += data.reward;
+          }
+          
+          players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+            if (key !== data["playerID"]) {
+              newPlayers[key] = value;
+            }
+            return newPlayers;
+          }, {});
+        });
         socket.on('playerDamaged', (data) => {
           players[data.player1.id].health = data.player1.health;
           if (data.player2.id === playerId) {
@@ -393,37 +459,36 @@
 
             let tankdata = tankmeta[type]
             console.log(level >= tankdata["upgradeLevel"])
-            if (level >= tankdata["upgradeLevel"]) {
-                var tankstiles = document.getElementById('tanktiles')
-                tankstiles.style.display = 'block';
-                tankstiles.style.left = 0;
-                tankstiles.style.animation = '2s 1 move';
-                var upgrade = tankdata["upgrades"]
+            if (level === tankdata["upgradeLevel"]) {
+              var tankstiles = document.getElementById('tanktiles')
+              tankstiles.style.display = 'block';
+              tankstiles.style.left = 0;
+              tankstiles.style.animation = '2s 1 move';
+              var upgrade = tankdata["upgrades"]
 
-                for (let i = 0; i < Object.keys(upgrade).length; i++) {
+              for (let i = 0; i < Object.keys(upgrade).length; i++) {
 
-                  var img__ = document.createElement("img")
-                  var tileImg = Object.keys(upgrade)[i];
-                  tankstiles.appendChild(img__);
-                  console.log(Object.keys(upgrade));
-                  img__.src = "tanktiles/"+tileImg+".png";
-                  img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
-                  
+                var img__ = document.createElement("img")
+                var tileImg = Object.values(upgrade)[i];
+                tankstiles.appendChild(img__);
+                console.log(tileImg);
+
+                img__.src = "tanktiles/"+tileImg+".png";
+                img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
 
 
-                  img__.addEventListener("click", function() {
-                    event.stopPropagation()
-                    tankstiles.style.display = 'none';
-                    type = Object.keys(upgrade)[i]
-                    players[playerId].type = type;
-                    playerSpeed *= tankdata["speed-m"]
-                    playerHealth *= tankdata["health-m"]
-                    playerSize *= tankdata["size-m"]
-                    bodyDamage *= tankdata["damage-m"]
-                    bullet_damage *= tankdata["BodyDamage-m"]
-                    
-                  });
-              }    
+                img__.addEventListener("click", function() {
+                  event.stopPropagation()
+                  tankstiles.style.display = 'none';
+                  type = Object.keys(upgrade)[i]
+                  players[playerId].type = type;
+                  var tankdatacannon__ = tankdata['cannons']
+                  cannonWidth = []
+                  for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                    cannonWidth.push(0);
+                  }
+                });
+              }   
             }
             level += 1;
             tonextlevel = levels["level"+level]-levels["level"+(level-1)]
@@ -453,7 +518,66 @@
             console.warn("Received bulletDamage for an unknown player:", data.playerID);
           }
         });
+        //io.emit("shapeDamage",{PlayerId:player.id,playerDamage:damageplayer,shapes:food_squares});
+        socket.on('shapeDamage', (data) => {
+          if (players[data.PlayerId]) {
+            food_squares = data.shapes; // Check if the player exists
+            players[data.playerID].health -= data.damageplayer;
+
+            if (data.PlayerId == playerId) {
+              playerHealth -= data.damageplayer;
+            }
+          } else {
+            console.warn("Received shapeDamage for an unknown player:", data.playerID);
+          }
+        });
         let keysPressed = {};
+        const movePlayer = (dx, dy) => {
+            playerX += dx;
+            cavansX += dx;
+            playerY += dy;
+            cavansY += dy;
+
+            socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score:score, username:username, level:level, dx:dx, dy:dy });
+        };
+
+        const getCannonAngle = () => {
+            return Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize));
+        };
+
+        const checkCollisions = () => {
+            for (let playerId_ in players) {
+                let player = players[playerId_];
+                let distance = Math.hypot(player.x - playerX, player.y - playerY);
+
+                if (distance < (player.size * 40 + playerSize * 40) && playerId_ != playerId) {
+                    socket.emit('playerCollided', {
+                        id_other: playerId_,
+                        damagetaken: player.bodyDamage,
+                        damagegiven: bodyDamage,
+                        speed: playerSpeed,
+                        health: players[playerId].health,
+                        id_self: playerId,
+                    });
+                    for (let i = 0; i < playerSpeed; i++) {
+                        setTimeout(() => {
+                          movePlayer(dx, dy);
+                        }, 15*i);
+                    }// Reverse the last movement
+                }
+            }
+        };
+
+        const handleMovement = (dx, dy) => {
+            if ((playerX + dx > mapLeft && playerX + dx < mapRight) && (playerY + dy > mapTop && playerY + dy < mapBottom)) {
+                for (let i = 0; i < playerSpeed; i++) {
+                    setTimeout(() => {
+                      movePlayer(dx, dy);
+                    }, 15*i)
+                }
+                checkCollisions();
+            }
+        };
         document.addEventListener('keydown', (event) => {
           keysPressed[event.key] = true;
           if (keysPressed['k']) {
@@ -464,8 +588,7 @@
             if ((score/levels["level"+level]) >= 1) {  // Add transition property
               
               let tankdata = tankmeta[type]
-              console.log(level >= tankdata["upgradeLevel"])
-              if (level >= tankdata["upgradeLevel"]) {
+              if (level === tankdata["upgradeLevel"]) {
                   var tankstiles = document.getElementById('tanktiles')
                   tankstiles.style.display = 'block';
                   tankstiles.style.left = 0;
@@ -475,7 +598,7 @@
                   for (let i = 0; i < Object.keys(upgrade).length; i++) {
                     
                     var img__ = document.createElement("img")
-                    var tileImg = Object.keys(upgrade)[i];
+                    var tileImg = Object.values(upgrade)[i];
                     tankstiles.appendChild(img__);
                     console.log(tileImg);
                     
@@ -488,11 +611,17 @@
                       tankstiles.style.display = 'none';
                       type = Object.keys(upgrade)[i]
                       players[playerId].type = type;
+                      tankdata = tankmeta[type]
                       var tankdatacannon__ = tankdata['cannons']
-                      cannonWidth = []
-                      for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
-                        cannonWidth.push(0);
-                      }
+                      setTimeout(() => {
+                        cannonWidth = []
+                        console.log(Object.keys(tankdatacannon__).length)
+                        for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                          cannonWidth.push(0);
+                        }
+                        console.log(cannonWidth)
+                      },100);
+                      
                     });
                 }    
               }
@@ -507,370 +636,22 @@
               }
             }
           }
-          if      (keysPressed['ArrowLeft'] && keysPressed['ArrowUp'] || keysPressed['a'] && keysPressed['w']) {
-            if (playerX > mapLeft && playerY > mapTop) {
-              playerMovementX += -(11); 
-              playerMovementY += -(11); 
-              playerX -= 1;
-              cavansX -= 1;
-              playerY -= 1;
-              cavansY -= 1;
-  
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerX -= 1;
-                  cavansX -= 1;
-                  playerY -= 1;
-                  cavansY -= 1;
-                },  i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-
-                        //playerHealth -= player.bodyDamage;
-                        socket.emit('playerCollided', {
-                          id_other: playerId_,
-                          damagetaken: player.bodyDamage,
-                          damagegiven: bodyDamage,
-                          speed: playerSpeed,
-                          health: players[playerId].health,
-                          id_self: playerId,
-                        });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerX += 1;
-                              cavansX += 1;
-                              playerY += 1;
-                              cavansY += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth-(player.bodyDamage/t), speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        }, 1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, 15);
-            }
-          }
-          else if (keysPressed['ArrowLeft'] && keysPressed['ArrowDown'] || keysPressed['a'] && keysPressed['s']) {
-            if (playerX > mapLeft && playerY < mapBottom) {
-              playerMovementX += -(11); 
-              playerMovementY += (11); 
-              playerX -= 1;
-              cavansX -= 1;
-              playerY += 1;
-              cavansY += 1;
-  
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerX -= 1;
-                  cavansX -= 1;
-                  playerY += 1;
-                  cavansY += 1;
-                  
-                },  i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-
-                      //playerHealth -= player.bodyDamage;
-                        socket.emit('playerCollided', {
-                          id_other: playerId_,
-                          damagetaken: player.bodyDamage,
-                          damagegiven: bodyDamage,
-                          speed: playerSpeed,
-                          health: players[playerId].health,
-                          id_self: playerId,
-                        });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerX += 1;
-                              cavansX += 1;
-                              playerY -= 1;
-                              cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        }, 1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, 15);
-            }
-          }
-          else if (keysPressed['ArrowRight'] && keysPressed['ArrowUp'] || keysPressed['d'] && keysPressed['w']) {
-            if (playerX < mapRight && playerY > mapTop) {
-              playerMovementX += (11); 
-              playerMovementY += -(11); 
-              playerX += 1;
-              cavansX += 1;
-              playerY -= 1;
-              cavansY -= 1;
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerX += 1;
-                  cavansX += 1;
-                  playerY -= 1;
-                  cavansY -= 1;
-                },  i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-                      //playerHealth -= player.bodyDamage;
-                      socket.emit('playerCollided', {
-                        id_other: playerId_,
-                        damagetaken: player.bodyDamage,
-                        damagegiven: bodyDamage,
-                        speed: playerSpeed,
-                        health: players[playerId].health,
-                        id_self: playerId,
-                      });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerX -= 1;
-                              cavansX -= 1;
-                              playerY -= 1;
-                              cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        },1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, 15);
-            }
-          }
-          else if (keysPressed['ArrowRight'] && keysPressed['ArrowDown'] || keysPressed['d'] && keysPressed['s']) {
-            if (playerX < mapRight && playerY < mapBottom) {
-              playerMovementX += (11); 
-              playerMovementY += (11); 
-              playerX += 1;
-              cavansX += 1;
-              playerY += 1;
-              cavansY += 1;
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerX += 1;
-                  cavansX += 1;
-                  playerY += 1;
-                  cavansY += 1;
-                }, i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-                      //playerHealth -= player.bodyDamage;
-                      socket.emit('playerCollided', {
-                        id_other: playerId_,
-                        damagetaken: player.bodyDamage,
-                        damagegiven: bodyDamage,
-                        speed: playerSpeed,
-                        health: players[playerId].health,
-                        id_self: playerId,
-                      });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerX -= 1;
-                              cavansX -= 1;
-                              playerY -= 1;
-                              cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        }, 1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, 15);
-            }
-          }
-          else if (keysPressed['ArrowUp'] || keysPressed['w']) {
-            if (playerY > mapTop) {
-              playerMovementY += (11); 
-              playerY -= 1;
-              cavansY -= 1;
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerY -= 1;
-                  cavansY -= 1;
-                },  i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-
-                      //playerHealth -= player.bodyDamage;
-                        socket.emit('playerCollided', {
-                          id_other: playerId_,
-                          damagetaken: player.bodyDamage,
-                          damagegiven: bodyDamage,
-                          speed: playerSpeed,
-                          health: players[playerId].health,
-                          id_self: playerId,
-                        });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerY += 1;
-                              cavansY += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        }, 1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, playerSpeed*10)
-            }
-          }
-          else if (keysPressed['ArrowDown'] || keysPressed['s']) {
-            if (playerY < mapBottom) {
-              playerMovementY += (11); 
-              playerY += 1;
-              cavansY += 1;
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerY += 1;
-                  cavansY += 1;
-                },  i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-
-                        //playerHealth -= player.bodyDamage;
-                        socket.emit('playerCollided', {
-                          id_other: playerId_,
-                          damagetaken: player.bodyDamage,
-                          damagegiven: bodyDamage,
-                          speed: playerSpeed,
-                          health: players[playerId].health,
-                          id_self: playerId,
-                        });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerY -= 1;
-                              cavansY -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        }, 1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize))
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, playerSpeed*10)
-            }
-          } 
-          else if (keysPressed['ArrowLeft'] || keysPressed['a']) {
-            if (playerX > mapLeft) {
-              playerMovementX += -(11); 
-              playerX -= 1;
-              cavansX -= 1;
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerX -= 1;
-                  cavansX -= 1;
-                },  i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-
-                      //playerHealth -= player.bodyDamage;
-                        socket.emit('playerCollided', {
-                          id_other: playerId_,
-                          damagetaken: player.bodyDamage,
-                          damagegiven: bodyDamage,
-                          speed: playerSpeed,
-                          health: players[playerId].health,
-                          id_self: playerId,
-                        });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerX += 1;
-                              cavansX += 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        }, 1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, playerSpeed*10);
-            }
-          }
-          else if (keysPressed['ArrowRight'] || keysPressed['d']) {
-            if (playerX < mapRight) {
-              playerMovementX += (11); 
-              playerX += 1;
-              cavansX += 1;
-              for (let i = 1; i < playerSpeed; i++) {
-                setTimeout(() => {
-                  playerX += 1;
-                  cavansX += 1;
-                },  i*10)
-              }
-              setTimeout(() => {
-                for (let playerId_ in players) {
-                    var player = players[playerId_];
-                    if (Math.abs(player.x - playerX) < (player.size*40 + playerSize*40) 
-                        && Math.abs(player.y - playerY) < (player.size*40 + playerSize*40) && playerId_ != playerId) {
-                      //players[playerId].health -= player.bodyDamage; // Keeped for revision, don't remove
-                      //playerHealth -= player.bodyDamage;
-                      socket.emit('playerCollided', {
-                        id_other: playerId_,
-                        damagetaken: player.bodyDamage,
-                        damagegiven: bodyDamage,
-                        speed: playerSpeed,
-                        health: players[playerId].health,
-                        id_self: playerId,
-                      });
-                        setTimeout(() => {
-                          for (let t = 0; t < playerSpeed; t++) {
-                            setTimeout(() => {
-                              playerX -= 1;
-                              cavansX -= 1;
-                              socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:current_angle, score:score, username:username,  level:level });
-                            },(t)*10);
-                          }
-                        }, 1);
-                    }
-                }
-                let __angle___ = Math.atan2(Math.abs(MouseY_) - (248), Math.abs(MouseX_) - 511.25);
-                socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle___, score:score, username:username,  level:level });
-              }, playerSpeed*10);
-            }
+          if ((keysPressed['ArrowLeft'] && keysPressed['ArrowUp']) || (keysPressed['a'] && keysPressed['w'])) {
+              handleMovement(-1, -1);
+          } else if ((keysPressed['ArrowLeft'] && keysPressed['ArrowDown']) || (keysPressed['a'] && keysPressed['s'])) {
+              handleMovement(-1, 1);
+          } else if ((keysPressed['ArrowRight'] && keysPressed['ArrowUp']) || (keysPressed['d'] && keysPressed['w'])) {
+              handleMovement(1, -1);
+          } else if ((keysPressed['ArrowRight'] && keysPressed['ArrowDown']) || (keysPressed['d'] && keysPressed['s'])) {
+              handleMovement(1, 1);
+          } else if (keysPressed['ArrowUp'] || keysPressed['w']) {
+              handleMovement(0, -1);
+          } else if (keysPressed['ArrowDown'] || keysPressed['s']) {
+              handleMovement(0, 1);
+          } else if (keysPressed['ArrowLeft'] || keysPressed['a']) {
+              handleMovement(-1, 0);
+          } else if (keysPressed['ArrowRight'] || keysPressed['d']) {
+              handleMovement(1, 0);
           }
         });
   
@@ -926,8 +707,9 @@
               bullet_size_l = bullet_size * cannon["bulletSize"]
               var xxx = (cannon["cannon-width"]-bullet_size_l*1.5)
               var yyy = (cannon["cannon-height"]-bullet_size_l*2)
-              let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle) - (cannon["offSet-y"]+yyy) * Math.sin(angle);
-              let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle) + (cannon["offSet-y"]+yyy) * Math.cos(angle);
+              var angle_ = angle+(cannon["offset-angle"]);
+              let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle_) - (cannon["offSet-y"]+yyy) * Math.sin(angle_);
+              let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle_) + (cannon["offSet-y"]+yyy) * Math.cos(angle_);
               let bullet_start_x = playerX + rotated_offset_x;
               let bullet_start_y = playerY + rotated_offset_y;
               console.log(rotated_offset_x,rotated_offset_y)
@@ -945,7 +727,7 @@
                 bullet_distance: (bullet_speed__ * 100) * (bullet_size / 6),
                 speed: bullet_speed__,
                 size: bullet_size_l,
-                angle: angle + cannon["offset-angle"],
+                angle: angle_,
                 bullet_damage: bullet_damage * cannon["bulletSize"],
                 distanceTraveled: 0,
                 bullet_pentration: bullet_pentration * cannon["bullet_pentration"],
@@ -968,33 +750,35 @@
             canFire = true;
           }, 750 * tankdata["reaload-m"]);
         });
+        var mouse_X = 0
+        var mouse_Y = 0
 
         document.addEventListener('mousedown', (evt) => {
           let tankdata = tankmeta[type];
           let tankdatacannon = tankdata["cannons"];
-          firingInterval = setInterval((event=evt) => {
+          firingInterval = setInterval((event=evt,MouseY__=MouseY_,MouseX__=MouseX_) => {
             canFire2 = false;
             var mouse = getMousePos(canvas, event);
             console.log(mouse)
-            mouseX = mouse.x;
-            mouseY = mouse.y;
-            let angle = Math.atan2(Math.abs(mouseY) - (canvas.height/2-playerSize), Math.abs(mouseX) - (canvas.width/2-playerSize))
+            let angle = Math.atan2(Math.abs(MouseY__) - (canvas.height/2-playerSize), Math.abs(MouseX__) - (canvas.width/2-playerSize))
 
             tankdatacannon.forEach((cannon, i) => {
               let tankdatacannondata = tankdatacannon[i];
               setTimeout(() => {
-                
+                let realAngle = angle+(cannon["offset-angle"]);
                 var xxx = (cannon["cannon-width"]-bullet_size_l*1.5)
                 var yyy = (cannon["cannon-height"]-bullet_size_l*2)
-                let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle) - (cannon["offSet-y"]+yyy) * Math.sin(angle);
-                let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle) + (cannon["offSet-y"]+yyy) * Math.cos(angle);
+                let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(realAngle)
+                  - (cannon["offSet-y"]+yyy) * Math.sin(realAngle);
+                let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(realAngle)
+                  + (cannon["offSet-y"]+yyy) * Math.cos(realAngle);
                 let bullet_start_x = playerX + rotated_offset_x;
                 let bullet_start_y = playerY + rotated_offset_y;
                 let identdfire = Date.now() + Math.random();
                 let bullet_speed__ = bullet_speed * cannon["bulletSpeed"];
                 
-                let recoilX = bullet.x + bullet.speed * Math.cos(bullet.angle);
-                let recoilY = bullet.y + bullet.speed * Math.sin(bullet.angle);
+                let recoilX = -(playerX + bullet_speed__ * Math.cos(realAngle));
+                let recoilY = -(playerY + bullet_speed__ * Math.sin(realAngle));
                 // Recoil effect
                 cannonWidth[i] = cannonWidth[i] || 0;
                 for (let l = 0; l < 10; l++) {
@@ -1006,7 +790,7 @@
                   bullet_distance: (bullet_speed__ * 100) * (bullet_size / 6),
                   speed: bullet_speed__,
                   size: bullet_size * cannon["bulletSize"],
-                  angle: angle + cannon["offset-angle"],
+                  angle: realAngle,
                   bullet_damage: bullet_damage * cannon["bulletSize"],
                   distanceTraveled: 0,
                   bullet_pentration: bullet_pentration * cannon["bullet_pentration"],
@@ -1093,6 +877,53 @@
                           ctx.fillRect(-45, 35, healthWidth, 10);
                       }
                   }
+                if (item.type === 'pentagon') {
+                    ctx.fillStyle = item.color;
+                    const centerX = 0;
+                    const centerY = 0;
+                    const radius = item.size;
+                    const angle = item.angle * Math.PI / 180; // Convert angle to radians
+
+                    // Calculate vertices
+                    const vertices = [];
+                    for (let i = 0; i < 5; i++) {
+                        const theta = (i * 2 * Math.PI / 5) + angle; // Divide circle into 5 parts and add rotation angle
+                        const x = centerX + radius * Math.cos(theta);
+                        const y = centerY + radius * Math.sin(theta);
+                        vertices.push({ x, y });
+                    }
+
+                    // Draw filled pentagon
+                    ctx.beginPath();
+                    ctx.moveTo(vertices[0].x, vertices[0].y);
+                    for (let i = 1; i < vertices.length; i++) {
+                        ctx.lineTo(vertices[i].x, vertices[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Draw pentagon outline
+                    ctx.strokeStyle = "#3976cc";
+                    ctx.beginPath();
+                    ctx.moveTo(vertices[0].x, vertices[0].y);
+                    for (let i = 1; i < vertices.length; i++) {
+                        ctx.lineTo(vertices[i].x, vertices[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+
+                    // Rotate context back to original position (if needed)
+                    ctx.rotate(-item.angle * Math.PI / 180);
+
+                    // Draw health bar if health is less than 100%
+                    if (item.health < 100) {
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(centerX - 60, centerY + 35, 120, 10);
+                        const healthWidth = (item.health / item.maxhealth) * 120;
+                        ctx.fillStyle = 'green';
+                        ctx.fillRect(centerX - 60, centerY + 35, healthWidth, 10);
+                    }
+                }
 
                   ctx.restore();
               }
@@ -1138,7 +969,7 @@
                   ctx.translate(player.x-cavansX, player.y-cavansY);
                   let angle = player.cannon_angle;
   
-                  var angle_offset = tankdatacannondata["offset-angle"]
+                  let angle_offset = tankdatacannondata["offset-angle"]
                   ctx.rotate(angle+angle_offset);
                   // Draw the square
                   let basex = (((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"])-player.cannonW[i];
@@ -1159,7 +990,7 @@
                     ctx.translate(player.x-cavansX, player.y-cavansY);
                     let angle = player.cannon_angle;
 
-                    var angle_offset = tankdatacannondata["offset-angle"]
+                    let angle_offset = tankdatacannondata["offset-angle"]
                     ctx.rotate(angle+angle_offset);
                     // Draw the square
                     let basex = (((-tankdatacannondata["cannon-width"] / 2)+
@@ -1266,7 +1097,7 @@
               ctx.save();
               // Translate to the center of the square
               ctx.translate((canW / 2), (canH / 2));
-              var angle_offset = tankdatacannondata["offset-angle"]
+              let angle_offset = tankdatacannondata["offset-angle"]
               ctx.rotate(angle+angle_offset);
               // Draw the square
               let basex = ((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"]-cannonWidth[i];
@@ -1418,15 +1249,7 @@
           requestAnimationFrame(draw);
         }
         
-        setInterval(() => {
-          if (playerHealth <= 0) {
-            socket.emit('playerDied', {id: playerId});
-            document.getElementById('die').style.display = 'block';
-            document.getElementById('container').style.display = 'none';
-            document.getElementById('myCanvas').style.display = 'none';
-          }
-          document.getElementById('players').innerText = `${playerX},${playerY}`;
-        }, 100);
+        
       }
 
       document.getElementById('playButton').addEventListener("mousedown", () => {
