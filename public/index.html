@@ -395,14 +395,29 @@
         socket.on('connect', () => {
           playerId = socket.id;
           socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level });
-          
           draw() // Call draw after connecting
-        });
+        })
         socket.on('playerJoined', (data) => {
-          players[data.id] = data;
+          console.log(data); // Log the player data
+          players[data.id] = data; // Update the local player list
+          if (playerId !== data.id) {
+            socket.emit('updatePlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level })
+          }
         });
+
+        // If you need to handle player updates, add this
+        socket.on('playerUpdated', (data) => {
+          players[data.id] = data; // Update the local player data
+          console.log("Player updated:", data); // Log the update
+        });
+        
         socket.on('playerMoved', (data) => {
-          players[data.id] = data;
+          players[data.id].x = data.x;
+          players[data.id].y = data.y;
+          players[data.id].cannonW = data.cannonW;
+          players[data.id].type = data.type;
+          players[data.id].username = data.username;
+          players[data.id].bodyDamage = data.bodyDamage;
         });
         socket.on('playerCannonUpdated', (data) => {
           players[data.id].cannon_angle = data.cannon_angle;
@@ -424,7 +439,7 @@
             document.getElementById('container').style.display = 'none';
             document.getElementById('myCanvas').style.display = 'none';
           }
-          else if (data["rewarder"] === playerId) {
+          else if (data["rewarder"] === playerId && data.reward) {
             score += data.reward;
           }
           
@@ -522,15 +537,16 @@
         socket.on('shapeDamage', (data) => {
           if (players[data.PlayerId]) {
             food_squares = data.shapes; // Check if the player exists
-            players[data.playerID].health -= data.damageplayer;
+            players[data.PlayerId].health -= data.playerDamage;
 
             if (data.PlayerId == playerId) {
-              playerHealth -= data.damageplayer;
+              playerHealth -= data.playerDamage;
             }
           } else {
-            console.warn("Received shapeDamage for an unknown player:", data.playerID);
+            console.warn("Received shapeDamage for an unknown player:", data.PlayerId);
           }
         });
+        
         let keysPressed = {};
         const movePlayer = (dx, dy) => {
             playerX += dx;
@@ -545,7 +561,11 @@
             return Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize));
         };
 
-        const checkCollisions = () => {
+        socket.on("bouceBack", (data) => {
+            movePlayer(data.dx, data.dy)
+        });
+
+        const checkCollisions = (dx, dy) => {
             for (let playerId_ in players) {
                 let player = players[playerId_];
                 let distance = Math.hypot(player.x - playerX, player.y - playerY);
@@ -555,13 +575,12 @@
                         id_other: playerId_,
                         damagetaken: player.bodyDamage,
                         damagegiven: bodyDamage,
-                        speed: playerSpeed,
-                        health: players[playerId].health,
                         id_self: playerId,
                     });
                     for (let i = 0; i < playerSpeed; i++) {
                         setTimeout(() => {
-                          movePlayer(dx, dy);
+                          console.log(-dx, -dy)
+                          movePlayer(-dx, -dy);
                         }, 15*i);
                     }// Reverse the last movement
                 }
@@ -575,7 +594,7 @@
                       movePlayer(dx, dy);
                     }, 15*i)
                 }
-                checkCollisions();
+                checkCollisions(dx,dy);
             }
         };
         document.addEventListener('keydown', (event) => {

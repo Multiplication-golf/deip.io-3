@@ -125,7 +125,6 @@ for (let i = 0; i < getRandomInt(300, 400); i++) {
     fooditem.vertices = rawvertices;
   }
   if (type === "pentagon") {
-    console.log("penta")
     const rawvertices = calculateRotatedPentagonVertices(
       fooditem.x,
       fooditem.y,
@@ -314,13 +313,16 @@ function removeItemOnce(arr, id) {
 
 var angle = 0;
 
-//console.log(array);
 
 io.on('connection', (socket) => {
   socket.on('newPlayer', (data) => {
-    players[socket.id] = data;
-    io.emit('playerJoined', data)
-    io.emit('FoodUpdate', food_squares)
+    players[data.id] = data;
+    io.emit('playerJoined', data); // Emit playerJoined event to notify all clients
+    io.emit('FoodUpdate', food_squares); // Emit FoodUpdate event to update food squares
+  });
+
+  socket.on('updatePlayer', (data) => {
+    io.emit('playerUpdated', data); // Emit playerUpdated event if needed
   });
 
   socket.on('getFood', (data) => {
@@ -328,33 +330,141 @@ io.on('connection', (socket) => {
   });
 
   socket.on('playerMoved', (data) => {
-    players[socket.id] = data;
-    var player = players[socket.id]
-    for (const gkg_ in food_squares) {
-      var item = food_squares[gkg_]
-      const distanceX = Math.abs(player.x - item.x);
-      const distanceY = Math.abs(player.y - item.y);
-      if (distanceX < 200 && distanceY < 200) {
-        var collisionCheck
-        if (item.type === "pentagon") {
-          collisionCheck = isCircleCollidingWithPentagon(player, item.vertices)
+    if (players[data.id]) {
+      players[data.id].x = data.x;
+      players[data.id].y = data.y;
+      players[data.id].cannonW = data.cannonW;
+      players[data.id].type = data.type;
+      players[data.id].username = data.username;
+      players[data.id].bodyDamage = data.bodyDamage;
+    
+      var player = players[data.id]
+      food_squares = food_squares.filter((item, index) => {
+        const distanceX = Math.abs(player.x - item.x);
+        const distanceY = Math.abs(player.y - item.y);
+        if (distanceX < 200 && distanceY < 200) {
+          var collisionCheck
+          if (item.type === "pentagon") {
+            collisionCheck = isCircleCollidingWithPentagon(player, item.vertices)
+          }
+          if (item.type === "triangle") {
+            collisionCheck = checkCircleTriangleCollision(player, item);
+          }
+          if (item.type === "square") {
+            collisionCheck = checkCircleSquareCollision(player, item);
+          }
+          if (collisionCheck) {
+            const damageplayer = item.body_damage
+            const damageother = player["bodyDamage"];
+            player.health -= damageplayer;
+  
+            console.log("playerhealth:",player.health)
+            if (player.health < 0) {
+              io.emit('playerDied', { "playerID": player.id, "rewarder": null, "reward": null });
+              players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+                if (key !== player.id) {
+                  newPlayers[key] = value;
+                }
+                return newPlayers;
+              }, {});
+            }
+            
+            io.emit('bouceBack', { "dx": -data.dx, "dy": -data.dy })
+            if (0 > item.health) {
+              player.score += item.score_add;
+              io.emit('playerScore', { bulletId: player.id, socrepluse: item.score_add });
+  
+              let x, y;
+              do {
+                x = getRandomInt(-3500, 3500);
+                y = getRandomInt(-3500, 3500);
+              } while (cors_taken.some(c => between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)));
+  
+              cors_taken.push({ x, y });
+  
+              const valueOp = getRandomInt(1, 10);
+              var type = ""
+              var color = ""
+              var health_max = ""
+              var score_add = 0
+              var body_damage = 0
+              switch (true) {
+                case (between(valueOp, 1, 6)): // Adjusted to 1-6 for square
+                  type = "square";
+                  color = "Gold";
+                  health_max = 10;
+                  score_add = 10;
+                  body_damage = 2
+                  break;
+                case (between(valueOp, 0, 1)): // Adjusted to 7-8 for triangle
+                  type = "triangle";
+                  color = "Red";
+                  health_max = 15;
+                  score_add = 15;
+                  body_damage = 3.5
+                  break;
+                case (between(valueOp, 6, 10)): // Adjusted to 9-10 for pentagon
+                  type = "pentagon";
+                  color = "#579bfa";
+                  health_max = 100;
+                  score_add = 120;
+                  body_damage = 10
+                  break;
+              }
+              let fooditem = {
+                type: type,
+                health: health_max,
+                maxhealth: health_max,
+                size: 50,
+                angle: getRandomInt(0, 180),
+                x: x,
+                y: y,
+                centerX: x,
+                centerY: y,
+                body_damage: body_damage,
+                scalarX: getRandomInt(-100, 100),
+                scalarY: getRandomInt(-100, 100),
+                vertices: null,
+                color: color,
+                score_add: score_add,
+                randomID: (Math.random() * index * Date.now())
+              };
+              if (type === "triangle") {
+                const rawvertices = calculateTriangleVertices(
+                  fooditem.x,
+                  fooditem.y,
+                  fooditem.size,
+                  fooditem.angle,
+                );
+                fooditem.vertices = rawvertices;
+              }
+              if (type === "pentagon") {
+  
+                const rawvertices = calculateRotatedPentagonVertices(
+                  fooditem.x,
+                  fooditem.y,
+                  fooditem.size,
+                  fooditem.angle,
+                );
+                fooditem.vertices = rawvertices;
+              }
+  
+              food_squares.push(fooditem);
+              io.emit('bulletUpdate', bullets);
+  
+              return false;
+            } else {
+              item.health -= damageother;
+            }
+            
+            io.emit("shapeDamage", { "PlayerId": player.id, "playerDamage": damageplayer, "shapes": food_squares });
+          }
         }
-        if (item.type === "triangle") {
-          collisionCheck = checkCircleTriangleCollision(player, item);
-        }
-        if (item.type === "square") {
-          collisionCheck = checkCircleSquareCollision(player, item);
-        }
-        if (collisionCheck) {
-          const damageplayer = item.body_damage
-          const damageother = player.body_damage
-          player.health -= damageplayer;
-          item.health -= damageother;
-          io.emit("shapeDamage", { PlayerId: player.id, playerDamage: damageplayer, shapes: food_squares });
-        }
-      }
+        return true
+      });
     }
-    socket.broadcast.emit('playerMoved', data); // Send to other players
+    socket.broadcast.emit('playerMoved', data);
+    io.emit('FoodUpdate', food_squares);// Send to other players
   });
 
   socket.on('playerCannonMoved', (data) => {
@@ -567,7 +677,6 @@ io.on('connection', (socket) => {
                   fooditem.vertices = rawvertices;
                 }
                 if (type === "pentagon") {
-                  console.log("penta")
                   const rawvertices = calculateRotatedPentagonVertices(
                     fooditem.x,
                     fooditem.y,
@@ -579,6 +688,11 @@ io.on('connection', (socket) => {
 
                 food_squares.push(fooditem);
                 bullet.bullet_distance /= (3 / bullet.bullet_pentration);
+                if (bullet.bullet_pentration > item.size) {
+                  if (bullet.type === "triangle") {
+                    bullet.angle *= 5;
+                  }
+                }
                 io.emit('bulletUpdate', bullets);
                 io.emit('FoodUpdate', food_squares);
 
