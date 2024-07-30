@@ -381,6 +381,34 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('statechangeUpdate', data);
   });
 
+  socket.on("AddplayerHealTime", (data) => {
+    //playerHealTime:playerHealTime, ID:playerId
+    if (!players[data.ID]) return
+    players[data.ID].maxhealth = data.maxhealth;
+    console.log(data,players[data.ID].health,players[data.ID].maxhealth)
+    players[data.ID].playerHealTime = data.playerHealTime;
+    io.emit("updaterHeal", {ID:data.ID, HEALTime:data.playerHealTime})
+    if (data.playerHealTime > 30 && players[data.ID].health < players[data.ID].maxhealth) {
+      io.emit('playerHealing', { "playerID": data.ID, "playerHealTime": data.playerHealTime} );
+      let healer = setInterval(function() {
+        players[data.ID].health += players[data.ID].playerReheal;
+        io.emit("playerHeal", {HEALTH:players[data.ID].health,ID:data.ID})
+        if (players[data.ID].health >= players[data.ID].maxhealth) {
+          players[data.ID].health = players[data.ID].maxhealth;
+          clearInterval(healer);
+        }
+        if (players[data.ID].playerHealTime < 30) {
+          clearInterval(healer);
+        }
+      }, 500);
+    }
+  });
+
+  socket.on("playerHealintterupted", (data) => {
+    players[data.ID].playerHealTime = 0;
+    io.emit("updaterHeal", {ID:data.ID, HEALTime:0})
+  });
+
   socket.on('playerCollided', (data) => {
     try {
       players[data.id_other].health -= data.damagegiven; // Swap damagegiven and damagetaken
@@ -657,6 +685,9 @@ io.on('connection', (socket) => {
     }, {});
     io.emit('playerLeft', socket.id); // Inform everyone of the departure
   });
+  socket.on("unSynched Health", (data) => {
+    console.warn(data)
+  })
 });
 
 server.listen(3000, function() {

@@ -8,8 +8,8 @@ for (let i = 0; i < 125; i++) {
     div.style.backgroundColor = 'white';
     div.style.border = '1px solid black';
     document.getElementById("grid").appendChild(div);
-  }  
-} 
+  }
+}
 function ongame() {
 
 
@@ -68,27 +68,27 @@ function ongame() {
       "reaload-m": 1,
       "upgradeLevel": 15,
       "upgrades": {
-        "twin":1,
-        "flank":2,
-        "sniper":3,
-        "mechiane gun":4,
-        "spreader":5,
-        "rammer":6
+        "twin": 1,
+        "flank": 2,
+        "sniper": 3,
+        "mechiane gun": 4,
+        "spreader": 5,
+        "rammer": 6
       },
-      "cannons":  [
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 90,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 0,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0,
-                    "bullet_pentration": 1,
-                    }
-                  ]
+      "cannons": [
+        {
+          "type": "basicCannon",
+          "cannon-width": 90,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0,
+          "bullet_pentration": 1,
+        }
+      ]
     },
     "twin": {
       "size-m": 1,
@@ -102,32 +102,32 @@ function ongame() {
         "twin",
         "sniper"
       ],
-      "cannons":  [
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 90,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": -20,
-                    "offset-angle": 0,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0,
-                    "bullet_pentration": 0.9,
-                    },
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 90,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 20,
-                    "offset-angle": 0,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0.5,
-                    "bullet_pentration": 0.9,
-                    }
-                  ]
+      "cannons": [
+        {
+          "type": "basicCannon",
+          "cannon-width": 90,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": -20,
+          "offset-angle": 0,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0,
+          "bullet_pentration": 0.9,
+        },
+        {
+          "type": "basicCannon",
+          "cannon-width": 90,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 20,
+          "offset-angle": 0,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0.5,
+          "bullet_pentration": 0.9,
+        }
+      ]
     },
     "flank": {
       "size-m": 1,
@@ -141,32 +141,32 @@ function ongame() {
         "twin",
         "sniper"
       ],
-      "cannons":  [
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 90,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 0,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0,
-                    "bullet_pentration": 0.8,
-                    },
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 70,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 3.14159,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0,
-                    "bullet_pentration": 0.8,
-                    }
-                  ]
+      "cannons": [
+        {
+          "type": "basicCannon",
+          "cannon-width": 90,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0,
+          "bullet_pentration": 0.8,
+        },
+        {
+          "type": "basicCannon",
+          "cannon-width": 70,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 3.14159,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0,
+          "bullet_pentration": 0.8,
+        }
+      ]
     },
     "sniper": {
       "size-m": 1.05,
@@ -175,20 +175,20 @@ function ongame() {
       "health-m": 0.95,
       "BodyDamage-m": 1,
       "reaload-m": 1.5,
-      "cannons":  [
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 120,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 0,
-                    "bulletSize": 1,
-                    "bulletSpeed": 1.5,
-                    "delay": 0,
-                    "bullet_pentration": 1.6,
-                    }
-                  ]
+      "cannons": [
+        {
+          "type": "basicCannon",
+          "cannon-width": 120,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0,
+          "bulletSize": 1,
+          "bulletSpeed": 1.5,
+          "delay": 0,
+          "bullet_pentration": 1.6,
+        }
+      ]
     },
     "mechiane gun": {
       "size-m": 1.05,
@@ -199,26 +199,26 @@ function ongame() {
       "reaload-m": 0.75,
       "upgradeLevel": 30,
       "upgrades": {
-        "twin":1,
-        "sniper":2,
-        "flank":3,
-        "mechiane gun":4
+        "twin": 1,
+        "sniper": 2,
+        "flank": 3,
+        "mechiane gun": 4
       },
-      "cannons":  [
-                    {
-                    "type": "trapezoid",
-                    "cannon-width-top": 80,
-                    "cannon-height": 50,
-                    "cannon-width-bottom": 50,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 0,
-                    "bulletSize": 1.05,
-                    "bulletSpeed": 1,
-                    "delay": 0,
-                    "bullet_pentration": 0.9,
-                    }
-                  ]
+      "cannons": [
+        {
+          "type": "trapezoid",
+          "cannon-width-top": 80,
+          "cannon-height": 50,
+          "cannon-width-bottom": 50,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0,
+          "bulletSize": 1.05,
+          "bulletSpeed": 1,
+          "delay": 0,
+          "bullet_pentration": 0.9,
+        }
+      ]
     },
     "spreader": {
       "size-m": 1.05,
@@ -229,38 +229,38 @@ function ongame() {
       "reaload-m": 0.80,
       "upgradeLevel": 30,
       "upgrades": {
-        "twin":1,
-        "sniper":2,
-        "flank":3,
-        "mechiane gun":4
+        "twin": 1,
+        "sniper": 2,
+        "flank": 3,
+        "mechiane gun": 4
       },
-      "cannons":  [
-                    {
-                    "type": "trapezoid",
-                    "cannon-width-top": 55,
-                    "cannon-height": 40,
-                    "cannon-width-bottom": 50,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 0,
-                    "bulletSize": 1.05,
-                    "bulletSpeed": 0.9,
-                    "delay": 0.1,
-                    "bullet_pentration": 0.9,
-                    },
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 75,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 0,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0,
-                    "bullet_pentration": 1,
-                    }
-                  ]
+      "cannons": [
+        {
+          "type": "trapezoid",
+          "cannon-width-top": 55,
+          "cannon-height": 40,
+          "cannon-width-bottom": 50,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0,
+          "bulletSize": 1.05,
+          "bulletSpeed": 0.9,
+          "delay": 0.1,
+          "bullet_pentration": 0.9,
+        },
+        {
+          "type": "basicCannon",
+          "cannon-width": 75,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0,
+          "bullet_pentration": 1,
+        }
+      ]
     },
     "rammer": {
       "size-m": 1,
@@ -274,32 +274,32 @@ function ongame() {
         "twin",
         "sniper"
       ],
-      "cannons":  [
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 90,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": -0.785398,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0,
-                    "bullet_pentration": 0.9,
-                    },
-                    {
-                    "type": "basicCannon",
-                    "cannon-width": 90,
-                    "cannon-height": 30,
-                    "offSet-x": 0,
-                    "offSet-y": 0,
-                    "offset-angle": 0.785398,
-                    "bulletSize": 1,
-                    "bulletSpeed": 0.5,
-                    "delay": 0.5,
-                    "bullet_pentration": 0.9,
-                    }
-                  ]
+      "cannons": [
+        {
+          "type": "basicCannon",
+          "cannon-width": 90,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": -0.785398,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0,
+          "bullet_pentration": 0.9,
+        },
+        {
+          "type": "basicCannon",
+          "cannon-width": 90,
+          "cannon-height": 30,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0.785398,
+          "bulletSize": 1,
+          "bulletSpeed": 0.5,
+          "delay": 0.5,
+          "bullet_pentration": 0.9,
+        }
+      ]
     }
   }
   var players = {};
@@ -313,6 +313,7 @@ function ongame() {
   var playerY = canvas.height / 2;
   var cavansX = 0;
   var cavansY = 0;
+  var playerHealTime = 0;
   var playerHealth = 100;
   var playerSpeed = 10;
   var playerSize = 1;
@@ -322,7 +323,6 @@ function ongame() {
   var bullet_speed = 3;
   var bullet_size = 15;
   var bullet_pentration = 2;
-  var bullet_power = (bullet_speed/5.5)+bullet_damage*(bullet_pentration/10)
   var cannonWidth = [0];
   var current_angle = 0;
   var MouseX_ = 0;
@@ -331,41 +331,45 @@ function ongame() {
   var mapRight =  5000;
   var mapTop =   -5000; // Similar to mapLeft, this could be zero
   var mapBottom = 5000;
-  var playerMovementX = 0; 
-  var playerMovementY = 0; 
+  var playerMovementX = 0;
+  var playerMovementY = 0;
   var score = 0;
   var barWidth = 600;
   var barHeight = 30;
   var borderRadius = 10;
+  var playerReheal = 2.5;
+  var maxhealth = 100;
 
   var state = 'start'
   var statecycle = 0;
 
   var progress = 0.0;
-  var levels = {'level0': 11.0, 'level1': 17.0, 'level2': 29.0, 'level3': 47.0,
-                'level4': 71.0, 'level5': 103.0, 'level6': 144.0, 'level7': 193.0,
-                'level8': 253.0, 'level9': 323.0, 'level10': 405.0, 'level11': 501.0,
-                'level12': 611.0, 'level13': 737.0, 'level14': 880.0, 'level15': 1043.0,
-                'level16': 1228.0, 'level17': 1436.0, 'level18': 1669.0, 'level19': 1931.0,
-                'level20': 2224.0, 'level21': 2552.0, 'level22': 2917.0, 'level23': 3323.0,
-                'level24': 3776.0, 'level25': 4278.0, 'level26': 4836.0, 'level27': 5455.0,
-                'level28': 6140.0, 'level29': 6899.0, 'level30': 7739.0, 'level31': 8668.0,
-                'level32': 9695.0, 'level33': 10829.0, 'level34': 12082.0, 'level35': 13465.0,
-                'level36': 14992.0, 'level37': 16676.0, 'level38': 18534.0, 'level39': 20582.0,
-                'level40': 22840.0, 'level41': 25329.0, 'level42': 28072.0, 'level43': 31095.0,
-                'level44': 34424.0, 'level45': 38092.0, 'level46': 42131.0, 'level47': 46579.0,
-                'level48': 51477.0, 'level49': 56869.0, 'level50': 62806.0, 'level51': 69342.0,
-                'level52': 76536.0, 'level53': 84455.0, 'level54': 93170.0, 'level55': 102762.0,
-                'level56': 113318.0, 'level57': 124935.0, 'level58': 137719.0, 'level59': 151786.0,
-                'level60': 167264.0, 'level61': 100000000000000000000000000000000000000000000000000}
+  var levels = {
+    'level0': 11.0, 'level1': 17.0, 'level2': 29.0, 'level3': 47.0,
+    'level4': 71.0, 'level5': 103.0, 'level6': 144.0, 'level7': 193.0,
+    'level8': 253.0, 'level9': 323.0, 'level10': 405.0, 'level11': 501.0,
+    'level12': 611.0, 'level13': 737.0, 'level14': 880.0, 'level15': 1043.0,
+    'level16': 1228.0, 'level17': 1436.0, 'level18': 1669.0, 'level19': 1931.0,
+    'level20': 2224.0, 'level21': 2552.0, 'level22': 2917.0, 'level23': 3323.0,
+    'level24': 3776.0, 'level25': 4278.0, 'level26': 4836.0, 'level27': 5455.0,
+    'level28': 6140.0, 'level29': 6899.0, 'level30': 7739.0, 'level31': 8668.0,
+    'level32': 9695.0, 'level33': 10829.0, 'level34': 12082.0, 'level35': 13465.0,
+    'level36': 14992.0, 'level37': 16676.0, 'level38': 18534.0, 'level39': 20582.0,
+    'level40': 22840.0, 'level41': 25329.0, 'level42': 28072.0, 'level43': 31095.0,
+    'level44': 34424.0, 'level45': 38092.0, 'level46': 42131.0, 'level47': 46579.0,
+    'level48': 51477.0, 'level49': 56869.0, 'level50': 62806.0, 'level51': 69342.0,
+    'level52': 76536.0, 'level53': 84455.0, 'level54': 93170.0, 'level55': 102762.0,
+    'level56': 113318.0, 'level57': 124935.0, 'level58': 137719.0, 'level59': 151786.0,
+    'level60': 167264.0, 'level61': 100000000000000000000000000000000000000000000000000
+  }
 
 
   // Update grid position
   var gridstyle = grid.style;
-  setInterval(() => {
+  /*setInterval(() => {
     gridstyle.top = `calc(-5000px - ${cavansY}px)`;
     gridstyle.left = `calc(-5000px - ${cavansX}px)`;
-  }, 75)
+  }, 75)*/
 
 
   function getMousePos(canvas, evt) {
@@ -378,17 +382,24 @@ function ongame() {
 
 
 
+  let healer = setInterval(() => {
+    playerHealTime += 1;
+    console.log("player heal", playerHealTime)
+    socket.emit("AddplayerHealTime", { playerHealTime: playerHealTime, ID: playerId,maxhealth:maxhealth });
+  }, 1000);
+
+
 
   socket.on('connect', () => {
     playerId = socket.id;
-    socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level, state:state, statecycle:statecycle });
+    socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: 0, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal });
     draw() // Call draw after connecting
   });
   socket.on('playerJoined', (data) => {
     console.log(data); // Log the player data
     players[data.id] = data; // Update the local player list
     if (playerId !== data.id) {
-      socket.emit('updatePlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:0, score:score, username:username,  level:level, state:state, statecycle:statecycle  })
+      socket.emit('updatePlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: 0, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal })
     }
   });
 
@@ -397,6 +408,34 @@ function ongame() {
     players[data.id] = data; // Update the local player data
     console.log("Player updated:", data); // Log the update
   });
+
+  socket.on("updaterHeal",(data) => {
+    players[data.ID].playerHealTime = data.HEALTime;
+  });
+
+  socket.on('playerHeal', (data) => {
+    players[data.ID].health = data.HEALTH;
+    if (data.ID === playerId) {
+      playerHealth = data.HEALTH;
+    } // Log the update
+  });
+
+  function setCookie(cname, cvalue, exdays) {
+    const d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    let expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+  }
+
+  socket.on("playerHealthCheck", (data) => {
+    if (!(players[data.ID].health === data.HEALTH)) {
+      players[data.ID].health = data.HEALTH;
+      // yes hackty hackers you getting a waring
+      setCookie("player",socket.id,1000000)
+      socket.emit("unSynched Health",{playerId:playerId,"expsected Health":data.HEALTH, "actual Health":players[data.ID].health})
+    }
+  });
+  //socket.emit("playerHealthCheck", {HEALTH:players[data.ID].health,ID:data.ID})
 
   socket.on('playerMoved', (data) => {
     players[data.id].x = data.x;
@@ -420,11 +459,13 @@ function ongame() {
       return newPlayers;
     }, {});
   });
-  socket.on('playerDied',(data) => {
+  socket.on('playerDied', (data) => {
     if (data["playerID"] === playerId) {
       document.getElementById('die').style.display = 'block';
       document.getElementById('container').style.display = 'none';
       document.getElementById('myCanvas').style.display = 'none';
+      clearInterval(healer);
+      
     }
     else if (data["rewarder"] === playerId && data.reward) {
       score += data.reward;
@@ -441,11 +482,13 @@ function ongame() {
     players[data.player1.id].health = data.player1.health;
     if (data.player2.id === playerId) {
       playerHealth = data.player2.health;
+      playerHealTime = 0;
     }
     if (data.player1.id === playerId) {
       playerHealth = data.player1.health;
+      playerHealTime = 0;
     }
-    players[data.player2.id].health = data.player2.health; 
+    players[data.player2.id].health = data.player2.health;
   });
   socket.on('bulletUpdate', (data) => {
     bullets = data;
@@ -455,9 +498,9 @@ function ongame() {
     if (data["bulletId"] === playerId) {
       score = players[data["bulletId"]].score;
     }
-    tonextlevel = levels["level"+level]-levels["level"+(level-1)]
-    progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
-    if ((score/levels["level"+level]) >= 1) {  // Add transition property
+    tonextlevel = levels["level" + level] - levels["level" + (level - 1)]
+    progress = (score - levels["level" + (level - 1)]) / (levels["level" + level] - levels["level" + (level - 1)]);
+    if ((score / levels["level" + level]) >= 1) {  // Add transition property
 
       let tankdata = tankmeta[type]
       console.log(level >= tankdata["upgradeLevel"])
@@ -475,7 +518,7 @@ function ongame() {
           tankstiles.appendChild(img__);
           console.log(tileImg);
 
-          img__.src = "tanktiles/"+tileImg+".png";
+          img__.src = "tanktiles/" + tileImg + ".png";
           img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
 
 
@@ -490,16 +533,16 @@ function ongame() {
               cannonWidth.push(0);
             }
           });
-        }   
+        }
       }
       level += 1;
-      tonextlevel = levels["level"+level]-levels["level"+(level-1)]
-      progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
-      playerSize += playerSize*0.005
-      while ((score/levels["level"+level]) >= 1) {
+      tonextlevel = levels["level" + level] - levels["level" + (level - 1)]
+      progress = (score - levels["level" + (level - 1)]) / (levels["level" + level] - levels["level" + (level - 1)]);
+      playerSize += playerSize * 0.005
+      while ((score / levels["level" + level]) >= 1) {
         level += 1;
-        playerSize += playerSize*0.005
-        progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+        playerSize += playerSize * 0.005
+        progress = (score - levels["level" + (level - 1)]) / (levels["level" + level] - levels["level" + (level - 1)]);
       }
     }
   });
@@ -515,6 +558,8 @@ function ongame() {
 
       if (data.playerID == playerId) {
         playerHealth = data.playerHealth;
+        socket.emit("playerHealintterupted", {ID:playerId});
+        playerHealTime = 0;
       }
     } else {
       console.warn("Received bulletDamage for an unknown player:", data.playerID);
@@ -528,6 +573,8 @@ function ongame() {
 
       if (data.PlayerId == playerId) {
         playerHealth -= data.playerDamage;
+        playerHealTime = 0;
+        socket.emit("playerHealintterupted", {ID:playerId});
       }
     } else {
       console.warn("Received shapeDamage for an unknown player:", data.PlayerId);
@@ -536,135 +583,137 @@ function ongame() {
 
   let keysPressed = {};
   const movePlayer = (dx, dy, last) => {
-      playerX += dx;
-      cavansX += dx;
-      playerY += dy;
-      cavansY += dy;
+    playerX += dx;
+    cavansX += dx;
+    playerY += dy;
+    cavansY += dy;
 
-      socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score:score, username:username, level:level, dx:dx, dy:dy, last:last, state:state, statecycle:statecycle });
+    socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, dx: dx, dy: dy, last: last, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal });
   };
 
   const getCannonAngle = () => {
-      return Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize));
+    return Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
   };
 
   socket.on("bouceBack", (data) => {
     for (let i = 0; i < playerSpeed; i++) {
-        setTimeout(() => {
-          movePlayer(data.dx, data.dy);
-        }, 20*i)
+      setTimeout(() => {
+        movePlayer(data.dx, data.dy);
+      }, 20 * i)
     }
   });
 
   const checkCollisions = (dx, dy) => {
-      for (let playerId_ in players) {
-          let player = players[playerId_];
-          let distance = Math.hypot(player.x - playerX, player.y - playerY);
+    for (let playerId_ in players) {
+      let player = players[playerId_];
+      let distance = Math.hypot(player.x - playerX, player.y - playerY);
 
-          if (distance < (player.size * 40 + playerSize * 40) && playerId_ != playerId) {
-              socket.emit('playerCollided', {
-                  id_other: playerId_,
-                  damagetaken: player.bodyDamage,
-                  damagegiven: bodyDamage,
-                  id_self: playerId,
-              });
-              for (let i = 0; i < playerSpeed; i++) {
-                  setTimeout(() => {
-                    console.log(-dx, -dy)
-                    movePlayer(-dx, -dy);
-                  }, 17*i);
-              }// Reverse the last movement
-          }
+      if (distance < (player.size * 40 + playerSize * 40) && playerId_ != playerId) {
+        socket.emit('playerCollided', {
+          id_other: playerId_,
+          damagetaken: player.bodyDamage,
+          damagegiven: bodyDamage,
+          id_self: playerId,
+        });
+        playerHealTime = 0;
+        socket.emit("playerHealintterupted", {ID:playerId});
+        for (let i = 0; i < playerSpeed; i++) {
+          setTimeout(() => {
+            console.log(-dx, -dy)
+            movePlayer(-dx, -dy);
+          }, 17 * i);
+        }// Reverse the last movement
       }
+    }
   };
 
   const handleMovement = (dx, dy) => {
-      if ((playerX + dx > mapLeft && playerX + dx < mapRight) && (playerY + dy > mapTop && playerY + dy < mapBottom)) {
-          for (let i = 0; i < playerSpeed; i++) {
-              setTimeout(() => {
-                movePlayer(dx, dy, (i == playerSpeed-1) );
-              }, 15*i)
-          }
-          checkCollisions(dx,dy);
+    if ((playerX + dx > mapLeft && playerX + dx < mapRight) && (playerY + dy > mapTop && playerY + dy < mapBottom)) {
+      for (let i = 0; i < playerSpeed; i++) {
+        setTimeout(() => {
+          movePlayer(dx, dy, (i == playerSpeed - 1));
+        }, 15 * i)
       }
+      checkCollisions(dx, dy);
+    }
   };
   document.addEventListener('keydown', (event) => {
     keysPressed[event.key] = true;
     if (keysPressed['k']) {
       players[playerId].score += 15;
       score = players[playerId].score;
-      tonextlevel = levels["level"+level]-levels["level"+(level-1)]
-      progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
-      if ((score/levels["level"+level]) >= 1) {  // Add transition property
+      tonextlevel = levels["level" + level] - levels["level" + (level - 1)]
+      progress = (score - levels["level" + (level - 1)]) / (levels["level" + level] - levels["level" + (level - 1)]);
+      if ((score / levels["level" + level]) >= 1) {  // Add transition property
 
         let tankdata = tankmeta[type]
         if (level === tankdata["upgradeLevel"]) {
-            var tankstiles = document.getElementById('tanktiles')
-            tankstiles.style.display = 'block';
-            tankstiles.style.left = 0;
-            tankstiles.style.animation = '2s 1 move';
-            var upgrade = tankdata["upgrades"]
+          var tankstiles = document.getElementById('tanktiles')
+          tankstiles.style.display = 'block';
+          tankstiles.style.left = 0;
+          tankstiles.style.animation = '2s 1 move';
+          var upgrade = tankdata["upgrades"]
 
-            for (let i = 0; i < Object.keys(upgrade).length; i++) {
+          for (let i = 0; i < Object.keys(upgrade).length; i++) {
 
-              var img__ = document.createElement("img")
-              var tileImg = Object.values(upgrade)[i];
-              tankstiles.appendChild(img__);
-              console.log(tileImg);
+            var img__ = document.createElement("img")
+            var tileImg = Object.values(upgrade)[i];
+            tankstiles.appendChild(img__);
+            console.log(tileImg);
 
-              img__.src = "tanktiles/"+tileImg+".png";
-              img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
+            img__.src = "tanktiles/" + tileImg + ".png";
+            img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
 
 
-              img__.addEventListener("click", function() {
-                event.stopPropagation()
-                tankstiles.style.display = 'none';
-                type = Object.keys(upgrade)[i]
-                players[playerId].type = type;
-                tankdata = tankmeta[type]
-                var tankdatacannon__ = tankdata['cannons']
-                setTimeout(() => {
-                  cannonWidth = []
-                  console.log(Object.keys(tankdatacannon__).length)
-                  for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
-                    cannonWidth.push(0);
-                  }
-                  console.log(cannonWidth)
-                },100);
+            img__.addEventListener("click", function() {
+              event.stopPropagation()
+              tankstiles.style.display = 'none';
+              type = Object.keys(upgrade)[i]
+              players[playerId].type = type;
+              tankdata = tankmeta[type]
+              var tankdatacannon__ = tankdata['cannons']
+              setTimeout(() => {
+                cannonWidth = []
+                console.log(Object.keys(tankdatacannon__).length)
+                for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                  cannonWidth.push(0);
+                }
+                console.log(cannonWidth)
+              }, 100);
 
-              });
-          }    
+            });
+          }
         }
         level += 1;
-        tonextlevel = levels["level"+level]-levels["level"+(level-1)]
-        progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
-        playerSize += playerSize*0.005
-        while ((score/levels["level"+level]) >= 1) {
+        tonextlevel = levels["level" + level] - levels["level" + (level - 1)]
+        progress = (score - levels["level" + (level - 1)]) / (levels["level" + level] - levels["level" + (level - 1)]);
+        playerSize += playerSize * 0.005
+        while ((score / levels["level" + level]) >= 1) {
           level += 1;
-          playerSize += playerSize*0.005
-          progress = (score-levels["level"+(level-1)])  /  (levels["level"+level]-levels["level"+(level-1)]);
+          playerSize += playerSize * 0.005
+          progress = (score - levels["level" + (level - 1)]) / (levels["level" + level] - levels["level" + (level - 1)]);
         }
       }
     }
     if ((keysPressed['ArrowLeft'] && keysPressed['ArrowUp']) || (keysPressed['a'] && keysPressed['w'])) {
-        handleMovement(-1, -1);
+      handleMovement(-1, -1);
     } else if ((keysPressed['ArrowLeft'] && keysPressed['ArrowDown']) || (keysPressed['a'] && keysPressed['s'])) {
-        handleMovement(-1, 1);
+      handleMovement(-1, 1);
     } else if ((keysPressed['ArrowRight'] && keysPressed['ArrowUp']) || (keysPressed['d'] && keysPressed['w'])) {
-        handleMovement(1, -1);
+      handleMovement(1, -1);
     } else if ((keysPressed['ArrowRight'] && keysPressed['ArrowDown']) || (keysPressed['d'] && keysPressed['s'])) {
-        handleMovement(1, 1);
+      handleMovement(1, 1);
     } else if (keysPressed['ArrowUp'] || keysPressed['w']) {
-        handleMovement(0, -1);
+      handleMovement(0, -1);
     } else if (keysPressed['ArrowDown'] || keysPressed['s']) {
-        handleMovement(0, 1);
+      handleMovement(0, 1);
     } else if (keysPressed['ArrowLeft'] || keysPressed['a']) {
-        handleMovement(-1, 0);
+      handleMovement(-1, 0);
     } else if (keysPressed['ArrowRight'] || keysPressed['d']) {
-        handleMovement(1, 0);
+      handleMovement(1, 0);
     }
   });
-  socket.on("statechangeUpdate" , (data) => {          
+  socket.on("statechangeUpdate", (data) => {
     players[data.playerID].state = data.state;
     players[data.playerID].statecycle = data.statecycle;
   })
@@ -674,13 +723,13 @@ function ongame() {
     if (event.key === 'ArrowUp' || event.key === 'w') {
       playerMovementY = 0;
     }
-    else if (event.key === 'ArrowDown' || event.key === 's' ) {
+    else if (event.key === 'ArrowDown' || event.key === 's') {
       playerMovementY = 0;
-    } 
-    else if (event.key === 'ArrowLeft' || event.key ==='a') {
+    }
+    else if (event.key === 'ArrowLeft' || event.key === 'a') {
       playerMovementX = 0;
     }
-    else if (event.key === 'ArrowRight' || event.key ==='d') {
+    else if (event.key === 'ArrowRight' || event.key === 'd') {
       playerMovementX = 0;
     }
   });
@@ -701,8 +750,8 @@ function ongame() {
     var mousepos = getMousePos(container, evt);
     MouseX_ = mousepos.x;
     MouseY_ = mousepos.y;
-    let __angle__ = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize));
-    socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle:__angle__, score:score, username:username,  level:level, state:state, statecycle:statecycle  });
+    let __angle__ = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
+    socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: __angle__, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime });
   });
 
   function generateRandomNumber(min, max) {
@@ -712,7 +761,7 @@ function ongame() {
   let canFire2 = true;
   let firingInterval = null;
 
-  document.addEventListener('mousedown', function (evt) {
+  document.addEventListener('mousedown', function(evt) {
     if (!canFire) return;
 
     canFire = false;
@@ -727,24 +776,24 @@ function ongame() {
     tankdatacannon.forEach((cannon, i) => {
       setTimeout(() => {
         bullet_size_l = bullet_size * cannon["bulletSize"]
-        
+
         let randomNumber = generateRandomNumber(-0.2, 0.2);
 
         if (cannon["type"] === 'basicCannon') {
-          var xxx = (cannon["cannon-width"]-bullet_size_l*1.5)
-          var yyy = (cannon["cannon-height"]-bullet_size_l*2)
-          var angle_ = angle+(cannon["offset-angle"]);
+          var xxx = (cannon["cannon-width"] - bullet_size_l * 1.5)
+          var yyy = (cannon["cannon-height"] - bullet_size_l * 2)
+          var angle_ = angle + (cannon["offset-angle"]);
         } else {
-          var angle_ = angle+(cannon["offset-angle"]) + randomNumber;
-          var xxx = (cannon["cannon-width-top"]-bullet_size_l*1.5)
-          var yyy = (cannon["cannon-height"]-bullet_size_l*2) - ((cannon["cannon-width-top"]/2) * Math.random())
+          var angle_ = angle + (cannon["offset-angle"]) + randomNumber;
+          var xxx = (cannon["cannon-width-top"] - bullet_size_l * 1.5)
+          var yyy = (cannon["cannon-height"] - bullet_size_l * 2) - ((cannon["cannon-width-top"] / 2) * Math.random())
         }
 
-        let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle_) - (cannon["offSet-y"]+yyy) * Math.sin(angle_);
-        let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle_) + (cannon["offSet-y"]+yyy) * Math.cos(angle_);
+        let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(angle_) - (cannon["offSet-y"] + yyy) * Math.sin(angle_);
+        let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle_) + (cannon["offSet-y"] + yyy) * Math.cos(angle_);
         let bullet_start_x = playerX + rotated_offset_x;
         let bullet_start_y = playerY + rotated_offset_y;
-        console.log(rotated_offset_x,rotated_offset_y)
+        console.log(rotated_offset_x, rotated_offset_y)
         let identdfire = Date.now() + Math.random();
         let bullet_speed__ = bullet_speed * cannon["bulletSpeed"];
 
@@ -772,7 +821,7 @@ function ongame() {
         };
 
         // Emit bullet data
-        console.log("fired",Date.now())
+        console.log("fired", Date.now())
         socket.emit('bulletFired', bullet);
       }, cannon.delay * 1000);
     });
@@ -784,38 +833,38 @@ function ongame() {
   });
   var mouse_X = 0
   var mouse_Y = 0
-  
-  
-  
+
+
+
   document.addEventListener('mousedown', (evt) => {
     let tankdata = tankmeta[type];
     let tankdatacannon = tankdata["cannons"];
-    firingInterval = setInterval((event=evt,MouseY__=MouseY_,MouseX__=MouseX_) => {
+    firingInterval = setInterval((event = evt, MouseY__ = MouseY_, MouseX__ = MouseX_) => {
       canFire2 = false;
       var mouse = getMousePos(canvas, event);
       console.log(mouse)
-      let angle = Math.atan2(Math.abs(MouseY__) - (canvas.height/2-playerSize), Math.abs(MouseX__) - (canvas.width/2-playerSize))
+      let angle = Math.atan2(Math.abs(MouseY__) - (canvas.height / 2 - playerSize), Math.abs(MouseX__) - (canvas.width / 2 - playerSize))
 
       tankdatacannon.forEach((cannon, i) => {
         let tankdatacannondata = tankdatacannon[i];
         setTimeout(() => {
-          
+
 
           let randomNumber = generateRandomNumber(-0.2, 0.2);
-          
+
           if (cannon["type"] === 'basicCannon') {
-            var xxx = (cannon["cannon-width"]-bullet_size_l*1.5)
-            var yyy = (cannon["cannon-height"]-bullet_size_l*2)
-            var realAngle = angle+(cannon["offset-angle"]);
+            var xxx = (cannon["cannon-width"] - bullet_size_l * 1.5)
+            var yyy = (cannon["cannon-height"] - bullet_size_l * 2)
+            var realAngle = angle + (cannon["offset-angle"]);
           } else {
-            var realAngle = angle+(cannon["offset-angle"]) + randomNumber;
-            var xxx = (cannon["cannon-width-top"]-bullet_size_l*1.5)
-            var yyy = (cannon["cannon-height"]-bullet_size_l*2) - ((cannon["cannon-width-top"]/2) * Math.random())
+            var realAngle = angle + (cannon["offset-angle"]) + randomNumber;
+            var xxx = (cannon["cannon-width-top"] - bullet_size_l * 1.5)
+            var yyy = (cannon["cannon-height"] - bullet_size_l * 2) - ((cannon["cannon-width-top"] / 2) * Math.random())
           }
           let rotated_offset_x = (cannon["offSet-x"] + xxx) * Math.cos(realAngle)
-            - (cannon["offSet-y"]+yyy) * Math.sin(realAngle);
+            - (cannon["offSet-y"] + yyy) * Math.sin(realAngle);
           let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(realAngle)
-            + (cannon["offSet-y"]+yyy) * Math.cos(realAngle);
+            + (cannon["offSet-y"] + yyy) * Math.cos(realAngle);
           let bullet_start_x = playerX + rotated_offset_x;
           let bullet_start_y = playerY + rotated_offset_y;
           let identdfire = Date.now() + Math.random();
@@ -824,9 +873,9 @@ function ongame() {
           let recoilX = -(bullet_speed__ * Math.cos(realAngle));
           let recoilY = -(bullet_speed__ * Math.sin(realAngle));
           for (let i = 0; i < playerSpeed; i++) {
-              setTimeout(() => {
-                movePlayer(recoilX/15, recoilY/15, (i == playerSpeed-1) );
-              }, 15*i)
+            setTimeout(() => {
+              movePlayer(recoilX / 15, recoilY / 15, (i == playerSpeed - 1));
+            }, 15 * i)
           }
           // Recoil effect
           cannonWidth[i] = cannonWidth[i] || 0;
@@ -856,7 +905,7 @@ function ongame() {
     }, 750 * tankdata["reaload-m"]);
   });
 
-  document.addEventListener('mouseup', function (evt) {
+  document.addEventListener('mouseup', function(evt) {
     if (firingInterval) {
       clearInterval(firingInterval);
       firingInterval = null;
@@ -866,13 +915,13 @@ function ongame() {
   var start
   start = setInterval(() => {
     statecycle += 1;
-    socket.emit("statechange", {state:state,statecycle:statecycle,playerID:playerId});
-  },50);
+    socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
+  }, 50);
   setTimeout(() => {
     state = "normal";
     clearInterval(start)
-    socket.emit("statechange", {state:state,statecycle:statecycle,playerID:playerId});
-  },5000);
+    socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
+  }, 5000);
 
 
 
@@ -888,122 +937,122 @@ function ongame() {
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     food_list.forEach((item) => {
-        if (item.x > 0 + cavansX && item.x < canvas.width + cavansX && item.y - cavansY > 0 &&
-            item.y < canvas.height + cavansY && item.health > 0) {
-            ctx.save();
-            ctx.translate(item.x - cavansX, item.y - cavansY);
-            ctx.rotate(item.angle * Math.PI / 180);
+      if (item.x > 0 + cavansX && item.x < canvas.width + cavansX && item.y - cavansY > 0 &&
+        item.y < canvas.height + cavansY && item.health > 0) {
+        ctx.save();
+        ctx.translate(item.x - cavansX, item.y - cavansY);
+        ctx.rotate(item.angle * Math.PI / 180);
 
-            if (item.type === 'square') {
-                ctx.fillStyle = item.color;
-                ctx.fillRect(-item.size / 2, -item.size / 2, item.size, item.size);
-                ctx.strokeStyle = 'GoldenRod';
-                ctx.lineWidth = 5;
-                ctx.strokeRect(-item.size / 2, -item.size / 2, item.size, item.size);
+        if (item.type === 'square') {
+          ctx.fillStyle = item.color;
+          ctx.fillRect(-item.size / 2, -item.size / 2, item.size, item.size);
+          ctx.strokeStyle = 'GoldenRod';
+          ctx.lineWidth = 5;
+          ctx.strokeRect(-item.size / 2, -item.size / 2, item.size, item.size);
 
-                ctx.rotate(-item.angle * Math.PI / 180);
-                if (item.health < 10) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(-45, 35, 90, 10);
-                    const healthWidth = (item.health / item.maxhealth) * 90;
-                    ctx.fillStyle = 'green';
-                    ctx.fillRect(-45, 35, healthWidth, 10);
-                }
-            }
+          ctx.rotate(-item.angle * Math.PI / 180);
+          if (item.health < 10) {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(-45, 35, 90, 10);
+            const healthWidth = (item.health / item.maxhealth) * 90;
+            ctx.fillStyle = 'green';
+            ctx.fillRect(-45, 35, healthWidth, 10);
+          }
+        }
 
-            if (item.type === 'triangle') {
-                const h = item.size * Math.sqrt(3) / 2;
+        if (item.type === 'triangle') {
+          const h = item.size * Math.sqrt(3) / 2;
 
-                ctx.beginPath();
-                ctx.moveTo(0, -h / 2);
-                ctx.lineTo(-item.size / 2, h / 2);
-                ctx.lineTo(item.size / 2, h / 2);
-                ctx.closePath();
+          ctx.beginPath();
+          ctx.moveTo(0, -h / 2);
+          ctx.lineTo(-item.size / 2, h / 2);
+          ctx.lineTo(item.size / 2, h / 2);
+          ctx.closePath();
 
-                ctx.fillStyle = item.color;
-                ctx.fill();
-                ctx.strokeStyle = 'Darkred';
-                ctx.lineWidth = 5;
-                ctx.stroke();
+          ctx.fillStyle = item.color;
+          ctx.fill();
+          ctx.strokeStyle = 'Darkred';
+          ctx.lineWidth = 5;
+          ctx.stroke();
 
-                ctx.rotate(-item.angle * Math.PI / 180);
-                if (item.health < 15) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(-45, 35, 90, 10);
-                    const healthWidth = (item.health / item.maxhealth) * 90;
-                    ctx.fillStyle = 'green';
-                    ctx.fillRect(-45, 35, healthWidth, 10);
-                }
-            }
-          if (item.type === 'pentagon') {
-              ctx.fillStyle = item.color;
-              const centerX = 0;
-              const centerY = 0;
-              const radius = item.size;
-              const angle = item.angle * Math.PI / 180; // Convert angle to radians
+          ctx.rotate(-item.angle * Math.PI / 180);
+          if (item.health < 15) {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(-45, 35, 90, 10);
+            const healthWidth = (item.health / item.maxhealth) * 90;
+            ctx.fillStyle = 'green';
+            ctx.fillRect(-45, 35, healthWidth, 10);
+          }
+        }
+        if (item.type === 'pentagon') {
+          ctx.fillStyle = item.color;
+          const centerX = 0;
+          const centerY = 0;
+          const radius = item.size;
+          const angle = item.angle * Math.PI / 180; // Convert angle to radians
 
-              // Calculate vertices
-              const vertices = [];
-              for (let i = 0; i < 5; i++) {
-                  const theta = (i * 2 * Math.PI / 5) + angle; // Divide circle into 5 parts and add rotation angle
-                  const x = centerX + radius * Math.cos(theta);
-                  const y = centerY + radius * Math.sin(theta);
-                  vertices.push({ x, y });
-              }
-
-              // Draw filled pentagon
-              ctx.beginPath();
-              ctx.moveTo(vertices[0].x, vertices[0].y);
-              for (let i = 1; i < vertices.length; i++) {
-                  ctx.lineTo(vertices[i].x, vertices[i].y);
-              }
-              ctx.closePath();
-              ctx.fill();
-
-              // Draw pentagon outline
-              ctx.strokeStyle = "#3976cc";
-              ctx.beginPath();
-              ctx.moveTo(vertices[0].x, vertices[0].y);
-              for (let i = 1; i < vertices.length; i++) {
-                  ctx.lineTo(vertices[i].x, vertices[i].y);
-              }
-              ctx.closePath();
-              ctx.stroke();
-
-              // Rotate context back to original position (if needed)
-              ctx.rotate(-item.angle * Math.PI / 180);
-
-              // Draw health bar if health is less than 100%
-              if (item.health < 100) {
-                  ctx.fillStyle = 'black';
-                  ctx.fillRect(centerX - 60, centerY + 35, 120, 10);
-                  const healthWidth = (item.health / item.maxhealth) * 120;
-                  ctx.fillStyle = 'green';
-                  ctx.fillRect(centerX - 60, centerY + 35, healthWidth, 10);
-              }
+          // Calculate vertices
+          const vertices = [];
+          for (let i = 0; i < 5; i++) {
+            const theta = (i * 2 * Math.PI / 5) + angle; // Divide circle into 5 parts and add rotation angle
+            const x = centerX + radius * Math.cos(theta);
+            const y = centerY + radius * Math.sin(theta);
+            vertices.push({ x, y });
           }
 
-            ctx.restore();
+          // Draw filled pentagon
+          ctx.beginPath();
+          ctx.moveTo(vertices[0].x, vertices[0].y);
+          for (let i = 1; i < vertices.length; i++) {
+            ctx.lineTo(vertices[i].x, vertices[i].y);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // Draw pentagon outline
+          ctx.strokeStyle = "#3976cc";
+          ctx.beginPath();
+          ctx.moveTo(vertices[0].x, vertices[0].y);
+          for (let i = 1; i < vertices.length; i++) {
+            ctx.lineTo(vertices[i].x, vertices[i].y);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+          // Rotate context back to original position (if needed)
+          ctx.rotate(-item.angle * Math.PI / 180);
+
+          // Draw health bar if health is less than 100%
+          if (item.health < 100) {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(centerX - 60, centerY + 35, 120, 10);
+            const healthWidth = (item.health / item.maxhealth) * 120;
+            ctx.fillStyle = 'green';
+            ctx.fillRect(centerX - 60, centerY + 35, healthWidth, 10);
+          }
         }
+
+        ctx.restore();
+      }
     });
     bullets.forEach((bullet) => {
-      if (bullet.x > 0+cavansX && bullet.x < canvas.width+cavansX && bullet.y-cavansY > 0 && bullet.y < canvas.height+cavansY) {
-      ctx.beginPath();
-      if (bullet.id === playerId) {
-        ctx.fillStyle = 'blue';
-        ctx.strokeStyle = 'darkblue';
-      } else {
-        ctx.fillStyle = 'red';
-        ctx.strokeStyle = 'darkred';
-      }
+      if (bullet.x > 0 + cavansX && bullet.x < canvas.width + cavansX && bullet.y - cavansY > 0 && bullet.y < canvas.height + cavansY) {
+        ctx.beginPath();
+        if (bullet.id === playerId) {
+          ctx.fillStyle = 'blue';
+          ctx.strokeStyle = 'darkblue';
+        } else {
+          ctx.fillStyle = 'red';
+          ctx.strokeStyle = 'darkred';
+        }
 
-      ctx.arc(bullet.x - (bullet.xstart-(bullet.xstart-cavansX)), 
-              bullet.y - (bullet.ystart-(bullet.ystart-cavansY)), 
-              bullet.size, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.lineWidth = 5;
-      ctx.stroke();
-      ctx.closePath();
+        ctx.arc(bullet.x - (bullet.xstart - (bullet.xstart - cavansX)),
+          bullet.y - (bullet.ystart - (bullet.ystart - cavansY)),
+          bullet.size, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        ctx.closePath();
       }
     });
     for (let playerId__ in players) {
@@ -1024,14 +1073,14 @@ function ongame() {
           let tankdatacannondata = tankdatacannon[i]
           if (tankdatacannondata["type"] === "basicCannon") {
             ctx.save();
-            ctx.translate(player.x-cavansX, player.y-cavansY);
+            ctx.translate(player.x - cavansX, player.y - cavansY);
             let angle = player.cannon_angle;
 
             let angle_offset = tankdatacannondata["offset-angle"]
-            ctx.rotate(angle+angle_offset);
+            ctx.rotate(angle + angle_offset);
             // Draw the square
-            let basex = (((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"])-player.cannonW[i];
-            let basey = ((-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"])
+            let basex = (((-tankdatacannondata["cannon-width"] / 2) + tankdatacannondata["cannon-height"]) + tankdatacannondata["offSet-x"]) - player.cannonW[i];
+            let basey = ((-tankdatacannondata["cannon-height"] / 2) + tankdatacannondata["offSet-y"])
 
             ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
 
@@ -1042,46 +1091,46 @@ function ongame() {
             ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]); // Draw the border
             // Restore the previous transformation matrix
             ctx.restore();
-          } 
+          }
           else if (tankdatacannondata["type"] === "trapezoid") {
-              ctx.save();
-              ctx.translate(player.x-cavansX, player.y-cavansY);
-              let angle = player.cannon_angle;
+            ctx.save();
+            ctx.translate(player.x - cavansX, player.y - cavansY);
+            let angle = player.cannon_angle;
 
-              let angle_offset = tankdatacannondata["offset-angle"]
-              ctx.rotate(angle+angle_offset);
-              // Draw the square
-              let basex = (((-tankdatacannondata["cannon-width"] / 2)+
-                            tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"])-player.cannonW[i];
-              let basey = ((-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"])
+            let angle_offset = tankdatacannondata["offset-angle"]
+            ctx.rotate(angle + angle_offset);
+            // Draw the square
+            let basex = (((-tankdatacannondata["cannon-width"] / 2) +
+              tankdatacannondata["cannon-height"]) + tankdatacannondata["offSet-x"]) - player.cannonW[i];
+            let basey = ((-tankdatacannondata["cannon-height"] / 2) + tankdatacannondata["offSet-y"])
 
-              const cannonHeight = tankdatacannondata["cannon-height"]
-              const cannonWidth = tankdatacannondata["cannon-width"]
-              const cannonHeightBy2 = cannonHeight / 2;
-              const cannonWidthBY2 = cannonWidth/2;
+            const cannonHeight = tankdatacannondata["cannon-height"]
+            const cannonWidth = tankdatacannondata["cannon-width"]
+            const cannonHeightBy2 = cannonHeight / 2;
+            const cannonWidthBY2 = cannonWidth / 2;
 
-              ctx.beginPath();
-              ctx.moveTo(basex, basey); // Move to the top-left corner
-              ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
-              ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + (cannonHeightBy2)));
-              ctx.lineTo(basex + cannonWidth, basey - (cannonHeightBy2+cannonHeightBy2/2));
-              ctx.closePath(); // Close the path
-              ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(basex, basey); // Move to the top-left corner
+            ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
+            ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + (cannonHeightBy2)));
+            ctx.lineTo(basex + cannonWidth, basey - (cannonHeightBy2 + cannonHeightBy2 / 2));
+            ctx.closePath(); // Close the path
+            ctx.fill();
 
 
-              // Add a border to the cannon
-              ctx.strokeStyle = 'lightgrey'; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.beginPath();
-              ctx.moveTo(basex, basey); // Move to the top-left corner
-              ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
-              ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + cannonHeightBy2));
-              ctx.lineTo(basex + cannonWidth, basey - (cannonHeight + cannonHeightBy2));
-              ctx.closePath(); // Close the path
-              ctx.stroke(); // Draw the border
-              // Restore the previous transformation matrix
-              ctx.restore();
-            }
+            // Add a border to the cannon
+            ctx.strokeStyle = 'lightgrey'; // Set border color
+            ctx.lineWidth = 3; // Set border width
+            ctx.beginPath();
+            ctx.moveTo(basex, basey); // Move to the top-left corner
+            ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
+            ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + cannonHeightBy2));
+            ctx.lineTo(basex + cannonWidth, basey - (cannonHeight + cannonHeightBy2));
+            ctx.closePath(); // Close the path
+            ctx.stroke(); // Draw the border
+            // Restore the previous transformation matrix
+            ctx.restore();
+          }
         }
 
         ctx.beginPath();
@@ -1127,7 +1176,7 @@ function ongame() {
     let r = Math.PI / 180;
     ctx.fillStyle = squareColor;
 
-    let angle = Math.atan2(Math.abs(MouseY_) - (canvas.height/2-playerSize), Math.abs(MouseX_) - (canvas.width/2-playerSize)); 
+    let angle = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
     let tankdata = tankmeta[type]
 
     let tankdatacannon = tankdata["cannons"]
@@ -1140,10 +1189,10 @@ function ongame() {
         // Translate to the center of the square
         ctx.translate((canW / 2), (canH / 2));
         let angle_offset = tankdatacannondata["offset-angle"]
-        ctx.rotate(angle+angle_offset);
+        ctx.rotate(angle + angle_offset);
         // Draw the square
-        let basex = ((-tankdatacannondata["cannon-width"] / 2)+tankdatacannondata["cannon-height"])+tankdatacannondata["offSet-x"]-cannonWidth[i];
-        let basey = (-tankdatacannondata["cannon-height"] / 2)+tankdatacannondata["offSet-y"]
+        let basex = ((-tankdatacannondata["cannon-width"] / 2) + tankdatacannondata["cannon-height"]) + tankdatacannondata["offSet-x"] - cannonWidth[i];
+        let basey = (-tankdatacannondata["cannon-height"] / 2) + tankdatacannondata["offSet-y"]
         ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"], tankdatacannondata["cannon-height"]);
         // Add a border to the cannon
         ctx.strokeStyle = 'lightgrey'; // Set border color
@@ -1158,19 +1207,19 @@ function ongame() {
         ctx.translate((canW / 2), (canH / 2));
         let tankdatacannondata = tankdatacannon[i]
         var angle_offset = tankdatacannondata["offset-angle"]
-        ctx.rotate(angle+angle_offset);
+        ctx.rotate(angle + angle_offset);
         // Draw the square
-        let basex = ((-tankdatacannondata["cannon-width-top"]/2)+tankdatacannondata["cannon-height"]*2)+tankdatacannondata["offSet-x"]-cannonWidth[i];
-        let basey = (tankdatacannondata["cannon-height"]*0)+tankdatacannondata["offSet-y"]
+        let basex = ((-tankdatacannondata["cannon-width-top"] / 2) + tankdatacannondata["cannon-height"] * 2) + tankdatacannondata["offSet-x"] - cannonWidth[i];
+        let basey = (tankdatacannondata["cannon-height"] * 0) + tankdatacannondata["offSet-y"]
         const cannonHeight = tankdatacannondata["cannon-height"]
         const cannonWidth_top = tankdatacannondata["cannon-width-top"]
         const cannonWidth_bottom = tankdatacannondata["cannon-width-bottom"]
-        
-        var canwB2 = cannonWidth_bottom/2;
-        var canwH2 = cannonWidth_top/2;
+
+        var canwB2 = cannonWidth_bottom / 2;
+        var canwH2 = cannonWidth_top / 2;
         ctx.beginPath();
-        ctx.moveTo(basex - cannonHeight, basey- canwB2); // Move to the top-left corner
-        ctx.lineTo(basex - cannonHeight, basey+ canwB2); // Draw to the bottom-left corner
+        ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+        ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
         ctx.lineTo(basex, basey + canwH2);
         ctx.lineTo(basex, basey - canwH2);
         ctx.closePath(); // Close the path
@@ -1180,11 +1229,11 @@ function ongame() {
         // Add a border to the cannon
         ctx.strokeStyle = 'lightgrey'; // Set border color
         ctx.lineWidth = 3; // Set border width
-        var canwB2 = cannonWidth_bottom/2;
-        var canwH2 = cannonWidth_top/2;
+        var canwB2 = cannonWidth_bottom / 2;
+        var canwH2 = cannonWidth_top / 2;
         ctx.beginPath();
-        ctx.moveTo(basex - cannonHeight, basey- canwB2); // Move to the top-left corner
-        ctx.lineTo(basex - cannonHeight, basey+ canwB2); // Draw to the bottom-left corner
+        ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+        ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
         ctx.lineTo(basex, basey + canwH2);
         ctx.lineTo(basex, basey - canwH2);
         ctx.closePath(); // Close the path
@@ -1235,6 +1284,9 @@ function ongame() {
     ctx.lineTo(mapLeft, mapBottom);
     ctx.lineTo(mapLeft, mapTop);
     ctx.stroke();
+
+    gridstyle.top = `calc(-5000px - ${cavansY}px)`;
+    gridstyle.left = `calc(-5000px - ${cavansX}px)`;
 
     function drawRoundedLevelBar(ctx, x, y, width, height, radius, progress) {
       // Full bar
@@ -1289,11 +1341,11 @@ function ongame() {
       ctx.fillStyle = 'black';
       ctx.textAlign = "center";
       ctx.font = "bold 40px Courier New";
-      ctx.fillText(level, canvas.width/2, canvas.height-40);
+      ctx.fillText(level, canvas.width / 2, canvas.height - 40);
     }
 
     // Call the function to draw the level bar
-    drawRoundedLevelBar(ctx, canvas.width/2-barWidth/2, canvas.height-40, barWidth, barHeight, borderRadius, progress+0.05);
+    drawRoundedLevelBar(ctx, canvas.width / 2 - barWidth / 2, canvas.height - 40, barWidth, barHeight, borderRadius, progress + 0.05);
 
 
     requestAnimationFrame(draw);
@@ -1305,16 +1357,16 @@ function ongame() {
 document.getElementById('playButton').addEventListener("mousedown", () => {
   username = document.getElementById('username').value;
   if (username) {
-      // Proceed to the game with the entered username
-      setTimeout(() => {
-        document.getElementById('start').style.display = 'none';
-        document.getElementById('game').style.display = 'block';
-        console.log(`Username: ${username}`,document.getElementById('start').style.display);
-        ongame();
-      }, 100);
+    // Proceed to the game with the entered username
+    setTimeout(() => {
+      document.getElementById('start').style.display = 'none';
+      document.getElementById('game').style.display = 'block';
+      console.log(`Username: ${username}`, document.getElementById('start').style.display);
+      ongame();
+    }, 100);
 
   } else {
-      alert('Please enter a username.');
+    alert('Please enter a username.');
   }
 });
 
