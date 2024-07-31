@@ -64,6 +64,7 @@ function ongame() {
       "speed-m": 1,
       "damage-m": 1,
       "health-m": 1,
+      "regen-m": 1,
       "BodyDamage-m": 1,
       "reaload-m": 1,
       "upgradeLevel": 15,
@@ -73,7 +74,8 @@ function ongame() {
         "sniper": 3,
         "mechiane gun": 4,
         "spreader": 5,
-        "rammer": 6
+        "rammer": 6,
+        "traper": 7
       },
       "cannons": [
         {
@@ -96,6 +98,7 @@ function ongame() {
       "damage-m": 1,
       "health-m": 1,
       "BodyDamage-m": 1,
+      "regen-m": 1,
       "reaload-m": 1.3,
       "upgradeLevel": 30,
       "upgrades": [
@@ -134,6 +137,7 @@ function ongame() {
       "speed-m": 0.98,
       "damage-m": 1,
       "health-m": 1,
+      "regen-m": 1,
       "BodyDamage-m": 1.10,
       "reaload-m": 1.2,
       "upgradeLevel": 30,
@@ -174,6 +178,7 @@ function ongame() {
       "damage-m": 1,
       "health-m": 0.95,
       "BodyDamage-m": 1,
+      "regen-m": 1,
       "reaload-m": 1.5,
       "cannons": [
         {
@@ -197,6 +202,7 @@ function ongame() {
       "health-m": 1,
       "BodyDamage-m": 1,
       "reaload-m": 0.75,
+      "regen-m": 1,
       "upgradeLevel": 30,
       "upgrades": {
         "twin": 1,
@@ -227,6 +233,7 @@ function ongame() {
       "health-m": 1.1,
       "BodyDamage-m": 1,
       "reaload-m": 0.80,
+      "regen-m": 1,
       "upgradeLevel": 30,
       "upgrades": {
         "twin": 1,
@@ -269,6 +276,7 @@ function ongame() {
       "health-m": 1,
       "BodyDamage-m": 1,
       "reaload-m": 0.7,
+      "regen-m": 1,
       "upgradeLevel": 30,
       "upgrades": [
         "twin",
@@ -298,6 +306,32 @@ function ongame() {
           "bulletSpeed": 0.5,
           "delay": 0.5,
           "bullet_pentration": 0.9,
+        }
+      ]
+    },
+    "traper": {
+      "size-m": 1,
+      "speed-m": 0.95,
+      "damage-m": 1,
+      "health-m": 0.95,
+      "BodyDamage-m": 1,
+      "regen-m": 1.1,
+      "max-traps" : 10,
+      "reaload-m": 1.5,
+      "cannons": [
+        {
+          "type": "trap",
+          "cannon-width": 70,
+          "cannon-height": 30,
+          "trap-to-cannon-ratio": 0.8,
+          "offSet-x": 0,
+          "offSet-y": 0,
+          "offset-angle": 0,
+          "bulletSize": 1,
+          "bulletSpeed": 1.5,
+          "delay": 0,
+          "life-time": 10,
+          "bullet_pentration": 1.6,
         }
       ]
     }
@@ -337,7 +371,7 @@ function ongame() {
   var barWidth = 600;
   var barHeight = 30;
   var borderRadius = 10;
-  var playerReheal = 2.5;
+  var playerReheal = 1;
   var maxhealth = 100;
 
   var state = 'start'
@@ -384,7 +418,6 @@ function ongame() {
 
   let healer = setInterval(() => {
     playerHealTime += 1;
-    console.log("player heal", playerHealTime)
     socket.emit("AddplayerHealTime", { playerHealTime: playerHealTime, ID: playerId,maxhealth:maxhealth });
   }, 1000);
 
@@ -401,6 +434,9 @@ function ongame() {
     if (playerId !== data.id) {
       socket.emit('updatePlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: 0, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal })
     }
+    setTimeout(() => {
+      socket.emit("healrate",{playerId:playerId,playerReheal:playerReheal});
+    },3000)
   });
 
   // If you need to handle player updates, add this
@@ -435,21 +471,14 @@ function ongame() {
       socket.emit("unSynched Health",{playerId:playerId,"expsected Health":data.HEALTH, "actual Health":players[data.ID].health})
     }
   });
-  //socket.emit("playerHealthCheck", {HEALTH:players[data.ID].health,ID:data.ID})
+  
 
   socket.on('playerMoved', (data) => {
     players[data.id].x = data.x;
     players[data.id].y = data.y;
-    players[data.id].cannonW = data.cannonW;
-    players[data.id].type = data.type;
-    players[data.id].username = data.username;
-    players[data.id].bodyDamage = data.bodyDamage;
   });
   socket.on('playerCannonUpdated', (data) => {
     players[data.id].cannon_angle = data.cannon_angle;
-    players[data.id].type = data.type;
-    players[data.id].cannonH = data.cannonH;
-    players[data.id].cannonW = data.cannonW;
   });
   socket.on('playerLeft', (id) => {
     players = Object.entries(players).reduce((newPlayers, [key, value]) => {
@@ -493,6 +522,9 @@ function ongame() {
   socket.on('bulletUpdate', (data) => {
     bullets = data;
   });
+  const getCannonAngle = () => {
+    return Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
+  };
   socket.on('playerScore', (data) => {
     players[data["bulletId"]].score += data["socrepluse"];
     if (data["bulletId"] === playerId) {
@@ -527,11 +559,25 @@ function ongame() {
             tankstiles.style.display = 'none';
             type = Object.keys(upgrade)[i]
             players[playerId].type = type;
+            tankdata = tankmeta[type]
             var tankdatacannon__ = tankdata['cannons']
-            cannonWidth = []
-            for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
-              cannonWidth.push(0);
-            }
+            playerSize *= tankdata['size-m']
+            playerSpeed *= tankdata['speed-m']
+            bullet_damage *= tankdata['damage-m']
+            playerReheal *= tankdata['regen-m']
+            bodyDamage *= tankdata['BodyDamage-m']
+            maxhealth *= tankdata['health-m']
+
+            socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal});
+
+            setTimeout(() => {
+              cannonWidth = []
+              console.log(Object.keys(tankdatacannon__).length)
+              for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                cannonWidth.push(0);
+              }
+              console.log(cannonWidth)
+            }, 100);
           });
         }
       }
@@ -588,12 +634,10 @@ function ongame() {
     playerY += dy;
     cavansY += dy;
 
-    socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, dx: dx, dy: dy, last: last, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal });
+    socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, dx: dx, dy: dy, last: last});
   };
 
-  const getCannonAngle = () => {
-    return Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
-  };
+  
 
   socket.on("bouceBack", (data) => {
     for (let i = 0; i < playerSpeed; i++) {
@@ -603,12 +647,16 @@ function ongame() {
     }
   });
 
+  socket.on('type_Change', (data) => {
+    players[data.id] = data
+  });
+
   const checkCollisions = (dx, dy) => {
     for (let playerId_ in players) {
       let player = players[playerId_];
       let distance = Math.hypot(player.x - playerX, player.y - playerY);
 
-      if (distance < (player.size * 40 + playerSize * 40) && playerId_ != playerId) {
+      if (distance < (player.size * 41 + playerSize * 41) && playerId_ != playerId) {
         socket.emit('playerCollided', {
           id_other: playerId_,
           damagetaken: player.bodyDamage,
@@ -617,11 +665,10 @@ function ongame() {
         });
         playerHealTime = 0;
         socket.emit("playerHealintterupted", {ID:playerId});
-        for (let i = 0; i < playerSpeed; i++) {
+        for (let c = 0; c < (playerSpeed+7); c++) {
           setTimeout(() => {
-            console.log(-dx, -dy)
-            movePlayer(-dx, -dy);
-          }, 17 * i);
+            movePlayer(-dx, -dy, (c == playerSpeed - 1));
+          }, 15 * c);
         }// Reverse the last movement
       }
     }
@@ -659,7 +706,6 @@ function ongame() {
             var img__ = document.createElement("img")
             var tileImg = Object.values(upgrade)[i];
             tankstiles.appendChild(img__);
-            console.log(tileImg);
 
             img__.src = "tanktiles/" + tileImg + ".png";
             img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;"
@@ -672,6 +718,14 @@ function ongame() {
               players[playerId].type = type;
               tankdata = tankmeta[type]
               var tankdatacannon__ = tankdata['cannons']
+              playerSize *= tankdata['size-m']
+              playerSpeed *= tankdata['speed-m']
+              bullet_damage *= tankdata['damage-m']
+              playerReheal *= tankdata['regen-m']
+              bodyDamage *= tankdata['BodyDamage-m']
+              maxhealth *= tankdata['health-m']
+              
+              socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal});
               setTimeout(() => {
                 cannonWidth = []
                 console.log(Object.keys(tankdatacannon__).length)
@@ -716,7 +770,12 @@ function ongame() {
   socket.on("statechangeUpdate", (data) => {
     players[data.playerID].state = data.state;
     players[data.playerID].statecycle = data.statecycle;
-  })
+  });
+
+  // socket.broadcast.emit('playerCannonWidthUpdate', { id: data.id, cannon_width: data.cannon_width });
+  socket.on('playerCannonWidthUpdate',(data) => {
+    players[data.id].cannon_width = data.cannon_width;
+  });
 
   document.addEventListener('keyup', (event) => {
     delete keysPressed[event.key];
@@ -751,7 +810,7 @@ function ongame() {
     MouseX_ = mousepos.x;
     MouseY_ = mousepos.y;
     let __angle__ = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
-    socket.emit('playerCannonMoved', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: __angle__, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime });
+    socket.emit('playerCannonMoved', { id: playerId, cannon_angle: __angle__});
   });
 
   function generateRandomNumber(min, max) {
@@ -793,15 +852,26 @@ function ongame() {
         let rotated_offset_y = (cannon["offSet-x"] + xxx) * Math.sin(angle_) + (cannon["offSet-y"] + yyy) * Math.cos(angle_);
         let bullet_start_x = playerX + rotated_offset_x;
         let bullet_start_y = playerY + rotated_offset_y;
-        console.log(rotated_offset_x, rotated_offset_y)
         let identdfire = Date.now() + Math.random();
         let bullet_speed__ = bullet_speed * cannon["bulletSpeed"];
 
         // Recoil effect
         cannonWidth[i] = cannonWidth[i] || 0;
         for (let l = 0; l < 10; l++) {
-          setTimeout(() => { cannonWidth[i] -= 1; }, 10 * l);
-          setTimeout(() => { cannonWidth[i] += 1; }, 20 * l); // Updated to prevent overlap
+          setTimeout(() => { cannonWidth[i] -= 1; 
+                           socket.emit('playerCannonWidth', { id: playerId, cannon_width: cannonWidth });
+                           }, 10 * l);
+          setTimeout(() => { cannonWidth[i] += 1; 
+                           socket.emit('playerCannonWidth', { id: playerId, cannon_width: cannonWidth });
+                           }, 20 * l); // Updated to prevent overlap
+        }
+
+        let recoilX = -((bullet_size_l/10)*bullet_speed__ * Math.cos(angle_));
+        let recoilY = -((bullet_size_l/10)*bullet_speed__ * Math.sin(angle_));
+        for (let i = 0; i < playerSpeed; i++) {
+          setTimeout(() => {
+            movePlayer(recoilX / 15, recoilY / 15, (i == playerSpeed - 1));
+          }, 15 * i)
         }
 
         let bullet = {
@@ -820,8 +890,6 @@ function ongame() {
           uniqueid: identdfire
         };
 
-        // Emit bullet data
-        console.log("fired", Date.now())
         socket.emit('bulletFired', bullet);
       }, cannon.delay * 1000);
     });
@@ -842,7 +910,6 @@ function ongame() {
     firingInterval = setInterval((event = evt, MouseY__ = MouseY_, MouseX__ = MouseX_) => {
       canFire2 = false;
       var mouse = getMousePos(canvas, event);
-      console.log(mouse)
       let angle = Math.atan2(Math.abs(MouseY__) - (canvas.height / 2 - playerSize), Math.abs(MouseX__) - (canvas.width / 2 - playerSize))
 
       tankdatacannon.forEach((cannon, i) => {
@@ -852,6 +919,7 @@ function ongame() {
 
           let randomNumber = generateRandomNumber(-0.2, 0.2);
 
+          let bullet_size_l = bullet_size * cannon["bulletSize"]
           if (cannon["type"] === 'basicCannon') {
             var xxx = (cannon["cannon-width"] - bullet_size_l * 1.5)
             var yyy = (cannon["cannon-height"] - bullet_size_l * 2)
@@ -870,8 +938,8 @@ function ongame() {
           let identdfire = Date.now() + Math.random();
           let bullet_speed__ = bullet_speed * cannon["bulletSpeed"];
 
-          let recoilX = -(bullet_speed__ * Math.cos(realAngle));
-          let recoilY = -(bullet_speed__ * Math.sin(realAngle));
+          let recoilX = -((bullet_size_l/10)*bullet_speed__ * Math.cos(realAngle));
+          let recoilY = -((bullet_size_l/10)*bullet_speed__ * Math.sin(realAngle));
           for (let i = 0; i < playerSpeed; i++) {
             setTimeout(() => {
               movePlayer(recoilX / 15, recoilY / 15, (i == playerSpeed - 1));
@@ -1063,7 +1131,6 @@ function ongame() {
 
         let r = Math.PI / 180;
 
-
         let tankdata = tankmeta[player.type]
 
         let tankdatacannon = tankdata["cannons"]
@@ -1107,7 +1174,6 @@ function ongame() {
             const cannonHeight = tankdatacannondata["cannon-height"]
             const cannonWidth = tankdatacannondata["cannon-width"]
             const cannonHeightBy2 = cannonHeight / 2;
-            const cannonWidthBY2 = cannonWidth / 2;
 
             ctx.beginPath();
             ctx.moveTo(basex, basey); // Move to the top-left corner
@@ -1137,7 +1203,7 @@ function ongame() {
         ctx.fillStyle = squareColor;
         ctx.arc(player.x - cavansX, player.y - cavansY, player.size * 40, 0, 2 * Math.PI, false);
         let num = (player.statecycle % 10)
-        if (num === 0) {
+        if (num === 0 && player.state === "start") {
           ctx.fillStyle = 'white';
         } else {
           ctx.fillStyle = 'red';
@@ -1153,7 +1219,7 @@ function ongame() {
         ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, 90, 10);
 
         // Draw health bar
-        const healthWidth = (player.health / 100) * 90;
+        const healthWidth = (player.health / player.maxhealth) * 90;
         ctx.fillStyle = 'green';
         ctx.fillRect((player.x - cavansX) - 50, (player.y - cavansY) + 55, healthWidth, 10);
 
@@ -1240,13 +1306,65 @@ function ongame() {
         ctx.stroke(); // Draw the border
         ctx.restore();
       }
+      if (tankdatacannondata["type"] === "trap") {
+        ctx.save();
+        // Translate to the center of the square
+        ctx.translate((canW / 2), (canH / 2));
+        let angle_offset = tankdatacannondata["offset-angle"]
+        let trapR = tankdatacannondata["trap-to-cannon-ratio"]
+        ctx.rotate(angle + angle_offset);
+        // Draw the square
+        let basex = ((-tankdatacannondata["cannon-width"] / 2) + tankdatacannondata["cannon-height"]) + tankdatacannondata["offSet-x"] - cannonWidth[i];
+        let reH = tankdatacannondata["cannon-width"] * (1 - trapR)
+        let basey = (-tankdatacannondata["cannon-height"] / 2) + tankdatacannondata["offSet-y"]
+        ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"]-reH, tankdatacannondata["cannon-height"]);
+        // Add a border to the cannon
+        
+        ctx.strokeStyle = 'lightgrey'; // Set border color
+        ctx.lineWidth = 3; // Set border width
+        ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"]-reH, tankdatacannondata["cannon-height"]);
+        // Restore the previous transformation matrix
+        const cannonHeight = reH
+        const cannonWidth_top = tankdatacannondata["cannon-height"]*1.4
+        const cannonWidth_bottom = tankdatacannondata["cannon-height"]
+
+
+        basex = basex+(tankdatacannondata["cannon-width"]-trapR)
+        
+
+        var canwB2 = cannonWidth_bottom / 2;
+        var canwH2 = cannonWidth_top / 2;
+        basey += canwB2
+        ctx.beginPath();
+        ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+        ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+        ctx.lineTo(basex, basey + canwH2);
+        ctx.lineTo(basex, basey - canwH2);
+        ctx.closePath(); // Close the path
+        ctx.fill();
+
+
+        // Add a border to the cannon
+        ctx.strokeStyle = 'lightgrey'; // Set border color
+        ctx.lineWidth = 3; // Set border width
+        var canwB2 = cannonWidth_bottom / 2;
+        var canwH2 = cannonWidth_top / 2;
+        ctx.beginPath();
+        ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+        ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+        ctx.lineTo(basex, basey + canwH2);
+        ctx.lineTo(basex, basey - canwH2);
+        ctx.closePath(); // Close the path
+        ctx.stroke(); // Draw the border
+        ctx.restore();
+      }
     }
 
 
     ctx.beginPath();
     ctx.arc(canvas.width / 2, canvas.height / 2, playerSize * 40, 0, 2 * Math.PI, false);
     num = (statecycle % 10)
-    if (num === 0) {
+    if (num === 0 && state === "start") {
       ctx.fillStyle = 'white';
     } else {
       ctx.fillStyle = 'blue';
@@ -1267,7 +1385,7 @@ function ongame() {
     ctx.fillText(username, (canvas.width / 2), (canvas.height / 2) - 75);
 
     // Draw health bar
-    const healthWidth = (playerHealth / 100) * 90;
+    const healthWidth = (playerHealth / maxhealth) * 90;
     ctx.fillStyle = 'green';
     ctx.fillRect((canvas.width / 2) - 50, (canvas.height / 2) + 55, healthWidth, 10);
 

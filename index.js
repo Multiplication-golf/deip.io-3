@@ -204,20 +204,13 @@ for (let i = 0; i < getRandomInt(300, 400); i++) {
   food_squares.push(fooditem);
 }
 
-
-
-
-function removeItemOnce(arr, id) {
-  return arr.filter(obj => obj.randomID !== id);
-}
-
-
 var angle = 0;
 
 
 io.on('connection', (socket) => {
   socket.on('newPlayer', (data) => {
     players[data.id] = data;
+    console.log(players)
     io.emit('playerJoined', data); // Emit playerJoined event to notify all clients
     io.emit('FoodUpdate', food_squares); // Emit FoodUpdate event to update food squares
   });
@@ -226,18 +219,25 @@ io.on('connection', (socket) => {
     io.emit('playerUpdated', data); // Emit playerUpdated event if needed
   });
 
-  socket.on('getFood', (data) => {
+  socket.on('getFood', () => {
     io.emit('FoodUpdate', food_squares);
+  });
+
+  socket.on("typeChange", (data) => {
+    players[data.id] = data
+    io.emit("type_Change", data);
+  })
+
+  // socket.emit('playerCannonWidth', { id: playerId, cannon_width: cannonWidth });
+  socket.on('playerCannonWidth', (data) => {
+    players[data.id].cannon_angle = data.cannon_width;
+    socket.broadcast.emit('playerCannonWidthUpdate', { id: data.id, cannon_width: data.cannon_width });
   });
 
   socket.on('playerMoved', (data) => {
     if (players[data.id]) {
       players[data.id].x = data.x;
       players[data.id].y = data.y;
-      players[data.id].cannonW = data.cannonW;
-      players[data.id].type = data.type;
-      players[data.id].username = data.username;
-      players[data.id].bodyDamage = data.bodyDamage;
       if (!data.last) {return}
       let player = players[data.id]
       food_squares = food_squares.filter((item, index) => {
@@ -371,40 +371,46 @@ io.on('connection', (socket) => {
   });
 
   socket.on('playerCannonMoved', (data) => {
-    players[data.id] = data;
-    if (data.id != undefined) {
-      socket.broadcast.emit('playerCannonUpdated', data);
-    }
+    if (!players[data.id]) return
+    players[data.id].cannon_angle = data.cannon_angle;
+    socket.broadcast.emit('playerCannonUpdated', data);
   });
 
   socket.on('statechange', (data) => {
     socket.broadcast.emit('statechangeUpdate', data);
   });
 
+  socket.on("healrate", (data) => {
+    players[data.playerId].playerReheal = data.playerReheal;
+  });
+
   socket.on("AddplayerHealTime", (data) => {
     //playerHealTime:playerHealTime, ID:playerId
     if (!players[data.ID]) return
     players[data.ID].maxhealth = data.maxhealth;
-    console.log(data,players[data.ID].health,players[data.ID].maxhealth)
     players[data.ID].playerHealTime = data.playerHealTime;
     io.emit("updaterHeal", {ID:data.ID, HEALTime:data.playerHealTime})
     if (data.playerHealTime > 30 && players[data.ID].health < players[data.ID].maxhealth) {
       io.emit('playerHealing', { "playerID": data.ID, "playerHealTime": data.playerHealTime} );
+      
       let healer = setInterval(function() {
         players[data.ID].health += players[data.ID].playerReheal;
-        io.emit("playerHeal", {HEALTH:players[data.ID].health,ID:data.ID})
         if (players[data.ID].health >= players[data.ID].maxhealth) {
           players[data.ID].health = players[data.ID].maxhealth;
           clearInterval(healer);
+          
         }
         if (players[data.ID].playerHealTime < 30) {
+          players[data.ID].health -= players[data.ID].playerReheal
           clearInterval(healer);
         }
-      }, 500);
+        io.emit("playerHeal", {HEALTH:players[data.ID].health,ID:data.ID})
+      }, 50);
     }
   });
 
   socket.on("playerHealintterupted", (data) => {
+    if (!players[data.ID]) return
     players[data.ID].playerHealTime = 0;
     io.emit("updaterHeal", {ID:data.ID, HEALTime:0})
   });
@@ -412,7 +418,33 @@ io.on('connection', (socket) => {
   socket.on('playerCollided', (data) => {
     try {
       players[data.id_other].health -= data.damagegiven; // Swap damagegiven and damagetaken
-      players[data.id_self].health -= data.damagetaken; // Swap damagegiven and damagetaken
+      players[data.id_self].health -= data.damagetaken;
+      if (players[data.id_other].health <= 0) {
+        let player = players[data.id_other]
+        let player2 = players[data.id_self]
+        var reward = Math.round(player.score / (20 + (players[player2.id].score / 10000)))
+        io.emit('playerScore', { bulletId: player2.id, socrepluse: reward });
+        io.emit('playerDied', { "playerID": player.id, "rewarder": player2.id, "reward": reward });
+        players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+          if (key !== player.id) {
+            newPlayers[key] = value;
+          }
+          return newPlayers;
+        }, {});
+      }
+      if (players[data.id_self].health <= 0) {
+        let player = players[data.id_self]
+        let player2 = players[data.id_other]
+        var reward = Math.round(player.score / (20 + (players[player2.id].score / 10000)))
+        io.emit('playerScore', { bulletId: player2.id, socrepluse: reward });
+        io.emit('playerDied', { "playerID": player.id, "rewarder": player2.id, "reward": reward });
+        players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+          if (key !== player.id) {
+            newPlayers[key] = value;
+          }
+          return newPlayers;
+        }, {});
+      }
     } catch (error) {
       console.log(error);
     }
@@ -424,6 +456,10 @@ io.on('connection', (socket) => {
       player2: players[data.id_self],
       ID2: data.id_self
     });
+  });
+
+  socket.on("playerUPDATE", (data) => {
+    players[data.id] = data;
   });
 
 
