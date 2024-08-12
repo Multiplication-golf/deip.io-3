@@ -4,7 +4,9 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const path = require('path')
 const SAT = require('sat');
+const fs = require('fs');
 const { setTimeout } = require('timers');
+const zlib = require('zlib');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -27,28 +29,22 @@ const pi = Math.PI
 const pi180 = pi / 180;
 const sqrt23 = (Math.sqrt(3) / 2)
 
-function writeCacheToFile(filePath) {
-  const data = JSON.stringify(vertexCache, null, 2); // Convert cache to JSON string
-  fs.writeFileSync(filePath, data); // Write JSON string to file
-  console.log(`Cache written to ${filePath}`);
-}
+
 // Function to calculate triangle vertices
 function calculateTriangleVertices(cx, cy, size, angle) {
-  const height = sqrt23 * size; // Height of an equilateral triangle
+  const height = sqrt23 * size;
   const halfSize = size / 2;
 
-  const angleRad = angle * (pi180); // Convert angle to radians
+  const angleRad = angle * pi180;
   const cosAngle = Math.cos(angleRad);
   const sinAngle = Math.sin(angleRad);
 
-  // Define vertices relative to the center
   let vertices = [
-    { x: -halfSize, y: -height / 3 }, // Bottom-left
-    { x: halfSize, y: -height / 3 },  // Bottom-right
-    { x: 0, y: 2 * height / 3 }       // Top
+    { x: -halfSize, y: -height / 3 },
+    { x: halfSize, y: -height / 3 },
+    { x: 0, y: 2 * height / 3 }
   ];
 
-  // Rotate and translate vertices
   for (let i = 0; i < vertices.length; i++) {
     const vertex = vertices[i];
     const rotatedX = vertex.x * cosAngle - vertex.y * sinAngle;
@@ -59,8 +55,9 @@ function calculateTriangleVertices(cx, cy, size, angle) {
   return vertices;
 }
 
-
 function calculateRotatedPentagonVertices(cx, cy, r, rotation) {
+
+
   const R = r + 5;
   const angleOffset = -pi / 2 + rotation;
   const vertices = new Array(5);
@@ -76,9 +73,10 @@ function calculateRotatedPentagonVertices(cx, cy, r, rotation) {
 }
 
 function calculateSquareVertices(cx, cy, size, angle) {
+
   const halfSize = size / 2;
 
-  const angleRad = angle * (pi180);
+  const angleRad = angle * pi180;
   const cosAngle = Math.cos(angleRad);
   const sinAngle = Math.sin(angleRad);
 
@@ -215,6 +213,8 @@ for (let i = 0; i < getRandomInt(300, 400); i++) {
 
 var angle = 0;
 
+var invaled_requests = [];
+
 
 io.on('connection', (socket) => {
   socket.on('newPlayer', (data) => {
@@ -233,13 +233,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on("typeChange", (data) => {
+    if (!players[data.id]) {invaled_requests.push(data.id); return}
     players[data.id] = data
     io.emit("type_Change", data);
   })
 
   // socket.emit('playerCannonWidth', { id: playerId, cannon_width: cannonWidth });
   socket.on('playerCannonWidth', (data) => {
-    players[data.id].cannon_angle = data.cannon_width;
+    if (!players[data.id]) {invaled_requests.push(data.id); return}
+    players[data.id].cannon_width = data.cannon_width;
     socket.broadcast.emit('playerCannonWidthUpdate', { id: data.id, cannon_width: data.cannon_width });
   });
 
@@ -380,16 +382,18 @@ io.on('connection', (socket) => {
   });
 
   socket.on('playerCannonMoved', (data) => {
-    if (!players[data.id]) return
+    if (!players[data.id]) {return}
     players[data.id].cannon_angle = data.cannon_angle;
     socket.broadcast.emit('playerCannonUpdated', data);
   });
 
   socket.on('statechange', (data) => {
+    if (!players[data.id]) {invaled_requests.push(data.id); return}
     socket.broadcast.emit('statechangeUpdate', data);
   });
 
   socket.on("healrate", (data) => {
+    if (!players[data.id]) {invaled_requests.push(data.id); return}
     players[data.playerId].playerReheal = data.playerReheal;
   });
 
