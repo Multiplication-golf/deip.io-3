@@ -1,0 +1,52 @@
+ctx.save();
+// Translate to the center of the square
+ctx.translate((canW / 2), (canH / 2));
+let angle_offset = tankdatacannondata["offset-angle"]
+let trapR = tankdatacannondata["trap-to-cannon-ratio"]
+ctx.rotate(angle + angle_offset);
+// Draw the square
+let basex = ((-tankdatacannondata["cannon-width"] / 2) + tankdatacannondata["cannon-height"]) + tankdatacannondata["offSet-x"] - cannonWidth[i];
+let reH = (((tankdatacannondata["cannon-width"])*playerSize)*FOV) * (1 - trapR)
+let basey = (-tankdatacannondata["cannon-height"] / 2) + tankdatacannondata["offSet-y"]
+ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"] - reH, tankdatacannondata["cannon-height"]);
+
+ctx.strokeStyle = 'lightgrey';
+ctx.lineWidth = 3; // Set border width
+ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"] - reH, tankdatacannondata["cannon-height"]);
+
+const cannonHeight = reH
+const cannonWidth_top = ((tankdatacannondata["cannon-height"]*playerSize)*FOV) * 1.4
+const cannonWidth_bottom = ((tankdatacannondata["cannon-height"]*playerSize)*FOV)
+
+
+basex = basex + (tankdatacannondata["cannon-width"] - trapR)
+
+
+var canwB2 = cannonWidth_bottom / 2;
+var canwH2 = cannonWidth_top / 2;
+basey += canwB2
+ctx.beginPath();
+ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+ctx.lineTo(basex, basey + canwH2);
+ctx.lineTo(basex, basey - canwH2);
+ctx.closePath(); // Close the path
+ctx.fill();
+
+
+// Add a border to the cannon
+ctx.strokeStyle = 'lightgrey'; // Set border color
+ctx.lineWidth = 3; // Set border width
+ctx.beginPath();
+ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+ctx.lineTo(basex, basey + canwH2);
+ctx.lineTo(basex, basey - canwH2);
+ctx.closePath(); // Close the path
+ctx.stroke(); // Draw the border
+ctx.restore();
+
+
+
+
+
