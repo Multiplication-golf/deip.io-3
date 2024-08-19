@@ -11,25 +11,6 @@ for (let i = 0; i < 125; i++) {
 }
 function ongame() {
 
-
-  function disableScroll() {
-    // Get the current page scroll position in the vertical direction
-    scrollTop =
-      window.scrollY || document.documentElement.scrollTop;
-
-
-    // Get the current page scroll position in the horizontal direction 
-
-    scrollLeft =
-      window.scrollX || document.documentElement.scrollLeft;
-
-
-    // if any scroll is attempted,
-    // set this to the previous value
-    window.onscroll = function() {
-      window.scrollTo(scrollLeft, scrollTop);
-    };
-  }
   // TODO:
   // add pentgons [DONE]
   // add reciol - [Done]
@@ -352,6 +333,8 @@ function ongame() {
   var xp = 0;
   var FOV = 1; // senstive
   var playerId;
+  var autoFiring = false;
+  var autoRotating = false;
   var playerX = canvas.width / 2;
   var playerY = canvas.height / 2;
   var cavansX = 0;
@@ -426,14 +409,14 @@ function ongame() {
 
   socket.on('connect', () => {
     playerId = socket.id;
-    socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: 0, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal,FOV:FOV });
+    socket.emit('newPlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: 0, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal, FOV: FOV, MouseX: MouseX_, MouseY: MouseY_ });
     draw() // Call draw after connecting
   });
   socket.on('playerJoined', (data) => {
     console.log(data); // Log the player data
     players[data.id] = data; // Update the local player list
     if (playerId !== data.id) {
-      socket.emit('updatePlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: 0, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal,FOV:FOV })
+      socket.emit('updatePlayer', { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: 0, score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal, FOV: FOV, MouseX: MouseX_, MouseY: MouseY_ })
     }
     setTimeout(() => {
       socket.emit("healrate", { playerId: playerId, playerReheal: playerReheal });
@@ -510,7 +493,7 @@ function ongame() {
       respawn.addEventListener("click", () => {
         window.location.reload();
       });
-      
+
     }
     else if (data["rewarder"] === playerId && data.reward) {
       score += data.reward;
@@ -531,7 +514,7 @@ function ongame() {
       state = "damaged";
       statecycle = 0;
       socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
-      setTimeout( () => {
+      setTimeout(() => {
         state = "noramal";
         statecycle = 0;
         socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
@@ -543,7 +526,7 @@ function ongame() {
       state = "damaged";
       statecycle = 0;
       socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
-      setTimeout( () => {
+      setTimeout(() => {
         state = "noramal";
         statecycle = 0;
         socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
@@ -604,7 +587,7 @@ function ongame() {
               playerHealth = maxhealth;
             }
 
-            socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal,FOV:FOV });
+            socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal, FOV: FOV, MouseX: MouseX, MouseY: MouseY });
 
             setTimeout(() => {
               cannonWidth = []
@@ -645,7 +628,7 @@ function ongame() {
         state = "damaged";
         statecycle = 0;
         socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
-        setTimeout( () => {
+        setTimeout(() => {
           state = "noramal";
           statecycle = 0;
           socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
@@ -665,7 +648,7 @@ function ongame() {
         state = "damaged";
         statecycle = 0;
         socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
-        setTimeout( () => {
+        setTimeout(() => {
           state = "noramal";
           statecycle = 0;
           socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
@@ -693,19 +676,19 @@ function ongame() {
     socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, dx: dx, dy: dy, last: last });
   };
 
-  
+
 
   socket.on("bouceBack", (data) => {
     canmove = false;
     for (let i = 0; i < playerSpeed; i++) {
-      
+
       setTimeout(() => {
         movePlayer(data.dx, data.dy);
       }, 25 * i)
     }
     setTimeout(() => {
       canmove = true;
-    }, 10*playerSpeed);
+    }, 10 * playerSpeed);
   });
 
   socket.on('type_Change', (data) => {
@@ -726,7 +709,7 @@ function ongame() {
         });
         playerHealTime = 0;
         socket.emit("playerHealintterupted", { ID: playerId });
-        for (let c = 0; c < (playerSpeed + 7); c++) {
+        for (let c = 0; c < (playerSpeed + 10); c++) {
           setTimeout(() => {
             movePlayer(-dx, -dy, (c === playerSpeed - 1));
           }, 50 * c);
@@ -739,7 +722,7 @@ function ongame() {
     if ((playerX + dx > mapLeft && playerX + dx < mapRight) && (playerY + dy > mapTop && playerY + dy < mapBottom)) {
       for (let i = 0; i < playerSpeed; i++) {
         setTimeout(() => {
-          movePlayer(dx, dy, (i === playerSpeed - 1));
+          movePlayer(dx, dy, (i === playerSpeed - 1 || i === 0));
         }, 50 * i)
       }
       checkCollisions(dx, dy);
@@ -814,7 +797,7 @@ function ongame() {
                 playerHealth = maxhealth;
               }
 
-              socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal,FOV:FOV });
+              socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal, FOV: FOV, MouseX: MouseX, MouseY: MouseY });
               setTimeout(() => {
                 cannonWidth = []
                 console.log(Object.keys(tankdatacannon__).length)
@@ -860,6 +843,8 @@ function ongame() {
       FOV -= 0.1;
     } else if (keysPressed['=']) {
       FOV += 0.1
+    } else if (keysPressed['e']) {
+      autoFiring = !autoFiring;
     }
   });
   socket.on("statechangeUpdate", (data) => {
@@ -892,7 +877,7 @@ function ongame() {
     } else if (keysPressed['ArrowRight'] || keysPressed['d']) {
       handleMovement(1, 0);
     }
-    
+
     if (event.key === 'ArrowUp' || event.key === 'w') {
       playerMovementY = 0;
     }
@@ -912,12 +897,12 @@ function ongame() {
   let squareColor = 'grey';
 
   var container = document.getElementById("container")
-  document.addEventListener('mousemove', function(evt) {
+  document.addEventListener('mousemove', (evt) => {
     var mousepos = getMousePos(container, evt);
     MouseX_ = mousepos.x;
     MouseY_ = mousepos.y;
     let __angle__ = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
-    socket.emit('playerCannonMoved', { id: playerId, cannon_angle: __angle__ });
+    socket.emit('playerCannonMoved', { id: playerId, cannon_angle: __angle__, MouseX: MouseX_, MouseY: MouseY_ });
   });
 
   function generateRandomNumber(min, max) {
@@ -925,10 +910,11 @@ function ongame() {
   }
   let canFire = true;
   let canFire2 = true;
+  let canFire3 = true;
   let firingInterval = null;
-
-  document.addEventListener('mousedown', function(evt) {
+  function fireOnce(evt) {
     if (!canFire) return;
+    if (autoFiring) return;
 
     canFire = false;
     let tankdata = tankmeta[type];
@@ -1031,18 +1017,16 @@ function ongame() {
     setTimeout(() => {
       canFire = true;
     }, 750 * tankdata["reaload-m"]);
-  });
-
-
-
-
-  document.addEventListener('mousedown', (evt) => {
+  }
+  function FireIntervale(evt) {
     let tankdata = tankmeta[type];
     let tankdatacannon = tankdata["cannons"];
+    if (autoFiring) return;
     firingInterval = setInterval((event = evt, MouseY__ = MouseY_, MouseX__ = MouseX_) => {
       canFire2 = false;
       var mouse = getMousePos(canvas, event);
       let angle = Math.atan2(Math.abs(MouseY__) - (canvas.height / 2 - playerSize), Math.abs(MouseX__) - (canvas.width / 2 - playerSize))
+      if (autoFiring) return;
 
       tankdatacannon.forEach((cannon, i) => {
         let tankdatacannondata = tankdatacannon[i];
@@ -1130,11 +1114,25 @@ function ongame() {
             uniqueid: identdfire
           };
           socket.emit('bulletFired', bullet);
-          
+
         }, (tankdatacannondata["delay"] * 1000));
       });
     }, 750 * tankdata["reaload-m"]);
+  }
+  
+  document.addEventListener('mousedown', fireOnce);
+
+  setInterval(() => {
+    if (!autoFiring) return;
+    if (firingInterval) {
+      clearInterval(firingInterval);
+      firingInterval = null;
+    }
+    fireOnce();
   });
+
+
+  document.addEventListener('mousedown', FireIntervale);
 
   document.addEventListener('mouseup', function() {
     if (firingInterval) {
@@ -1154,7 +1152,7 @@ function ongame() {
     // make sure the server got the mesage
     setTimeout(() => {
       socket.emit("statechange", { state: state, statecycle: statecycle, playerID: playerId });
-    },300)
+    }, 300)
   }, 5000);
 
   for (data in cannonWidth) {
@@ -1164,25 +1162,25 @@ function ongame() {
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     food_list.forEach((item) => {
-      var realx = (item.x - (item.size*(FOV-1)))
-      var realy = (item.y - (item.size*(FOV-1)))
+      var realx = (item.x - (item.size * (FOV - 1)))
+      var realy = (item.y - (item.size * (FOV - 1)))
       if (realx > 0 + cavansX && realx < canvas.width + cavansX && realy - cavansY > 0 &&
-          realy < canvas.height + cavansY && item.health > 0) {
+        realy < canvas.height + cavansY && item.health > 0) {
         ctx.save();
         ctx.translate(realx - cavansX, realy - cavansY);
         ctx.rotate(item.angle * pi180);
 
         if (item.type === 'square') {
           ctx.fillStyle = item.color;
-          ctx.fillRect(-item.size / 2, -item.size / 2, item.size*FOV, item.size*FOV);
+          ctx.fillRect(-item.size / 2, -item.size / 2, item.size * FOV, item.size * FOV);
           ctx.strokeStyle = 'GoldenRod';
           ctx.lineWidth = 5;
-          ctx.strokeRect(-item.size / 2, -item.size / 2, item.size*FOV, item.size*FOV);
+          ctx.strokeRect(-item.size / 2, -item.size / 2, item.size * FOV, item.size * FOV);
 
           ctx.rotate(-item.angle * pi180);
           if (item.health < 10) {
             ctx.fillStyle = 'black';
-            ctx.fillRect(-45, 35, 90*FOV, 10);
+            ctx.fillRect(-45, 35, 90 * FOV, 10);
             const healthWidth = (item.health / item.maxhealth) * 90 * FOV;
             ctx.fillStyle = 'green';
             ctx.fillRect(-45, 35, healthWidth, 10);
@@ -1190,7 +1188,7 @@ function ongame() {
         }
 
         if (item.type === 'triangle') {
-          let realitemsize = item.size*FOV
+          let realitemsize = item.size * FOV
           const h = realitemsize * Math.sqrt(3) / 2;
 
           ctx.beginPath();
@@ -1208,17 +1206,17 @@ function ongame() {
           ctx.rotate(-item.angle * pi180);
           if (item.health < 15) {
             ctx.fillStyle = 'black';
-            ctx.fillRect(-45, 35, 90*FOV, 10*FOV);
+            ctx.fillRect(-45, 35, 90 * FOV, 10 * FOV);
             const healthWidth = (item.health / item.maxhealth) * 90 * FOV;
             ctx.fillStyle = 'green';
-            ctx.fillRect(-45, 35, healthWidth, 10*FOV);
+            ctx.fillRect(-45, 35, healthWidth, 10 * FOV);
           }
         }
         if (item.type === 'pentagon') {
           ctx.fillStyle = item.color;
           const centerX = 0;
           const centerY = 0;
-          const radius = item.size*FOV;
+          const radius = item.size * FOV;
           const angle = item.angle * pi180; // Convert angle to radians
 
           const vertices = [];
@@ -1254,10 +1252,10 @@ function ongame() {
           // Draw health bar if health is less than 100%
           if (item.health < 100) {
             ctx.fillStyle = 'black';
-            ctx.fillRect(centerX - 60*FOV, centerY + 35*FOV, 120*FOV, 10);
-            const healthWidth = (item.health / item.maxhealth) * 120*FOV;
+            ctx.fillRect(centerX - 60 * FOV, centerY + 35 * FOV, 120 * FOV, 10);
+            const healthWidth = (item.health / item.maxhealth) * 120 * FOV;
             ctx.fillStyle = 'green';
-            ctx.fillRect(centerX - 60*FOV, centerY + 35*FOV, healthWidth, 10);
+            ctx.fillRect(centerX - 60 * FOV, centerY + 35 * FOV, healthWidth, 10);
           }
         }
 
@@ -1265,8 +1263,8 @@ function ongame() {
       }
     });
     bullets.forEach((bullet) => {
-      var realx = (bullet.x - Math.abs(bullet.size*(FOV-1)))
-      var realy = (bullet.y - Math.abs(bullet.size*(FOV-1)))
+      var realx = (bullet.x - Math.abs(bullet.size * (FOV - 1)))
+      var realy = (bullet.y - Math.abs(bullet.size * (FOV - 1)))
       if (realx > 0 + cavansX && realx < canvas.width + cavansX && realy - cavansY > 0 && realy < canvas.height + cavansY) {
         ctx.beginPath();
         if (bullet.type === 'basic') {
@@ -1277,7 +1275,7 @@ function ongame() {
             ctx.fillStyle = 'red';
             ctx.strokeStyle = 'darkred';
           }
-          let realsize = bullet.size*FOV
+          let realsize = bullet.size * FOV
 
           ctx.arc(realx - (bullet.xstart - (bullet.xstart - cavansX)),
             realy - (bullet.ystart - (bullet.ystart - cavansY)),
@@ -1343,14 +1341,18 @@ function ongame() {
 
         let tankdatacannon = tankdata["cannons"]
 
-        let playerX = player.x - Math.abs((player.size*80)*(FOV-1));
-        let playerY = player.y - Math.abs((player.size*80)*(FOV-1));
+        let playerX = player.x - Math.abs((player.size * 80) * (FOV - 1));
+        let playerY = player.y - Math.abs((player.size * 80) * (FOV - 1));
+
+        var FOVplayerz = player.size * FOV
 
         for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
           ctx.fillStyle = '#b3b3b3';
           let tankdatacannondata = tankdatacannon[i]
 
           console.log(tankdatacannondata);
+          let cannon_widthFOV = tankdatacannondata["cannon-width"] * FOVplayerz
+          let cannon_heightFOV = tankdatacannondata["cannon-height"] * FOVplayerz
           if (tankdatacannondata["type"] === "basicCannon") {
             ctx.save();
             ctx.translate(playerX - cavansX, playerY - cavansY);
@@ -1359,23 +1361,24 @@ function ongame() {
             let angle_offset = tankdatacannondata["offset-angle"]
             ctx.rotate(angle + angle_offset);
             // Draw the square
-            let basex = (((((-tankdatacannondata["cannon-width"]*playerSize)*FOV) / 2) +
-                          ((tankdatacannondata["cannon-height"]*playerSize)*FOV)) +
-                          tankdatacannondata["offSet-x"]) - player.cannonW[i];
-            let basey = (((((-tankdatacannondata["cannon-height"]*playerSize)*FOV)) / 2) + 
-                         tankdatacannondata["offSet-y"]);
 
-            ctx.fillRect(basex, basey, 
-                         (tankdatacannondata["cannon-width"]*playerSize)*FOV,
-                         (tankdatacannondata["cannon-height"]*playerSize)*FOV);
+            let basex = (((-cannon_widthFOV / 2) +
+              cannon_heightFOV) +
+              tankdatacannondata["offSet-x"]) - player.cannonW[i];
+            let basey = ((-cannon_heightFOV / 2) +
+              tankdatacannondata["offSet-y"]);
+
+            ctx.fillRect(basex, basey,
+              cannon_widthFOV,
+              cannon_heightFOV);
 
 
             // Add a border to the cannon
             ctx.strokeStyle = 'lightgrey'; // Set border color
             ctx.lineWidth = 3; // Set border width
-            ctx.strokeRect(basex, basey, 
-               (tankdatacannondata["cannon-width"]*playerSize)*FOV,
-               (tankdatacannondata["cannon-height"]*playerSize)*FOV);// Draw the border
+            ctx.strokeRect(basex, basey,
+              cannon_widthFOV,
+              cannon_heightFOV);// Draw the border
             // Restore the previous transformation matrix
             ctx.restore();
           }
@@ -1383,24 +1386,29 @@ function ongame() {
             ctx.save();
             ctx.translate(playerX - cavansX, playerY - cavansY);
             let angle = player.cannon_angle;
+            let cannonheight = tankdatacannondata["cannon-height"]
 
             let angle_offset = tankdatacannondata["offset-angle"]
             ctx.rotate(angle + angle_offset);
             console.log(angle)
             // Draw the square
-            let basex = (((((-tankdatacannondata["cannon-width"]*playerSize)*FOV) / 2) +
-              tankdatacannondata["cannon-height"]) + tankdatacannondata["offSet-x"]) - player.cannonW[i];
-            let basey = (((-tankdatacannondata["cannon-height"]*playerSize*FOV) / 2) + tankdatacannondata["offSet-y"])
+            const cannonWidth_bottom = (tankdatacannondata["cannon-width-bottom"] * playerSize) * FOV
 
-            const cannonHeight = (tankdatacannondata["cannon-height"]*playerSize)*FOV
-            const cannonWidth = (tankdatacannondata["cannon-width"]*playerSize)*FOV
-            const cannonHeightBy2 = cannonHeight / 2;
+            let basex = (((cannonWidth_bottom / 2) + cannonheight) + tankdatacannondata["offSet-x"]) - player.cannonW[i];
+            let basey = (((-cannon_heightFOV / 2) + cannon_heightFOV / 2) - tankdatacannondata["offSet-y"])
 
+            const cannonHeight = cannon_heightFOV
+            const cannonWidth_top = (tankdatacannondata["cannon-width-top"] * playerSize) * FOV
+
+            console.log((tankdatacannondata["cannon-width-top"] * playerSize) * FOV)
+            console.log((tankdatacannondata["cannon-width-bottom"] * playerSize) * FOV)
+            var canwB2 = cannonWidth_bottom / 2;
+            var canwH2 = cannonWidth_top / 2;
             ctx.beginPath();
-            ctx.moveTo(basex, basey); // Move to the top-left corner
-            ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
-            ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + (cannonHeightBy2)));
-            ctx.lineTo(basex + cannonWidth, basey - (cannonHeightBy2 + cannonHeightBy2 / 2));
+            ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+            ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+            ctx.lineTo(basex, basey + canwH2);
+            ctx.lineTo(basex, basey - canwH2);
             ctx.closePath(); // Close the path
             ctx.fill();
 
@@ -1409,41 +1417,44 @@ function ongame() {
             ctx.strokeStyle = 'lightgrey'; // Set border color
             ctx.lineWidth = 3; // Set border width
             ctx.beginPath();
-            ctx.moveTo(basex, basey); // Move to the top-left corner
-            ctx.lineTo(basex, basey + (cannonHeightBy2)); // Draw to the bottom-left corner
-            ctx.lineTo(basex + cannonWidth, basey + (cannonHeight + cannonHeightBy2));
-            ctx.lineTo(basex + cannonWidth, basey - (cannonHeight + cannonHeightBy2));
+            ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+            ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+            ctx.lineTo(basex, basey + canwH2);
+            ctx.lineTo(basex, basey - canwH2);
             ctx.closePath(); // Close the path
-            ctx.stroke();
+            ctx.stroke(); // Draw the border
             ctx.restore();
           } else if (tankdatacannondata["type"] === "trap") {
+            let cannonwidth = tankdatacannondata["cannon-width"]
+            let cannonheight = tankdatacannondata["cannon-height"]
             ctx.save();
-            
+
             ctx.translate(playerX - cavansX, playerY - cavansY);
             let angle = player.cannon_angle;
-            
+
             let angle_offset = tankdatacannondata["offset-angle"]
             let trapR = tankdatacannondata["trap-to-cannon-ratio"]
             ctx.rotate(angle + angle_offset);
             // Draw the square
-            let basex = ((((-tankdatacannondata["cannon-width"]*playerSize)*FOV) / 2)
-                         + tankdatacannondata["cannon-height"]) + 
+            let basex = ((-cannon_widthFOV / 2)
+              + cannonheight) +
               tankdatacannondata["offSet-x"] - player.cannonW[i];
-            let reH = (((tankdatacannondata["cannon-width"])*playerSize)*FOV) * (1 - trapR)
-            let basey = (((-tankdatacannondata["cannon-height"]*playerSize)*FOV) / 2) + tankdatacannondata["offSet-y"]
-            ctx.fillRect(basex, basey, tankdatacannondata["cannon-width"] - reH, tankdatacannondata["cannon-height"]);
+            let reH = cannon_widthFOV * (1 - trapR)
+            let basey = (-
+              cannon_heightFOV / 2) + tankdatacannondata["offSet-y"]
+            ctx.fillRect(basex, basey, cannon_widthFOV - reH, cannon_heightFOV);
             // Add a border to the cannon
 
             ctx.strokeStyle = 'lightgrey'; // Set border color
             ctx.lineWidth = 3; // Set border width
-            ctx.strokeRect(basex, basey, tankdatacannondata["cannon-width"] - reH, tankdatacannondata["cannon-height"]);
+            ctx.strokeRect(basex, basey, cannon_widthFOV - reH, cannon_heightFOV);
             // Restore the previous transformation matrix
             const cannonHeight = reH
-            const cannonWidth_top = ((tankdatacannondata["cannon-height"]*playerSize)*FOV) * 1.4
-            const cannonWidth_bottom = ((tankdatacannondata["cannon-height"]*playerSize)*FOV)
+            const cannonWidth_top = cannon_heightFOV * 1.4
+            const cannonWidth_bottom = cannon_heightFOV
 
 
-            basex = basex + (((tankdatacannondata["cannon-width"]*playerSize)*FOV) - trapR)
+            basex = basex + (cannon_widthFOV - trapR)
 
 
             var canwB2 = cannonWidth_bottom / 2;
@@ -1474,7 +1485,7 @@ function ongame() {
 
         ctx.beginPath();
         ctx.fillStyle = squareColor;
-        ctx.arc(playerX - cavansX, playerY - cavansY, (player.size*FOV) * 40, 0, 2 * Math.PI, false);
+        ctx.arc(playerX - cavansX, playerY - cavansY, (player.size * FOV) * 40, 0, 2 * Math.PI, false);
         let num = (player.statecycle % 10)
         if (num === 0 && (player.state === "start" || player.state === "damaged")) {
           ctx.fillStyle = 'white';
@@ -1489,14 +1500,14 @@ function ongame() {
 
         // Draw background bar
         ctx.fillStyle = 'black';
-        ctx.fillRect((playerX - cavansX) - 50*FOV, (playerY - cavansY) + 55*FOV,
-                     90*FOV, 10*playerSize*FOV);
+        ctx.fillRect((playerX - cavansX) - 50 * FOV, (playerY - cavansY) + 55 * FOV,
+          90 * FOV, 10 * playerSize * FOV);
 
         // Draw health bar
         const healthWidth = (player.health / player.maxhealth) * 90 * FOV;
         ctx.fillStyle = 'green';
-        ctx.fillRect((playerX - cavansX) - 50*FOV, (playerY - cavansY) + 55*FOV,
-                     healthWidth, 10*playerSize*FOV);
+        ctx.fillRect((playerX - cavansX) - 50 * FOV, (playerY - cavansY) + 55 * FOV,
+          healthWidth, 10 * playerSize * FOV);
 
         ctx.fillStyle = 'black';
         ctx.textAlign = "center";
@@ -1508,7 +1519,7 @@ function ongame() {
         // Draw border
         ctx.lineWidth = 1;
         ctx.strokeStyle = 'grey';
-        ctx.strokeRect((playerX - cavansX) - 50, (playerY - cavansY) + 55, 90*playerSize*FOV, 10*playerSize*FOV);
+        ctx.strokeRect((playerX - cavansX) - 50, (playerY - cavansY) + 55, 90 * playerSize * FOV, 10 * playerSize * FOV);
 
 
       }
@@ -1516,7 +1527,7 @@ function ongame() {
 
     ctx.fillStyle = squareColor;
 
-    let angle = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - (playerSize*FOV)), Math.abs(MouseX_) - (canvas.width / 2 - (playerSize*FOV)));
+    let angle = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - (playerSize * FOV)), Math.abs(MouseX_) - (canvas.width / 2 - (playerSize * FOV)));
     let tankdata = tankmeta[type]
 
     let tankdatacannon = tankdata["cannons"]
@@ -1531,19 +1542,19 @@ function ongame() {
         let angle_offset = tankdatacannondata["offset-angle"]
         ctx.rotate(angle + angle_offset);
         // Draw the square
-        let basex = ((((-tankdatacannondata["cannon-width"]*playerSize)*FOV) / 2) + 
-                     (tankdatacannondata["cannon-height"]*playerSize)*FOV) + 
-                     tankdatacannondata["offSet-x"] - cannonWidth[i];
-        let basey = ((((-tankdatacannondata["cannon-height"]*playerSize)*FOV)) / 2) + tankdatacannondata["offSet-y"]
-        ctx.fillRect(basex, basey, 
-                     (tankdatacannondata["cannon-width"]*playerSize)*FOV,
-                     (tankdatacannondata["cannon-height"]*playerSize)*FOV);
+        let basex = ((((-tankdatacannondata["cannon-width"] * playerSize) * FOV) / 2) +
+          (tankdatacannondata["cannon-height"] * playerSize) * FOV) +
+          tankdatacannondata["offSet-x"] - cannonWidth[i];
+        let basey = ((((-tankdatacannondata["cannon-height"] * playerSize) * FOV)) / 2) + tankdatacannondata["offSet-y"]
+        ctx.fillRect(basex, basey,
+          (tankdatacannondata["cannon-width"] * playerSize) * FOV,
+          (tankdatacannondata["cannon-height"] * playerSize) * FOV);
         // Add a border to the cannon
         ctx.strokeStyle = 'lightgrey'; // Set border color
         ctx.lineWidth = 3; // Set border width
-        ctx.strokeRect(basex, basey, 
-                       (tankdatacannondata["cannon-width"]*playerSize)*FOV, 
-                       (tankdatacannondata["cannon-height"]*playerSize)*FOV); // Draw the border
+        ctx.strokeRect(basex, basey,
+          (tankdatacannondata["cannon-width"] * playerSize) * FOV,
+          (tankdatacannondata["cannon-height"] * playerSize) * FOV); // Draw the border
         // Restore the previous transformation matrix
         ctx.restore();
       }
@@ -1557,9 +1568,9 @@ function ongame() {
         // Draw the square
         let basex = ((-tankdatacannondata["cannon-width-top"] / 2) + tankdatacannondata["cannon-height"] * 2) + tankdatacannondata["offSet-x"] - cannonWidth[i];
         let basey = (tankdatacannondata["cannon-height"] * 0) + tankdatacannondata["offSet-y"]
-        const cannonHeight = (tankdatacannondata["cannon-height"]*playerSize)*FOV
-        const cannonWidth_top = (tankdatacannondata["cannon-width-top"]*playerSize)*FOV
-        const cannonWidth_bottom = (tankdatacannondata["cannon-width-bottom"]*playerSize)*FOV
+        const cannonHeight = (tankdatacannondata["cannon-height"] * playerSize) * FOV
+        const cannonWidth_top = (tankdatacannondata["cannon-width-top"] * playerSize) * FOV
+        const cannonWidth_bottom = (tankdatacannondata["cannon-width-bottom"] * playerSize) * FOV
 
         var canwB2 = cannonWidth_bottom / 2;
         var canwH2 = cannonWidth_top / 2;
@@ -1594,21 +1605,21 @@ function ongame() {
         let trapR = tankdatacannondata["trap-to-cannon-ratio"]
         ctx.rotate(angle + angle_offset);
         // Draw the square
-        let basex = ((((-tankdatacannondata["cannon-width"]*playerSize)*FOV) / 2) + ((tankdatacannondata["cannon-height"])*playerSize)*FOV) + tankdatacannondata["offSet-x"] - cannonWidth[i];
-        let reH = (((tankdatacannondata["cannon-width"])*playerSize)*FOV) * (1 - trapR)
-        let basey = (((-tankdatacannondata["cannon-height"]*playerSize)*FOV) / 2) + tankdatacannondata["offSet-y"]
-        ctx.fillRect((basex*playerSize)*FOV, (basey*playerSize)*FOV, (tankdatacannondata["cannon-width"]*playerSize)*FOV - reH, (tankdatacannondata["cannon-height"]*playerSize)*FOV);
+        let basex = ((((-tankdatacannondata["cannon-width"] * playerSize) * FOV) / 2) + ((tankdatacannondata["cannon-height"]) * playerSize) * FOV) + tankdatacannondata["offSet-x"] - cannonWidth[i];
+        let reH = (((tankdatacannondata["cannon-width"]) * playerSize) * FOV) * (1 - trapR)
+        let basey = (((-tankdatacannondata["cannon-height"] * playerSize) * FOV) / 2) + tankdatacannondata["offSet-y"]
+        ctx.fillRect((basex * playerSize) * FOV, (basey * playerSize) * FOV, (tankdatacannondata["cannon-width"] * playerSize) * FOV - reH, (tankdatacannondata["cannon-height"] * playerSize) * FOV);
 
         ctx.strokeStyle = 'lightgrey';
         ctx.lineWidth = 3; // Set border width
-        ctx.strokeRect((basex*playerSize)*FOV, (basey*playerSize)*FOV, (tankdatacannondata["cannon-width"]*playerSize)*FOV - reH, (tankdatacannondata["cannon-height"]*playerSize)*FOV);
+        ctx.strokeRect((basex * playerSize) * FOV, (basey * playerSize) * FOV, (tankdatacannondata["cannon-width"] * playerSize) * FOV - reH, (tankdatacannondata["cannon-height"] * playerSize) * FOV);
 
         const cannonHeight = reH
-        const cannonWidth_top = ((tankdatacannondata["cannon-height"]*playerSize)*FOV) * 1.4
-        const cannonWidth_bottom = ((tankdatacannondata["cannon-height"]*playerSize)*FOV)
+        const cannonWidth_top = ((tankdatacannondata["cannon-height"] * playerSize) * FOV) * 1.4
+        const cannonWidth_bottom = ((tankdatacannondata["cannon-height"] * playerSize) * FOV)
 
 
-        basex = basex + ((tankdatacannondata["cannon-width"]*playerSize)*FOV - trapR)
+        basex = basex + ((tankdatacannondata["cannon-width"] * playerSize) * FOV - trapR)
 
 
         var canwB2 = cannonWidth_bottom / 2;
@@ -1639,7 +1650,7 @@ function ongame() {
 
 
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, (playerSize*FOV) * 40, 0, 2 * Math.PI, false);
+    ctx.arc(canvas.width / 2, canvas.height / 2, (playerSize * FOV) * 40, 0, 2 * Math.PI, false);
     num = (statecycle % 10)
     if (num === 0 && (state === "start" || state === "damaged")) {
       ctx.fillStyle = 'white';
@@ -1653,7 +1664,7 @@ function ongame() {
 
     // Draw background bar
     ctx.fillStyle = 'black';
-    ctx.fillRect((canvas.width / 2) - 50* FOV, (canvas.height / 2) + 55* FOV, 90* FOV, 10* FOV);
+    ctx.fillRect((canvas.width / 2) - 50 * FOV, (canvas.height / 2) + 55 * FOV, 90 * FOV, 10 * FOV);
 
     ctx.textAlign = "center";
     ctx.font = "bold 20px Geneva";
@@ -1664,12 +1675,12 @@ function ongame() {
     // Draw health bar
     const healthWidth = (playerHealth / maxhealth) * 90 * FOV;
     ctx.fillStyle = 'green';
-    ctx.fillRect((canvas.width / 2) - 50* FOV, (canvas.height / 2) + 55* FOV, healthWidth, 10*FOV);
+    ctx.fillRect((canvas.width / 2) - 50 * FOV, (canvas.height / 2) + 55 * FOV, healthWidth, 10 * FOV);
 
     // Draw border
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'grey';
-    ctx.strokeRect((canvas.width / 2) - 50 * FOV, (canvas.height / 2) + 55 * FOV, 90*FOV, 10*FOV);
+    ctx.strokeRect((canvas.width / 2) - 50 * FOV, (canvas.height / 2) + 55 * FOV, 90 * FOV, 10 * FOV);
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 5;
     ctx.beginPath();

@@ -4,9 +4,7 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const path = require('path')
 const SAT = require('sat');
-const fs = require('fs');
 const { setTimeout } = require('timers');
-const zlib = require('zlib');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -491,6 +489,15 @@ io.on('connection', (socket) => {
     }
     
     bullets.push(data);
+    let indexbullet = bullets.indexOf(data)
+    let bullet = bullets[indexbullet]
+    if (data.type === "trap") {
+      setTimeout(() => {
+        // hacky soltion to remove the bullet
+        bullet.distanceTraveled = 100e9;
+        console.log("removed")
+      }, bullet.lifespan*1000)
+    }
     io.emit('bulletUpdate', bullets); // Broadcast to all clients
   });
   
@@ -539,16 +546,7 @@ io.on('connection', (socket) => {
         bullet.y = newY;
         return true;
       }
-      if (bullet.type !== "trap") {
-        return false;
-      } else if (bullet.type === "trap") {
-        console.log(bullet.lifespan)
-        setTimeout(() => {
-          // hacky soltion to remove the bullet
-          bullet.bullet_distance = -10
-          console.log("removed")
-        }, bullet.lifespan)
-      }
+      return false;
     });
     
     // Emit updated bullet positions
@@ -608,11 +606,11 @@ io.on('connection', (socket) => {
           distanceY < (player40 + bulletsize) &&
           bullet.id !== player.id) {
           if (bullet.type === "trap") {
-              player.health -= (bullet.bullet_damage - 0.3) / (player.size / bullet.size+3);
+              player.health -= (bullet.bullet_damage - 0.8) / (player.size / bullet.size+3);
               bullet.bullet_distance /= (bullet.size / (bullet.bullet_pentration+10));
               console.log(player.size ,bullet.size, bullet.bullet_pentration,bullet.bullet_distance)
           } else {
-            player.health -= (bullet.bullet_damage - 0.3) / (player.size / bullet.speed);
+            player.health -= (bullet.bullet_damage - 0.8) / (player.size / bullet.speed);
             bullet.bullet_distance /= (bullet.size / (bullet.bullet_pentration+10));
           }
          
