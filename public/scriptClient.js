@@ -341,8 +341,9 @@ function ongame() {
       "cannons": [
         {
           "type": "directer",
-          "cannon-width": 90,
-          "cannon-height": 30,
+          "cannon-width-top": 52.5,
+          "cannon-height": 35,
+          "cannon-width-bottom": 50,
           "offSet-x": 0,
           "offSet-y": 0,
           "offset-angle": 0,
@@ -1128,6 +1129,17 @@ function ongame() {
               0,
             );
             vertices = rawvertices;
+          } else if (cannon["type"] === 'directer') {
+            var bulletdistance = (bullet_speed__ * 70) * (bullet_size / 20)
+            var type = 'directer';
+            var health = 10
+            const rawvertices = calculateTriangleVertices(
+              bullet_start_x,
+              bullet_start_y,
+              bullet_size_l,
+              0,
+            );
+            vertices = rawvertices;
           }
 
           let cannon_life = cannon["life-time"] || 0;
@@ -1374,7 +1386,31 @@ function ongame() {
           ctx.lineWidth = 5;
           ctx.stroke();
           ctx.closePath();
-        }
+        } else if (type === "directer") {
+          if (bullet.id === playerId) {
+            ctx.fillStyle = 'blue';
+            ctx.strokeStyle = 'darkblue';
+          } else {
+            ctx.fillStyle = 'red';
+            ctx.strokeStyle = 'darkred';
+          }
+          ctx.save();
+          ctx.translate(realx - cavansX, realy - cavansY);
+          ctx.rotate(bullet.angle * pi180);
+          let realitemsize = bullet.size * FOV
+          const h = realitemsize * Math.sqrt(3) / 2;
+
+          ctx.beginPath();
+          ctx.moveTo(0, -h / 2);
+          ctx.lineTo(-realitemsize / 2, h / 2);
+          ctx.lineTo(realitemsize / 2, h / 2);
+          ctx.closePath();
+
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.rotate(-bullet.angle * pi180);
+        } 
       }
     });
     for (let playerId__ in players) {

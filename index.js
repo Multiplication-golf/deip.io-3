@@ -21,6 +21,9 @@ function getRandomInt(min, max) {
 function between(x, min, max) {
   return x >= min && x <= max;
 }
+function MathHypotenuse(x, y) {
+  return Math.sqrt(x * x + y * y)
+}
 
 
 const pi = Math.PI
@@ -385,6 +388,8 @@ io.on('connection', (socket) => {
   socket.on('playerCannonMoved', (data) => {
     if (!players[data.id]) {invaled_requests.push(data.id); return}
     players[data.id].cannon_angle = data.cannon_angle;
+    players[data.id].MouseX = data.MouseX;
+    players[data.id].MouseY = data.MouseY;
     socket.broadcast.emit('playerCannonUpdated', data);
   });
 
@@ -495,7 +500,7 @@ io.on('connection', (socket) => {
       setTimeout(() => {
         // hacky soltion to remove the bullet
         bullet.distanceTraveled = 100e9;
-        console.log("removed")
+
       }, bullet.lifespan*1000)
     }
     io.emit('bulletUpdate', bullets); // Broadcast to all clients
@@ -508,17 +513,23 @@ io.on('connection', (socket) => {
   setInterval(() => {
     // Filter and update bullets
     bullets = bullets.filter(bullet => {
+      if (bullet.type === "directer") {
+        let dx = mousePos.x - bullet.x
+        let dy = mousePos.y - bullet.y
+        let angle = math.atan2(dy, dx)
+        bullet.angle = angle
+      }
       let newX = bullet.x + bullet.speed * Math.cos(bullet.angle);
       let newY = bullet.y + bullet.speed * Math.sin(bullet.angle);
-      bullet.distanceTraveled += Math.hypot(newX - bullet.x, newY - bullet.y);
-      if (bullet.type === "trap") {
-        if ((bullet.bullet_distance - bullet.distanceTraveled) < 200) {
+      bullet.distanceTraveled += MathHypotenuse(newX - bullet.x, newY - bullet.y);
+      if (bullet.type === "trap" || bullet.type === "directer") {
+        if (((bullet.bullet_distance - bullet.distanceTraveled) < 200) && bullet.type === "trap") {
           bullet.speed -= (bullet.bullet_distance - bullet.distanceTraveled) / 85
           if (bullet.speed <= 0) bullet.speed = 0;
         }
 
         bullets.forEach((bullet_) => {
-          let distance = Math.hypot(bullet.x - bullet_.x, bullet.y - bullet_.y);
+          let distance = MathHypotenuse(bullet.x - bullet_.x, bullet.y - bullet_.y);
 
           if (distance > 50) return 
           var bullet_speed = bullet.speed || 10
