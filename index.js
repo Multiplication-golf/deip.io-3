@@ -118,8 +118,7 @@ function isCircleCollidingWithPolygon(circle, polygonVertices, player) {
     circleSAT = new SAT.Circle(new SAT.Vector(circle.x, circle.y), circle.size);
   }
   const polygonSAT = toSATPolygon(polygonVertices);
-  const response = new SAT.Response();
-  const collided = SAT.testCirclePolygon(circleSAT, polygonSAT, response);
+  const collided = SAT.testCirclePolygon(circleSAT, polygonSAT);
   return collided;
 }
 
@@ -588,8 +587,7 @@ io.on('connection', (socket) => {
     // Emit updated bullet positions
     io.emit('bulletUpdate', bullets);
 
-    for (const gkg_ in food_squares) {
-      var item = food_squares[gkg_]
+    food_squares.forEach((item) => {
       item.x = item.centerX + item.scalarX * Math.cos(angle);
       item.y = item.centerY + item.scalarY * Math.sin(angle);
       if (item.type === "pentagon") {
@@ -628,7 +626,7 @@ io.on('connection', (socket) => {
         );
         item.vertices = rawvertices;
       }
-    };
+    });
     bullets.forEach((bullet) => {
       for (const playerId in players) {
         const player = players[playerId];

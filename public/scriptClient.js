@@ -382,6 +382,7 @@
     var bullet_damage = 5;
     var bullet_speed = 3;
     var bullet_size = 15;
+    let sqrt23 = Math.sqrt(3) / 2
     var bullet_pentration = 2;
     var cannonWidth = [0];
     var drones = 0
@@ -424,10 +425,10 @@
     }
 
     var gridstyle = grid.style;
-
+    var boundrectcanvas = canvas.getBoundingClientRect()
 
     function getMousePos(canvas, evt) {
-      const rect = canvas.getBoundingClientRect();
+      const rect = boundrectcanvas;
       return {
         x: evt.clientX - rect.left,
         y: evt.clientY - rect.top
@@ -464,6 +465,7 @@
     });
 
     socket.on("updaterHeal", (data) => {
+      if (!players[data.ID]) return
       players[data.ID].playerHealTime = data.HEALTime;
     });
 
@@ -762,16 +764,16 @@
 
     const handleMovement = (dx, dy) => {
       if ((playerX + dx > mapLeft && playerX + dx < mapRight) && (playerY + dy > mapTop && playerY + dy < mapBottom)) {
-        for (let i = 0; i < playerSpeed / 2; i++) {
+        for (let i = 0; i < playerSpeed / 3; i++) {
           setTimeout(() => {
-            movePlayer(dx * 2, dy * 2, (i === playerSpeed - 1 || i === 0));
+            movePlayer(dx * 3, dy * 3, (i === playerSpeed - 1 || i === 0));
           }, 75 * i)
         }
         checkCollisions(dx, dy);
       }
     };
     function calculateTriangleVertices(cx, cy, size, angle) {
-      const height = (Math.sqrt(3) / 2) * size; // Height of an equilateral triangle
+      const height = sqrt23 * size; // Height of an equilateral triangle
       const halfSize = size / 2;
 
       const angleRad = angle * (pi180); // Convert angle to radians
@@ -947,8 +949,8 @@
       MouseX_ = mousepos.x;
       MouseY_ = mousepos.y;
       let __angle__ = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
-      var ___MouseX___REAL = MouseX_ - Math.abs(cavansX*5000/3500)
-      var ___MouseY___REAL = MouseY_ - Math.abs(cavansY*5000/3500)
+      var ___MouseX___REAL = MouseX_ - (cavansX*(5000/3500))
+      var ___MouseY___REAL = MouseY_ - (cavansY*(5000/3500))
       socket.emit('playerCannonMoved', { id: playerId, cannon_angle: __angle__, MouseX: ___MouseX___REAL, MouseY: ___MouseY___REAL });
     });
 
@@ -1263,7 +1265,7 @@
     for (data in cannonWidth) {
       cannonWidth[data] = cannonWidth[data] || 0;
     }
-    let sqrt23 = Math.sqrt(3) / 2
+    
 
     function drawRoundedLevelBar(ctx, x, y, width, height, radius, progress) {
       // Full bar
@@ -1378,16 +1380,13 @@
             ctx.fillStyle = item.color;
             const centerX = 0;
             const centerY = 0;
-            const radius = item.size * FOV;
-            const angle = item.angle * pi180; // Convert angle to radians
 
-            const vertices = [];
-            for (let i = 0; i < 5; i++) {
-              const theta = (i * 2 * Math.PI / 5) + angle; // Divide circle into 5 parts and add rotation angle
-              const x = centerX + radius * Math.cos(theta);
-              const y = centerY + radius * Math.sin(theta);
-              vertices.push({ x, y });
-            }
+            const vertices = item.vertices
+            
+            vertices.forEach((vertice) => {
+              vertice.x -= 5000
+              vertice.y -= 5000
+            }); 
 
             // Draw filled pentagon
             ctx.beginPath();
