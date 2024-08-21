@@ -335,6 +335,7 @@ function ongame() {
       "BodyDamage-m": 1,
       "reaload-m": 1,
       "upgradeLevel": 15,
+      "max-drones": 6,
       "upgrades": {
         "twin": 1,
       },
@@ -369,6 +370,7 @@ function ongame() {
   var playerY = canvas.height / 2;
   var cavansX = 0;
   var cavansY = 0;
+  var dronetanks = ["directer"]
   var playerHealTime = 0;
   var playerHealth = 100;
   var playerSpeed = 10;
@@ -380,6 +382,7 @@ function ongame() {
   var bullet_size = 15;
   var bullet_pentration = 2;
   var cannonWidth = [0];
+  var drones = 0
   var current_angle = 0;
   var MouseX_ = 0;
   var MouseY_ = 0;
@@ -395,7 +398,6 @@ function ongame() {
   var borderRadius = 10;
   var playerReheal = 1;
   var maxhealth = 100;
-
   var state = 'start'
   var statecycle = 0;
 
@@ -692,75 +694,77 @@ function ongame() {
     }
   });
 
-  // no! stop going through the shapes players
   let canmove = true;
-  const cellSize = 100; // Adjust this based on your game requirements
+  let nolist = [3, 5, 7, 8, 10, 11, 13]
 
-  const movePlayerSmoothly = (dx, dy, steps, delay, last) => {
-    let step = 0;
-    const interval = setInterval(() => {
-      if (step >= steps) {
-        clearInterval(interval);
-        if (last) canmove = true;
-        return;
-      }
-      movePlayer(dx, dy, step === steps - 1);
-      step++;
-    }, delay);
+  let keysPressed = {};
+  const movePlayer = (dx, dy, last, i) => {
+    if (!canmove) return
+    playerX += dx;
+    cavansX += dx;
+    playerY += dy;
+    cavansY += dy;
+
+    if (i in nolist) return // just roll with it
+    socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, dx: dx, dy: dy, last: last });
   };
 
-  const addToGrid = (player) => {
-    const cellKey = `${Math.floor(player.x / cellSize)}-${Math.floor(player.y / cellSize)}`;
-    if (!grid[cellKey]) grid[cellKey] = [];
-    grid[cellKey].push(player);
-  };
+  function MathHypotenuse(x, y) {
+    return Math.sqrt(x * x + y * y)
+  }
 
-  const getNearbyPlayers = (x, y) => {
-    const cellKey = `${Math.floor(x / cellSize)}-${Math.floor(y / cellSize)}`;
-    return grid[cellKey] || [];
-  };
+
+  socket.on("bouceBack", (data) => {
+    canmove = false;
+    for (let i = 0; i < playerSpeed; i++) {
+
+      setTimeout(() => {
+        movePlayer(data.dx, data.dy);
+      }, 25 * i)
+    }
+    setTimeout(() => {
+      canmove = true;
+    }, 10 * playerSpeed);
+  });
+
+  socket.on('type_Change', (data) => {
+    players[data.id] = data
+  });
 
   const checkCollisions = (dx, dy) => {
-    const nearbyPlayers = getNearbyPlayers(playerX + dx, playerY + dy);
-    for (let player of nearbyPlayers) {
-      let distance = Math.hypot(player.x - playerX, player.y - playerY);
-      if (distance < (player.size * 41 + playerSize * 41) && player.id !== playerId) {
+    for (let playerId_ in players) {
+      let player = players[playerId_];
+      let distance = MathHypotenuse(player.x - playerX, player.y - playerY);
+
+      if (distance < (player.size * 41 + playerSize * 41) && playerId_ != playerId) {
         socket.emit('playerCollided', {
-          id_other: player.id,
+          id_other: playerId_,
           damagetaken: player.bodyDamage,
           damagegiven: bodyDamage,
           id_self: playerId,
         });
         playerHealTime = 0;
         socket.emit("playerHealintterupted", { ID: playerId });
-        movePlayerSmoothly(-dx, -dy, playerSpeed + 10, 50, true);
+        canmove = false
+        setTimeout(() => {
+          canmove = true;
+        }, 10 * playerSpeed);
+        for (let c = 0; c < (playerSpeed + 10); c++) {
+          setTimeout(() => {
+            movePlayer(-dx, -dy, (c === playerSpeed - 1), i);
+          }, 50 * c);
+        }// Reverse the last movement
       }
     }
   };
 
-  const movePlayer = (dx, dy, last) => {
-    if (!canmove) return;
-    playerX += dx;
-    cavansX += dx;
-    playerY += dy;
-    cavansY += dy;
-
-    socket.emit('playerMoved', { id: playerId, x: playerX, y: playerY, dx: dx, dy: dy, last: last });
-  };
-
-  socket.on("bouceBack", (data) => {
-    canmove = false;
-    movePlayerSmoothly(data.dx, data.dy, playerSpeed, 25, true);
-  });
-
-  socket.on('type_Change', (data) => {
-    players[data.id] = data;
-    addToGrid(data); // Update grid with new player data
-  });
-
   const handleMovement = (dx, dy) => {
     if ((playerX + dx > mapLeft && playerX + dx < mapRight) && (playerY + dy > mapTop && playerY + dy < mapBottom)) {
-      movePlayerSmoothly(dx, dy, playerSpeed, 50, false);
+      for (let i = 0; i < playerSpeed/2; i++) {
+        setTimeout(() => {
+          movePlayer(dx*2, dy*2, (i === playerSpeed - 1 || i === 0));
+        }, 75 * i)
+      }
       checkCollisions(dx, dy);
     }
   };
@@ -789,6 +793,9 @@ function ongame() {
 
     return vertices;
   }
+  window.addEventListener('beforeunload', () => {
+      socket.disconnect();
+  });
   document.addEventListener('keydown', (event) => {
     keysPressed[event.key] = true;
     if (keysPressed[']']) {
@@ -833,7 +840,7 @@ function ongame() {
                 playerHealth = maxhealth;
               }
 
-              socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal, FOV: FOV, MouseX: MouseX, MouseY: MouseY });
+              socket.emit("typeChange", { id: playerId, x: playerX, y: playerY, health: playerHealth, speed: playerSpeed, size: playerSize, bodyDamage: bodyDamage, cannonW: cannonWidth, cannonH: 0, type: type, cannon_angle: getCannonAngle(), score: score, username: username, level: level, state: state, statecycle: statecycle, playerHealTime: playerHealTime, maxhealth: maxhealth, playerReheal: playerReheal, FOV: FOV, MouseX: MouseX_, MouseY: MouseY_ });
               setTimeout(() => {
                 cannonWidth = []
                 console.log(Object.keys(tankdatacannon__).length)
@@ -938,7 +945,9 @@ function ongame() {
     MouseX_ = mousepos.x;
     MouseY_ = mousepos.y;
     let __angle__ = Math.atan2(Math.abs(MouseY_) - (canvas.height / 2 - playerSize), Math.abs(MouseX_) - (canvas.width / 2 - playerSize));
-    socket.emit('playerCannonMoved', { id: playerId, cannon_angle: __angle__, MouseX: MouseX_, MouseY: MouseY_ });
+    var ___MouseX___REAL = MouseX_ - Math.abs(cavansX)
+    var ___MouseY___REAL = MouseY_ - Math.abs(cavansY)
+    socket.emit('playerCannonMoved', { id: playerId, cannon_angle: __angle__, MouseX: ___MouseX___REAL, MouseY: ___MouseY___REAL });
   });
 
   function generateRandomNumber(min, max) {
@@ -1024,6 +1033,17 @@ function ongame() {
             0,
           );
           vertices = rawvertices;
+        } else if (cannon["type"] === 'directer') {
+          var bulletdistance = (bullet_speed__ * 70) * (bullet_size / 20)
+          var type = 'directer';
+          var health = 10
+          const rawvertices = calculateTriangleVertices(
+            bullet_start_x,
+            bullet_start_y,
+            bullet_size_l,
+            0,
+          );
+          vertices = rawvertices;
         }
 
         let cannon_life = cannon["life-time"] || 0;
@@ -1054,9 +1074,11 @@ function ongame() {
     });
 
     // Reset fire ability after reload time
-    setTimeout(() => {
-      canFire = true;
-    }, 750 * tankdata["reaload-m"]);
+    if (!(autoFiring || dronetanks.includes(type))) {
+      setTimeout(() => {
+        canFire = true;
+      }, 750 * tankdata["reaload-m"]);
+    }
   }
   function FireIntervale(evt) {
     let tankdata = tankmeta[type];
@@ -1064,7 +1086,6 @@ function ongame() {
     if (autoFiring) return;
     firingInterval = setInterval((event = evt, MouseY__ = MouseY_, MouseX__ = MouseX_) => {
       canFire2 = false;
-      var mouse = getMousePos(canvas, event);
       let angle = Math.atan2(Math.abs(MouseY__) - (canvas.height / 2 - playerSize), Math.abs(MouseX__) - (canvas.width / 2 - playerSize))
       if (autoFiring) return;
 
@@ -1133,6 +1154,7 @@ function ongame() {
             var bulletdistance = (bullet_speed__ * 70) * (bullet_size / 20)
             var type = 'directer';
             var health = 10
+            bullet_speed__ += 10;
             const rawvertices = calculateTriangleVertices(
               bullet_start_x,
               bullet_start_y,
@@ -1171,25 +1193,51 @@ function ongame() {
     }, 750 * tankdata["reaload-m"]);
   }
 
-  document.addEventListener('mousedown', fireOnce);
+  document.addEventListener('mousedown', (evt) => {
+    if (!dronetanks.includes(type)) {
+      fireOnce(evt);
+    }
+  });
 
   canvas.addEventListener('click', (evt) => {
     evt.preventDefault();
   })
 
+  socket.on("dronekilled", (data) => {
+    if (data.droneID === playerId) {
+      drones -= 1
+    }
+  });
+
+
   let __tankdata__ = tankmeta[type];
   setInterval(() => {
-    __tankdata__ = tankmeta[type];
-    if (!autoFiring) return;
-    if (firingInterval) {
-      clearInterval(firingInterval);
-      firingInterval = null;
+    console.log(type)
+    if (!dronetanks.includes(type)) {
+      __tankdata__ = tankmeta[type];
+      if (!autoFiring) return;
+      if (firingInterval) {
+        clearInterval(firingInterval);
+        firingInterval = null;
+      }
+      canFire = true
+      fireOnce();
+    } else if (dronetanks.includes(type)) {
+      canFire = true
+      console.log(tankmeta[type]["max-drones"],drones)
+      if (drones <= tankmeta[type]["max-drones"]) {
+        fireOnce();
+        drones += 1
+      }
     }
-    fireOnce();
-  }, (750 * __tankdata__["reaload-m"]) / 2);
+  }, (750 * __tankdata__["reaload-m"]));
 
 
-  document.addEventListener('mousedown', FireIntervale);
+  document.addEventListener('mousedown', (evt) => {
+    if (!dronetanks.includes(type)) {
+      FireIntervale(evt)
+    }
+  });
 
   document.addEventListener('mouseup', function() {
     if (firingInterval) {
@@ -1214,6 +1262,63 @@ function ongame() {
 
   for (data in cannonWidth) {
     cannonWidth[data] = cannonWidth[data] || 0;
+  }
+  let sqrt23 = Math.sqrt(3) / 2
+
+  function drawRoundedLevelBar(ctx, x, y, width, height, radius, progress) {
+    // Full bar
+    ctx.fillStyle = '#ddd';
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Filled bar (progress)
+    const filledWidth = width * progress;
+    ctx.fillStyle = '#00f';
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    if (filledWidth > radius) {
+      ctx.lineTo(x + filledWidth - radius, y);
+      if (filledWidth < width - radius) {
+        ctx.quadraticCurveTo(x + filledWidth, y, x + filledWidth, y + radius);
+        ctx.lineTo(x + filledWidth, y + height - radius);
+        ctx.quadraticCurveTo(x + filledWidth, y + height, x + filledWidth - radius, y + height);
+      } else {
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + filledWidth - radius, y + height);
+      }
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+    } else {
+      ctx.quadraticCurveTo(x + filledWidth, y, x + filledWidth, y + radius);
+      ctx.lineTo(x + filledWidth, y + height - radius);
+      ctx.quadraticCurveTo(x + filledWidth, y + height, x + filledWidth - radius, y + height);
+      ctx.lineTo(x, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+    }
+    ctx.closePath();
+
+    ctx.fill();
+    ctx.fillStyle = 'black';
+    ctx.textAlign = "center";
+    ctx.font = "bold 40px Courier New";
+    ctx.fillText(level, canvas.width / 2, canvas.height - 40);
   }
 
   function draw() {
@@ -1246,7 +1351,7 @@ function ongame() {
 
         if (item.type === 'triangle') {
           let realitemsize = item.size * FOV
-          const h = realitemsize * Math.sqrt(3) / 2;
+          const h = realitemsize * sqrt23;
 
           ctx.beginPath();
           ctx.moveTo(0, -h / 2);
@@ -1320,8 +1425,8 @@ function ongame() {
       }
     });
     bullets.forEach((bullet) => {
-      var realx = (bullet.x - Math.abs(bullet.size * (FOV - 1)))
-      var realy = (bullet.y - Math.abs(bullet.size * (FOV - 1)))
+      var realx = (bullet.x - Math.abs((bullet.size * 2) * (FOV - 1)))
+      var realy = (bullet.y - Math.abs((bullet.size * 2) * (FOV - 1)))
       if (realx > 0 + cavansX && realx < canvas.width + cavansX && realy - cavansY > 0 && realy < canvas.height + cavansY) {
         ctx.beginPath();
         if (bullet.type === 'basic') {
@@ -1342,7 +1447,7 @@ function ongame() {
           ctx.stroke();
           ctx.closePath();
         }
-        if (bullet.type === 'trap') {
+        else if (bullet.type === 'trap') {
           if (bullet.id === playerId) {
             ctx.fillStyle = 'blue';
             ctx.strokeStyle = 'darkblue';
@@ -1386,7 +1491,8 @@ function ongame() {
           ctx.lineWidth = 5;
           ctx.stroke();
           ctx.closePath();
-        } else if (type === "directer") {
+        }
+        else if (bullet.type === "directer") {
           if (bullet.id === playerId) {
             ctx.fillStyle = 'blue';
             ctx.strokeStyle = 'darkblue';
@@ -1396,9 +1502,9 @@ function ongame() {
           }
           ctx.save();
           ctx.translate(realx - cavansX, realy - cavansY);
-          ctx.rotate(bullet.angle * pi180);
-          let realitemsize = bullet.size * FOV
-          const h = realitemsize * Math.sqrt(3) / 2;
+          ctx.rotate(bullet.angle);
+          let realitemsize = bullet.size * 3 * FOV
+          const h = realitemsize * sqrt23;
 
           ctx.beginPath();
           ctx.moveTo(0, -h / 2);
@@ -1409,8 +1515,8 @@ function ongame() {
           ctx.fill();
           ctx.stroke();
 
-          ctx.rotate(-bullet.angle * pi180);
-        } 
+          ctx.restore()
+        }
       }
     });
     for (let playerId__ in players) {
@@ -1467,7 +1573,6 @@ function ongame() {
             ctx.save();
             ctx.translate(playerX - cavansX, playerY - cavansY);
             let angle = player.cannon_angle;
-            let cannonheight = tankdatacannondata["cannon-height"]
 
             let angle_offset = tankdatacannondata["offset-angle"]
             ctx.rotate(angle + angle_offset);
@@ -1628,7 +1733,7 @@ function ongame() {
         ctx.rotate(angle + angle_offset);
         // Draw the square
         let basex = ((-cannon_widthFOV / 2) +
-                     cannon_heightFOV) +
+          cannon_heightFOV) +
           tankdatacannondata["offSet-x"] - cannonWidth[i];
         let basey = (-cannon_heightFOV / 2) + tankdatacannondata["offSet-y"]
         ctx.fillRect(basex, basey,
@@ -1638,12 +1743,12 @@ function ongame() {
         ctx.strokeStyle = 'lightgrey'; // Set border color
         ctx.lineWidth = 3; // Set border width
         ctx.strokeRect(basex, basey,
-            cannon_widthFOV,
-            cannon_heightFOV); // Draw the border
+          cannon_widthFOV,
+          cannon_heightFOV); // Draw the border
         // Restore the previous transformation matrix
         ctx.restore();
       }
-      else if (tankdatacannondata["type"] === "trapezoid") {
+      else if (tankdatacannondata["type"] === "trapezoid" || tankdatacannondata["type"] === "directer") {
         ctx.save();
         // Translate to the center of the square
         ctx.translate((canW / 2), (canH / 2));
@@ -1690,7 +1795,7 @@ function ongame() {
         let trapR = tankdatacannondata["trap-to-cannon-ratio"]
         ctx.rotate(angle + angle_offset);
         // Draw the square
-        let basex = ((cannon_widthFOV) / 2) + (cannon_heightFOV) + tankdatacannondata["offSet-x"] - cannonWidth[i];
+        let basex = ((-cannon_widthFOV) / 2) + (cannon_heightFOV) + tankdatacannondata["offSet-x"] - cannonWidth[i];
         let reH = cannon_widthFOV * (1 - trapR)
         let basey = (-cannon_heightFOV / 2) + tankdatacannondata["offSet-y"]
         ctx.fillRect((basex * playerSize) * FOV, (basey * playerSize) * FOV, cannon_widthFOV - reH, cannon_heightFOV);
@@ -1699,9 +1804,9 @@ function ongame() {
         ctx.lineWidth = 3; // Set border width
         ctx.strokeRect((basex * playerSize) * FOV, (basey * playerSize) * FOV, cannon_widthFOV - reH, cannon_heightFOV);
 
-        const cannonHeight = reH
-        const cannonWidth_top = cannon_heightFOV * 1.4
-        const cannonWidth_bottom = cannon_heightFOV
+        var cannonHeight = reH
+        var cannonWidth_top = cannon_heightFOV * 1.4
+        var cannonWidth_bottom = cannon_heightFOV
 
 
         basex = basex + (cannon_widthFOV - trapR)
@@ -1709,7 +1814,7 @@ function ongame() {
 
         var canwB2 = cannonWidth_bottom / 2;
         var canwH2 = cannonWidth_top / 2;
-        basey += canwB2
+        basey += canwB2 - trapR
         ctx.beginPath();
         ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
         ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
@@ -1778,62 +1883,6 @@ function ongame() {
 
     gridstyle.top = `calc(-5000px - ${cavansY}px)`;
     gridstyle.left = `calc(-5000px - ${cavansX}px)`;
-
-    function drawRoundedLevelBar(ctx, x, y, width, height, radius, progress) {
-      // Full bar
-      ctx.fillStyle = '#ddd';
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Filled bar (progress)
-      const filledWidth = width * progress;
-      ctx.fillStyle = '#00f';
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      if (filledWidth > radius) {
-        ctx.lineTo(x + filledWidth - radius, y);
-        if (filledWidth < width - radius) {
-          ctx.quadraticCurveTo(x + filledWidth, y, x + filledWidth, y + radius);
-          ctx.lineTo(x + filledWidth, y + height - radius);
-          ctx.quadraticCurveTo(x + filledWidth, y + height, x + filledWidth - radius, y + height);
-        } else {
-          ctx.lineTo(x + width - radius, y);
-          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-          ctx.lineTo(x + width, y + height - radius);
-          ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-          ctx.lineTo(x + filledWidth - radius, y + height);
-        }
-        ctx.lineTo(x + radius, y + height);
-        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-      } else {
-        ctx.quadraticCurveTo(x + filledWidth, y, x + filledWidth, y + radius);
-        ctx.lineTo(x + filledWidth, y + height - radius);
-        ctx.quadraticCurveTo(x + filledWidth, y + height, x + filledWidth - radius, y + height);
-        ctx.lineTo(x, y + height);
-        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-      }
-      ctx.closePath();
-
-      ctx.fill();
-      ctx.fillStyle = 'black';
-      ctx.textAlign = "center";
-      ctx.font = "bold 40px Courier New";
-      ctx.fillText(level, canvas.width / 2, canvas.height - 40);
-    }
 
     // Call the function to draw the level bar
     drawRoundedLevelBar(ctx, canvas.width / 2 - barWidth / 2, canvas.height - 40, barWidth, barHeight, borderRadius, progress + 0.05);
