@@ -1,17 +1,20 @@
 const express = require("express");
 const app = express();
-const http = require('http');
+const http = require("http");
 const path = require("path");
 const SAT = require("sat");
 const { setTimeout } = require("timers");
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 
 const server = http.createServer(app);
 
 const wss = new WebSocket.Server({ server });
 
-// h
-
+// fix memory leak with dead players-fixed
+// fix auto rotion with cannon-started
+// fix game loop with nested functions-fixed
+// fix level up bar-FIXED-sure
+// fix bullet error with player-to-player combat-fixed
 
 app.use(express.static(path.join(__dirname, "public")));
 var port = process.env.PORT;
@@ -30,6 +33,12 @@ function between(x, min, max) {
 }
 function MathHypotenuse(x, y) {
   return Math.sqrt(x * x + y * y);
+}
+
+function normalizeAngleRadians(angle) {
+  while (angle >= Math.PI) angle -= 2 * Math.PI;
+  while (angle < -Math.PI) angle += 2 * Math.PI;
+  return angle;
 }
 
 var pi = Math.PI;
@@ -227,13 +236,15 @@ let speed = 0.000006;
 const connections = [];
 
 wss.on("connection", (socket) => {
-  connections.push(socket);
+  let connection = { socket: socket, playerId: null };
+  connections.push(connection);
 
   socket.on("message", (message) => {
     const { type, data } = JSON.parse(message);
 
     if (type === "newPlayer") {
       players[data.id] = data;
+      connection.playerId = data.id; // bind call
       console.log(players);
       emit("playerJoined", data); // Emit playerJoined event to notify all clients
       emit("FoodUpdate", food_squares); // Emit FoodUpdate event to update food squares
@@ -439,6 +450,121 @@ wss.on("connection", (socket) => {
       return;
     }
 
+    function generateRandomNumber(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    if (type === "Autofire") {
+      let maxdistance = 5000;
+      let fire_at = null;
+      for (const playerID in players) {
+        let player = players[playerID];
+        if (playerID !== data.playerId) {
+          var distance = MathHypotenuse(
+            player.x - data.playerX,
+            player.y - data.playerY
+          );
+          if (distance < maxdistance) {
+            maxdistance = distance;
+            fire_at = player;
+          }
+        }
+      }
+      if (maxdistance > 1300) {
+        food_squares.forEach((item) => {
+          var distance = MathHypotenuse(
+            item.x - data.playerX,
+            item.y - data.playerY
+          );
+          if (distance < maxdistance) {
+            maxdistance = distance;
+            fire_at = item;
+          }
+        });
+      }
+      let cannon = data.cannon;
+      let bullet_speed__ = data.bullet_speed * cannon["bulletSpeed"];
+      if (cannon["type"] === "basicCannon" || cannon["type"] === "trapezoid") {
+        var bulletdistance = bullet_speed__ * 100 * (data.bullet_size / 6);
+        var __type = "basic";
+        var health = 8;
+      } else if (cannon["type"] === "trap") {
+        var bulletdistance = bullet_speed__ * 70 * (data.bullet_size / 20);
+        var __type = "trap";
+        var health = 10;
+      } else if (cannon["type"] === "directer") {
+        var bulletdistance = 100;
+        var __type = "directer";
+        var health = 10;
+      } else if (cannon["type"] === "autoCannon") {
+        var bulletdistance = bullet_speed__ * 100 * (data.bullet_size / 6);
+        var __type = "basic";
+        var health = 8;
+      }
+      let angle = Math.atan2(
+        fire_at.y - data.playerY,  // y difference
+        fire_at.x - data.playerX   // x difference
+      );
+      
+
+      let bullet_size_l = data.bullet_size * cannon["bulletSize"];
+
+      let randomNumber = generateRandomNumber(-0.2, 0.2);
+
+      if (cannon["type"] === "basicCannon" || cannon["type"] === "trap") {
+        var xxx = cannon["cannon-width"] - bullet_size_l * 1.5;
+        var yyy = cannon["cannon-height"] - bullet_size_l * 2;
+        var angle_ = angle + cannon["offset-angle"];
+      } else if (cannon["type"] === "trapezoid") {
+        var angle_ = angle + cannon["offset-angle"] + randomNumber;
+        var xxx = cannon["cannon-width-top"] - bullet_size_l * 1.5;
+        var yyy =
+          cannon["cannon-height"] -
+          bullet_size_l * 2 -
+          (cannon["cannon-width-top"] / 2) * Math.random();
+      } else if (cannon["type"] === "autoCannon") {
+        var xxx = cannon["cannon-width"] - bullet_size_l * 1.5;
+        var yyy = cannon["cannon-height"] - bullet_size_l * 2;
+        var angle_ = angle + cannon["offset-angle"];
+      }
+      console.log(angle_,fire_at.type)
+      
+
+      let rotated_offset_x =
+        (cannon["offSet-x"] + xxx) * Math.cos(angle_) -
+        (cannon["offSet-y"] + yyy) * Math.sin(angle_);
+      let rotated_offset_y =
+        (cannon["offSet-x"] + xxx) * Math.sin(angle_) +
+        (cannon["offSet-y"] + yyy) * Math.cos(angle_);
+      let bullet_start_x = data.playerX + rotated_offset_x;
+      let bullet_start_y = data.playerY + rotated_offset_y;
+      // lol
+      let identdfire = Date.now() + Math.random();
+
+      let cannon_life = cannon["life-time"] || 0;
+
+      let bullet = {
+        type: __type,
+        bullet_distance: bulletdistance,
+        speed: bullet_speed__,
+        size: bullet_size_l,
+        angle: angle_,
+        bullet_damage: data.bullet_damage * cannon["bulletSize"],
+        distanceTraveled: 0,
+        vertices: null,
+        bullet_pentration: data.bullet_pentration * cannon["bullet_pentration"],
+        x: bullet_start_x,
+        y: bullet_start_y,
+        lifespan: cannon_life,
+        health: health,
+        xstart: data.playerX,
+        ystart: data.playerY,
+        id: data.playerId,
+        uniqueid: identdfire,
+      };
+      bullets.push(bullet);
+    }
+
     if (type === "playerCannonMoved") {
       if (!players[data.id]) {
         invaled_requests.push(data.id);
@@ -583,14 +709,10 @@ wss.on("connection", (socket) => {
       if (!players[data.id]) return;
       if (players[data.id].health <= 0) {
         // looks like some one is messing with the game
-        // lets send them to the annoying site (LOL) >:
-        io.killPlayer = () => {
-          emit("f-4ofl04kmzm932-03idk03-39", {});
-        };
-        io.killPlayer();
       }
 
       bullets.push(data);
+      console.log("angle",data.angle)
       let indexbullet = bullets.indexOf(data);
       let bullet = bullets[indexbullet];
       if (data.type === "trap") {
@@ -613,8 +735,6 @@ wss.on("connection", (socket) => {
       emit("playerLeft", data.id);
       return;
     }
-
-    
   });
   setInterval(function () {
     for (const key in players) {
@@ -623,7 +743,22 @@ wss.on("connection", (socket) => {
       }
     }
   }, 5000);
-  setInterval(() => {
+  socket.on("close", () => {
+    const index = connections.indexOf(socket);
+    if (index !== -1) {
+      connections.splice(index, 1); // Remove the connection from the list
+    }
+    players = Object.entries(players).reduce((newPlayers, [key, value]) => {
+      if (key !== connection.playerId) {
+        newPlayers[key] = value;
+      }
+      return newPlayers;
+    }, {});
+    emit("playerLeft", { playerID: connection.playerId });
+  });
+});
+
+setInterval(() => {
     // Filter and update bullets
     bullets = bullets.filter((bullet) => {
       if (bullet.type === "directer") {
@@ -680,6 +815,8 @@ wss.on("connection", (socket) => {
             distance < bullet.size * 2 + bullet_.size * 2 &&
             bullet.id !== bullet_.id
           ) {
+            if ((!bullet_.speed || !bullet_speed) && bullet.type === "trap")
+              return;
             bullet.bullet_distance -=
               bullet_.speed *
               (bullet_.size / 5 +
@@ -714,6 +851,58 @@ wss.on("connection", (socket) => {
         bullet.vertices = rawvertices;
       }
 
+      for (const playerId in players) {
+        var player = players[playerId];
+        var distance = MathHypotenuse(player.x - bullet.x, player.y - bullet.y);
+        let player40 = player.size * 40;
+
+        let bulletsize = bullet.size;
+
+        if ((distance < player40 + bullet.size) & (bullet.id !== player.id)) {
+          if (bullet.type === "trap") {
+            player.health -=
+              (bullet.bullet_damage - 3.8) / (player.size / bullet.size + 3);
+            bullet.bullet_distance /=
+              bullet.size / (bullet.bullet_pentration + 10);
+          } else if (bullet.type === "directer") {
+            player.health -=
+              (bullet.bullet_damage - 4.4) / (player.size / bullet.size + 5);
+            bullet.bullet_distance /=
+              bullet.size / (bullet.bullet_pentration + 10);
+          } else {
+            player.health -=
+              (bullet.bullet_damage - 3.8) / (player.size / bullet.speed);
+            bullet.bullet_distance /=
+              bullet.size / (bullet.bullet_pentration + 10);
+          }
+
+          emit("bulletDamage", {
+            playerID: player.id,
+            playerHealth: player.health,
+            BULLETS: bullets,
+          });
+          if (player.health <= 0) {
+            var reward = Math.round(
+              player.score / (20 + players[bullet.id].score / 10000)
+            );
+            emit("playerScore", { bulletId: bullet.id, socrepluse: reward });
+            emit("playerDied", {
+              playerID: player.id,
+              rewarder: bullet.id,
+              reward: reward,
+            });
+            players = Object.entries(players).reduce(
+              (newPlayers, [key, value]) => {
+                if (key !== player.id) {
+                  newPlayers[key] = value;
+                }
+                return newPlayers;
+              },
+              {}
+            );
+          }
+        }
+      }
       if (bullet.distanceTraveled < bullet.bullet_distance) {
         bullet.x = newX;
         bullet.y = newY;
@@ -721,18 +910,20 @@ wss.on("connection", (socket) => {
           bullet.x += newX__;
           bullet.y += newY__;
         }
+
         return true;
       }
       if (bullet.type === "directer") {
         emit("dronekilled", { droneID: bullet.id });
       }
+
       return false;
     });
 
     // Emit updated bullet positions
     emit("bulletUpdate", bullets);
 
-    food_squares.forEach((item) => {
+    food_squares = food_squares.filter((item, index) => {
       item.x = item.centerX + item.scalarX * Math.cos(angle);
       item.y = item.centerY + item.scalarY * Math.sin(angle);
       if (item.type === "pentagon") {
@@ -771,230 +962,163 @@ wss.on("connection", (socket) => {
         );
         item.vertices = rawvertices;
       }
-    });
-    bullets.forEach((bullet) => {
-      for (const playerId in players) {
-        var player = players[playerId];
-        var distanceX = Math.abs(player.x - bullet.x);
-        var distanceY = Math.abs(player.y - bullet.y);
-        let player40 = player.size * 40;
-
-        let bulletsize = bullet.size;
-
-        if (
-          distanceX < player40 + bulletsize &&
-          distanceY < player40 + bulletsize &&
-          bullet.id !== player.id
-        ) {
-          if (bullet.type === "trap") {
-            player.health -=
-              (bullet.bullet_damage - 0.8) / (player.size / bullet.size + 3);
-            bullet.bullet_distance /=
-              bullet.size / (bullet.bullet_pentration + 10);
-          } else if (bullet.type === "directer") {
-            player.health -=
-              (bullet.bullet_damage - 1.4) / (player.size / bullet.size + 5);
-            bullet.bullet_distance /=
-              bullet.size / (bullet.bullet_pentration + 10);
-          } else {
-            player.health -=
-              (bullet.bullet_damage - 0.8) / (player.size / bullet.speed);
-            bullet.bullet_distance /=
-              bullet.size / (bullet.bullet_pentration + 10);
-          }
-
-          emit("bulletDamage", {
-            playerID: player.id,
-            playerHealth: player.health,
-            BULLETS: bullets,
-          });
-          if (player.health <= 0) {
-            var reward = Math.round(
-              player.score / (20 + players[bullet.id].score / 10000)
-            );
-            emit("playerScore", { bulletId: bullet.id, socrepluse: reward });
-            emit("playerDied", {
-              playerID: player.id,
-              rewarder: bullet.id,
-              reward: reward,
-            });
-            players = Object.entries(players).reduce(
-              (newPlayers, [key, value]) => {
-                if (key !== player.id) {
-                  newPlayers[key] = value;
-                }
-                return newPlayers;
-              },
-              {}
-            );
-          }
-        }
-      }
-
-      food_squares = food_squares.filter((item, index) => {
-        let distanceX = Math.abs(item.x - bullet.x);
-        let distanceY = Math.abs(item.y - bullet.y);
-        if (distanceX < 200 && distanceY < 200) {
+      let return_ = true;
+      bullets.forEach((bullet) => {
+        let distance = MathHypotenuse(item.x - bullet.x, item.y - bullet.y);
+        if (distance < 400) {
           let collisionCheck = isCircleCollidingWithPolygon(
             bullet,
             item.vertices,
             false
           );
 
-          if (collisionCheck) {
-            if (bullet.type === "trap") {
-              var bulletSpeed = 4;
-            } else {
-              var bulletSpeed = bullet.speed || 0;
+          if (!collisionCheck) {
+            return;
+          }
+          if (bullet.type === "trap") {
+            var bulletSpeed = 4;
+          } else {
+            var bulletSpeed = bullet.speed || 0;
+          }
+
+          const damage = (bullet.bullet_damage * 4) / (item.size / bulletSpeed);
+
+          if (damage > item.health) {
+            if (!players[bullet.id]) {
+              console.log(bullet.id);
+              console.log(players);
+              return;
             }
+            players[bullet.id].score += item.score_add;
+            emit("playerScore", {
+              bulletId: bullet.id,
+              socrepluse: item.score_add,
+            });
 
-            const damage =
-              (bullet.bullet_damage * 4) / (item.size / bulletSpeed);
+            let x, y;
+            do {
+              x = getRandomInt(-3500, 3500);
+              y = getRandomInt(-3500, 3500);
+            } while (
+              cors_taken.some(
+                (c) =>
+                  between(x, c.x - 50, c.x + 50) &&
+                  between(y, c.y - 50, c.y + 50)
+              )
+            );
 
-            if (damage > item.health) {
-              if (!players[bullet.id]) {
-                console.log(bullet.id);
-                console.log(players);
-                return;
-              }
-              players[bullet.id].score += item.score_add;
-              emit("playerScore", {
-                bulletId: bullet.id,
-                socrepluse: item.score_add,
-              });
+            cors_taken.push({ x, y });
 
-              let x, y;
-              do {
-                x = getRandomInt(-3500, 3500);
-                y = getRandomInt(-3500, 3500);
-              } while (
-                cors_taken.some(
-                  (c) =>
-                    between(x, c.x - 50, c.x + 50) &&
-                    between(y, c.y - 50, c.y + 50)
-                )
+            const valueOp = getRandomInt(1, 15);
+            var type = "";
+            var color = "";
+            var health_max = "";
+            var score_add = 0;
+            var body_damage = 0;
+            switch (true) {
+              case between(valueOp, 1, 10): // Adjusted to 1-6 for square
+                type = "square";
+                color = "Gold";
+                health_max = 10;
+                score_add = 10;
+                body_damage = 2;
+                break;
+              case between(valueOp, 10, 13): // Adjusted to 7-8 for triangle
+                type = "triangle";
+                color = "Red";
+                health_max = 15;
+                score_add = 15;
+                body_damage = 3.5;
+                break;
+              case between(valueOp, 14, 15): // Adjusted to 9-10 for pentagon
+                type = "pentagon";
+                color = "#579bfa";
+                health_max = 100;
+                score_add = 120;
+                body_damage = 10;
+                break;
+            }
+            let fooditem = {
+              type: type,
+              health: health_max,
+              maxhealth: health_max,
+              size: 50,
+              angle: getRandomInt(0, 180),
+              x: x,
+              y: y,
+              centerX: x,
+              centerY: y,
+              body_damage: body_damage,
+              scalarX: getRandomInt(-100, 100),
+              scalarY: getRandomInt(-100, 100),
+              vertices: null,
+              color: color,
+              score_add: score_add,
+              randomID: Math.random() * index * Date.now(),
+            };
+            if (type === "triangle") {
+              const rawvertices = calculateTriangleVertices(
+                fooditem.x,
+                fooditem.y,
+                fooditem.size,
+                fooditem.angle
               );
-
-              cors_taken.push({ x, y });
-
-              const valueOp = getRandomInt(1, 15);
-              var type = "";
-              var color = "";
-              var health_max = "";
-              var score_add = 0;
-              var body_damage = 0;
-              switch (true) {
-                case between(valueOp, 1, 10): // Adjusted to 1-6 for square
-                  type = "square";
-                  color = "Gold";
-                  health_max = 10;
-                  score_add = 10;
-                  body_damage = 2;
-                  break;
-                case between(valueOp, 10, 13): // Adjusted to 7-8 for triangle
-                  type = "triangle";
-                  color = "Red";
-                  health_max = 15;
-                  score_add = 15;
-                  body_damage = 3.5;
-                  break;
-                case between(valueOp, 14, 15): // Adjusted to 9-10 for pentagon
-                  type = "pentagon";
-                  color = "#579bfa";
-                  health_max = 100;
-                  score_add = 120;
-                  body_damage = 10;
-                  break;
-              }
-              let fooditem = {
-                type: type,
-                health: health_max,
-                maxhealth: health_max,
-                size: 50,
-                angle: getRandomInt(0, 180),
-                x: x,
-                y: y,
-                centerX: x,
-                centerY: y,
-                body_damage: body_damage,
-                scalarX: getRandomInt(-100, 100),
-                scalarY: getRandomInt(-100, 100),
-                vertices: null,
-                color: color,
-                score_add: score_add,
-                randomID: Math.random() * index * Date.now(),
-              };
-              if (type === "triangle") {
-                const rawvertices = calculateTriangleVertices(
-                  fooditem.x,
-                  fooditem.y,
-                  fooditem.size,
-                  fooditem.angle
-                );
-                fooditem.vertices = rawvertices;
-              }
-              if (type === "pentagon") {
-                const rawvertices = calculateRotatedPentagonVertices(
-                  fooditem.x,
-                  fooditem.y,
-                  fooditem.size,
-                  fooditem.angle
-                );
-                fooditem.vertices = rawvertices;
-              }
-              if (type === "square") {
-                const rawvertices = calculateSquareVertices(
-                  fooditem.x,
-                  fooditem.y,
-                  fooditem.size,
-                  fooditem.angle
-                );
-                fooditem.vertices = rawvertices;
-              }
-
-              food_squares.push(fooditem);
-              bullet.bullet_distance /=
-                bullet.size / (bullet.bullet_pentration + 10);
-              if (bullet.bullet_pentration > item.size) {
-                if (bullet.type === "triangle") {
-                  bullet.angle *= 5;
-                }
-              }
-              emit("bulletUpdate", bullets);
-              emit("FoodUpdate", food_squares);
-
-              return false;
-            } else {
-              item.health -= damage;
-
-              if (bullet.bullet_pentration > item.size) {
-                if (bullet.type === "triangle") {
-                  bullet.angle *= 5;
-                }
-              }
+              fooditem.vertices = rawvertices;
             }
+            if (type === "pentagon") {
+              const rawvertices = calculateRotatedPentagonVertices(
+                fooditem.x,
+                fooditem.y,
+                fooditem.size,
+                fooditem.angle
+              );
+              fooditem.vertices = rawvertices;
+            }
+            if (type === "square") {
+              const rawvertices = calculateSquareVertices(
+                fooditem.x,
+                fooditem.y,
+                fooditem.size,
+                fooditem.angle
+              );
+              fooditem.vertices = rawvertices;
+            }
+
+            food_squares.push(fooditem);
             bullet.bullet_distance /=
               bullet.size / (bullet.bullet_pentration + 10);
-            bullet.bullet_distance -= 1; // for drones
+            if (bullet.bullet_pentration > item.size) {
+              if (bullet.type === "triangle") {
+                bullet.angle *= 5;
+              }
+            }
+            emit("bulletUpdate", bullets);
+            emit("FoodUpdate", food_squares);
+
+            return_ = false;
+          } else {
+            item.health -= damage;
+
+            if (bullet.bullet_pentration > item.size) {
+              if (bullet.type === "triangle") {
+                bullet.angle *= 5;
+              }
+            }
           }
+          bullet.bullet_distance /=
+            bullet.size / (bullet.bullet_pentration + 10);
+          bullet.bullet_distance -= 1; // for drones
         }
-        return true;
       });
+      return return_;
     });
     emit("FoodUpdate", food_squares);
   }, UPDATE_INTERVAL);
-  socket.on("close", () => {
-    const index = connections.indexOf(socket);
-    if (index !== -1) {
-      connections.splice(index, 1); // Remove the connection from the list
-    }
-  });
-});
 
 function emit(type, data) {
   const message = JSON.stringify({ type, data });
   connections.forEach((conn) => {
-    conn.send(message);
+    conn.socket.send(message);
   });
 }
 
@@ -1002,13 +1126,12 @@ function broadcast(type, data, senderConn) {
   const message = JSON.stringify({ type, data });
   connections.forEach((conn) => {
     // Exclude the sender connection if provided
-    if (conn !== senderConn) {
-      conn.send(message);
+    if (conn.socket !== senderConn) {
+      conn.socket.send(message);
     }
   });
 }
 
-
-const listener = server.listen(process.env.PORT, function() {
-  console.log('Your app is listening on port ' + listener.address().port);
+const listener = server.listen(process.env.PORT, function () {
+  console.log("Your app is listening on port " + listener.address().port);
 });
