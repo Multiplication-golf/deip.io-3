@@ -416,6 +416,11 @@
       "traper",
       "directer",
     ];
+    
+    
+    var HANDSHAKE = null;
+    
+    
     var players = {};
     var boardbullets = [];
     var bullets = [];
@@ -457,7 +462,7 @@
     var playerMovementX = 0;
     var playerMovementY = 0;
     var score = 0;
-    var firingIntervals = {}
+    var firingIntervals = {};
     var barWidth = 600;
     var barHeight = 30;
     var borderRadius = 10;
@@ -555,6 +560,109 @@
     function generateUniquePlayerId() {
       return "player-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     }
+    function levelHANDLER() {
+      let tonextlevel = levels["level" + level] - levels["level" + (level - 1)];
+      progress =
+        (score - levels["level" + (level - 1)]) /
+        (levels["level" + level] - levels["level" + (level - 1)]);
+      if (score / levels["level" + level] >= 1) {
+        // Add transition property
+
+        let tankdata = tankmeta[__type__];
+        if (level === tankdata["upgradeLevel"]) {
+          var tankstiles = document.getElementById("tanktiles");
+          tankstiles.style.display = "block";
+          tankstiles.style.left = 0;
+          tankstiles.style.animation = "2s 1 move";
+          var upgrade = tankdata["upgrades"];
+
+          for (let i = 0; i < Object.keys(upgrade).length; i++) {
+            var img__ = document.createElement("img");
+            var tileImg = Object.values(upgrade)[i];
+            tankstiles.appendChild(img__);
+
+            img__.src = "tanktiles/" + tileImg + ".png";
+            img__.style =
+              "width: 6vw; height: 6vw; margin: 10px; z-index: 100;";
+
+            img__.addEventListener("click", function () {
+              event.stopPropagation();
+              tankstiles.style.display = "none";
+              __type__ = Object.keys(upgrade)[i];
+              players[playerId].type = __type__;
+              tankdata = tankmeta[__type__];
+              var tankdatacannon__ = tankdata["cannons"];
+              playerSize *= tankdata["size-m"];
+              playerSpeed *= tankdata["speed-m"];
+              bullet_damage *= tankdata["damage-m"];
+              playerReheal *= tankdata["regen-m"];
+              bodyDamage *= tankdata["BodyDamage-m"];
+              maxhealth *= tankdata["health-m"];
+              if (playerHealth > maxhealth) {
+                playerHealth = maxhealth;
+              }
+
+              socket.send(
+                JSON.stringify({
+                  type: "typeChange",
+                  data: {
+                    id: playerId,
+                    x: playerX,
+                    y: playerY,
+                    health: playerHealth,
+                    speed: playerSpeed,
+                    size: playerSize,
+                    bodyDamage: bodyDamage,
+                    cannonW: cannonWidth,
+                    cannonH: 0,
+                    type: __type__,
+                    cannon_angle: 0,
+                    score: score,
+                    username: username,
+                    level: level,
+                    state: state,
+                    statecycle: statecycle,
+                    playerHealTime: playerHealTime,
+                    maxhealth: maxhealth,
+                    playerReheal: playerReheal,
+                    FOV: FOV,
+                    MouseX: MouseX_,
+                    MouseY: MouseY_,
+                    screenWidth: canvas.width,
+                    screenHeight: canvas.height,
+                  },
+                })
+              );
+
+              setTimeout(() => {
+                cannonWidth = [];
+                cannonFireData = [];
+                console.log(Object.keys(tankdatacannon__).length);
+                for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                  cannonWidth.push(0);
+                  cannonFireData.push(true);
+                }
+                console.log(cannonWidth);
+              }, 100);
+            });
+          }
+        }
+        level += 1;
+        let tonextlevel =
+          levels["level" + level] - levels["level" + (level - 1)];
+        progress =
+          (score - levels["level" + (level - 1)]) /
+          (levels["level" + level] - levels["level" + (level - 1)]);
+        playerSize += playerSize * 0.005;
+        while (score / levels["level" + level] >= 1) {
+          level += 1;
+          playerSize += playerSize * 0.005;
+          progress =
+            (score - levels["level" + (level - 1)]) /
+            (levels["level" + level] - levels["level" + (level - 1)]);
+        }
+      }
+    }
 
     socket.onopen = function () {
       setTimeout(() => {
@@ -590,6 +698,8 @@
         socket.send(JSON.stringify({ type: "newPlayer", data: playerData }));
 
         socket.send(JSON.stringify({ type: "getFood", data: {} }));
+        
+        socket.send(JSON.stringify({ type: "HANDSHAKE", data: {} }))
         draw();
 
         var masseg = document.getElementById("mesage");
@@ -602,6 +712,8 @@
           if (message.type === "playerUpdated") {
             players[data.id] = data; // Update the local player data
             console.log("Player updated:", data); // Log the update
+          } else if (type === "handshake") {
+            HANDSHAKE = data
           } else if (message.type === "updaterHeal") {
             if (!players[data.ID]) return;
             players[data.ID].playerHealTime = data.HEALTime;
@@ -785,112 +897,7 @@
             if (data["bulletId"] === playerId) {
               score = players[data["bulletId"]].score;
             }
-            let tonextlevel =
-              levels["level" + level] - levels["level" + (level - 1)];
-            progress =
-              (score - levels["level" + (level - 1)]) /
-              (levels["level" + level] - levels["level" + (level - 1)]);
-            if (score / levels["level" + level] >= 1) {
-              // Add transition property
-
-              let tankdata = tankmeta[__type__];
-              console.log(level >= tankdata["upgradeLevel"]);
-              if (level === tankdata["upgradeLevel"]) {
-                var tankstiles = document.getElementById("tanktiles");
-                tankstiles.style.display = "block";
-                tankstiles.style.left = 0;
-                tankstiles.style.animation = "2s 1 move";
-                var upgrade = tankdata["upgrades"];
-
-                for (let i = 0; i < Object.keys(upgrade).length; i++) {
-                  var img__ = document.createElement("img");
-                  var tileImg = Object.values(upgrade)[i];
-                  tankstiles.appendChild(img__);
-                  console.log(tileImg);
-
-                  img__.src = "tanktiles/" + tileImg + ".png";
-                  img__.style =
-                    "width: 6vw; height: 6vw; margin: 10px; z-index: 100;";
-
-                  img__.addEventListener("click", function (event) {
-                    event.stopPropagation();
-                    tankstiles.style.display = "none";
-                    __type__ = Object.keys(upgrade)[i];
-                    players[playerId].type = __type__;
-                    tankdata = tankmeta[__type__];
-                    var tankdatacannon__ = tankdata["cannons"];
-                    playerSize *= tankdata["size-m"];
-                    playerSpeed *= tankdata["speed-m"];
-                    bullet_damage *= tankdata["damage-m"];
-                    playerReheal *= tankdata["regen-m"];
-                    bodyDamage *= tankdata["BodyDamage-m"];
-                    maxhealth *= tankdata["health-m"];
-                    if (playerHealth > maxhealth) {
-                      playerHealth = maxhealth;
-                    }
-
-                    socket.send(
-                      JSON.stringify({
-                        type: "typeChange",
-                        data: {
-                          id: playerId,
-                          x: playerX,
-                          y: playerY,
-                          health: playerHealth,
-                          speed: playerSpeed,
-                          size: playerSize,
-                          bodyDamage: bodyDamage,
-                          cannonW: cannonWidth,
-                          cannonH: 0,
-                          __type__: __type__,
-                          cannon_angle: getCannonAngle(),
-                          score: score,
-                          username: username,
-                          level: level,
-                          state: state,
-                          statecycle: statecycle,
-                          playerHealTime: playerHealTime,
-                          maxhealth: maxhealth,
-                          playerReheal: playerReheal,
-                          FOV: FOV,
-                          MouseX: MouseX_,
-                          MouseY: MouseY_,
-                          screenWidth: canvas.width,
-                          screenHeight: canvas.height,
-                        },
-                      })
-                    );
-
-                    setTimeout(() => {
-                      cannonWidth = [];
-                      console.log(Object.keys(tankdatacannon__).length);
-                      for (
-                        let i = 0;
-                        i < Object.keys(tankdatacannon__).length;
-                        i++
-                      ) {
-                        cannonWidth.push(0);
-                      }
-                      console.log(cannonWidth);
-                    }, 100);
-                  });
-                }
-              }
-              level += 1;
-              let tonextlevel =
-                levels["level" + level] - levels["level" + (level - 1)];
-              progress =
-                (score - levels["level" + (level - 1)]) /
-                (levels["level" + level] - levels["level" + (level - 1)]);
-              playerSize += playerSize * 0.005;
-              while (score / levels["level" + level] >= 1) {
-                level += 1;
-                playerSize += playerSize * 0.005;
-                progress =
-                  (score - levels["level" + (level - 1)]) /
-                  (levels["level" + level] - levels["level" + (level - 1)]);
-              }
-            }
+            levelHANDLER();
           } else if (message.type === "dronekilled") {
             if (data.droneID === playerId) {
               drones -= 1;
@@ -1152,109 +1159,7 @@
           if (keysPressed["]"]) {
             players[playerId].score += 15;
             score = players[playerId].score;
-            let tonextlevel =
-              levels["level" + level] - levels["level" + (level - 1)];
-            progress =
-              (score - levels["level" + (level - 1)]) /
-              (levels["level" + level] - levels["level" + (level - 1)]);
-            if (score / levels["level" + level] >= 1) {
-              // Add transition property
-
-              let tankdata = tankmeta[__type__];
-              if (level === tankdata["upgradeLevel"]) {
-                var tankstiles = document.getElementById("tanktiles");
-                tankstiles.style.display = "block";
-                tankstiles.style.left = 0;
-                tankstiles.style.animation = "2s 1 move";
-                var upgrade = tankdata["upgrades"];
-
-                for (let i = 0; i < Object.keys(upgrade).length; i++) {
-                  var img__ = document.createElement("img");
-                  var tileImg = Object.values(upgrade)[i];
-                  tankstiles.appendChild(img__);
-
-                  img__.src = "tanktiles/" + tileImg + ".png";
-                  img__.style =
-                    "width: 6vw; height: 6vw; margin: 10px; z-index: 100;";
-
-                  img__.addEventListener("click", function () {
-                    event.stopPropagation();
-                    tankstiles.style.display = "none";
-                    __type__ = Object.keys(upgrade)[i];
-                    players[playerId].type = __type__;
-                    tankdata = tankmeta[__type__];
-                    var tankdatacannon__ = tankdata["cannons"];
-                    playerSize *= tankdata["size-m"];
-                    playerSpeed *= tankdata["speed-m"];
-                    bullet_damage *= tankdata["damage-m"];
-                    playerReheal *= tankdata["regen-m"];
-                    bodyDamage *= tankdata["BodyDamage-m"];
-                    maxhealth *= tankdata["health-m"];
-                    if (playerHealth > maxhealth) {
-                      playerHealth = maxhealth;
-                    }
-
-                    socket.send(
-                      JSON.stringify({
-                        type: "typeChange",
-                        data: {
-                          id: playerId,
-                          x: playerX,
-                          y: playerY,
-                          health: playerHealth,
-                          speed: playerSpeed,
-                          size: playerSize,
-                          bodyDamage: bodyDamage,
-                          cannonW: cannonWidth,
-                          cannonH: 0,
-                          type: __type__,
-                          cannon_angle: getCannonAngle(),
-                          score: score,
-                          username: username,
-                          level: level,
-                          state: state,
-                          statecycle: statecycle,
-                          playerHealTime: playerHealTime,
-                          maxhealth: maxhealth,
-                          playerReheal: playerReheal,
-                          FOV: FOV,
-                          MouseX: MouseX_,
-                          MouseY: MouseY_,
-                          screenWidth: canvas.width,
-                          screenHeight: canvas.height,
-                        },
-                      })
-                    );
-                    setTimeout(() => {
-                      cannonWidth = [];
-                      console.log(Object.keys(tankdatacannon__).length);
-                      for (
-                        let i = 0;
-                        i < Object.keys(tankdatacannon__).length;
-                        i++
-                      ) {
-                        cannonWidth.push(0);
-                      }
-                      console.log(cannonWidth);
-                    }, 100);
-                  });
-                }
-              }
-              level += 1;
-              tonextlevel =
-                levels["level" + level] - levels["level" + (level - 1)];
-              progress =
-                (score - levels["level" + (level - 1)]) /
-                (levels["level" + level] - levels["level" + (level - 1)]);
-              playerSize += playerSize * 0.005;
-              while (score / levels["level" + level] >= 1) {
-                level += 1;
-                playerSize += playerSize * 0.005;
-                progress =
-                  (score - levels["level" + (level - 1)]) /
-                  (levels["level" + level] - levels["level" + (level - 1)]);
-              }
-            }
+            levelHANDLER();
           }
           if (
             (keysPressed["ArrowLeft"] && keysPressed["ArrowUp"]) ||
@@ -1445,7 +1350,6 @@
             })
           );
         }, 75);
-        
 
         function generateRandomNumber(min, max) {
           return Math.random() * (max - min) + min;
@@ -1611,7 +1515,7 @@
             }
           });
         }
-        
+
         function FireIntervale(evt) {
           let tankdata = tankmeta[__type__];
           let tankdatacannon = tankdata["cannons"];
@@ -1767,9 +1671,8 @@
               },
               750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__
             );
-            name = JSON.stringify(firingInterval+i)
-            firingIntervals[name] = firingInterval
-            
+            name = JSON.stringify(firingInterval + i);
+            firingIntervals[name] = firingInterval;
           });
         }
 
@@ -1831,7 +1734,7 @@
 
         document.addEventListener("mouseup", function () {
           for (const interval in firingIntervals) {
-            firingInterval = firingIntervals[interval]
+            firingInterval = firingIntervals[interval];
             clearInterval(firingInterval);
             firingInterval = null;
             canFire2 = true;
@@ -2366,7 +2269,7 @@
               ctx.closePath(); // Close the path
               ctx.stroke(); // Draw the border
               ctx.restore();
-            }
+            } 
           }
 
           ctx.beginPath();
@@ -2412,6 +2315,46 @@
             healthWidth,
             10 * playerSize * FOV
           );
+          // cannons on top of player 
+          for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
+            ctx.fillStyle = "#b3b3b3";
+            let tankdatacannondata = tankdatacannon[i];
+            let cannon_widthFOV =
+              tankdatacannondata["cannon-width"] * FOVplayerz;
+            let cannon_heightFOV =
+              tankdatacannondata["cannon-height"] * FOVplayerz;
+            if (tankdatacannondata["type"] === "autoCannon") {
+              ctx.save();
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+              let angle = player.cannon_angle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+
+              let basex =
+                -cannon_widthFOV / 2 +
+                cannon_heightFOV +
+                tankdatacannondata["offSet-x"] -
+                player.cannonW[i];
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+              ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
+
+              // Add a border to the cannon
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV); // Draw the border
+              // Restore the previous transformation matrix
+              ctx.rotate(-(angle + angle_offset));
+              ctx.arc(0,0,cannon_heightFOV,
+                        0,
+                        2 * Math.PI,
+                        false)
+              ctx.restore();
+            }
+          }
 
           ctx.fillStyle = "black";
           ctx.textAlign = "center";

@@ -1,276 +1,112 @@
+players[data["bulletId"]].score += data["socrepluse"];
+            if (data["bulletId"] === playerId) {
+              score = players[data["bulletId"]].score;
+            }
+            let tonextlevel =
+              levels["level" + level] - levels["level" + (level - 1)];
+            progress =
+              (score - levels["level" + (level - 1)]) /
+              (levels["level" + level] - levels["level" + (level - 1)]);
+            if (score / levels["level" + level] >= 1) {
+              // Add transition property
 
+              let tankdata = tankmeta[__type__];
+              console.log(level >= tankdata["upgradeLevel"]);
+              if (level === tankdata["upgradeLevel"]) {
+                var tankstiles = document.getElementById("tanktiles");
+                tankstiles.style.display = "block";
+                tankstiles.style.left = 0;
+                tankstiles.style.animation = "2s 1 move";
+                var upgrade = tankdata["upgrades"];
 
+                for (let i = 0; i < Object.keys(upgrade).length; i++) {
+                  var img__ = document.createElement("img");
+                  var tileImg = Object.values(upgrade)[i];
+                  tankstiles.appendChild(img__);
+                  console.log(tileImg);
 
-for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
-          ctx.fillStyle = '#b3b3b3';
-          let tankdatacannondata = tankdatacannon[i]
-          
+                  img__.src = "tanktiles/" + tileImg + ".png";
+                  img__.style =
+                    "width: 6vw; height: 6vw; margin: 10px; z-index: 100;";
 
-          console.log(tankdatacannondata);
-          let cannon_widthFOV = tankdatacannondata["cannon-width"] * FOVplayerz
-          let cannon_heightFOV = tankdatacannondata["cannon-height"] * FOVplayerz
-          if (tankdatacannondata["type"] === "basicCannon") {
-            ctx.save();
-            ctx.translate(playerX - cavansX, playerY - cavansY);
-            let angle = player.cannon_angle;
+                  img__.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    tankstiles.style.display = "none";
+                    __type__ = Object.keys(upgrade)[i];
+                    players[playerId].type = __type__;
+                    tankdata = tankmeta[__type__];
+                    var tankdatacannon__ = tankdata["cannons"];
+                    playerSize *= tankdata["size-m"];
+                    playerSpeed *= tankdata["speed-m"];
+                    bullet_damage *= tankdata["damage-m"];
+                    playerReheal *= tankdata["regen-m"];
+                    bodyDamage *= tankdata["BodyDamage-m"];
+                    maxhealth *= tankdata["health-m"];
+                    if (playerHealth > maxhealth) {
+                      playerHealth = maxhealth;
+                    }
 
-            let angle_offset = tankdatacannondata["offset-angle"]
-            ctx.rotate(angle + angle_offset);
-            // Draw the square
+                    socket.send(
+                      JSON.stringify({
+                        type: "typeChange",
+                        data: {
+                          id: playerId,
+                          x: playerX,
+                          y: playerY,
+                          health: playerHealth,
+                          speed: playerSpeed,
+                          size: playerSize,
+                          bodyDamage: bodyDamage,
+                          cannonW: cannonWidth,
+                          cannonH: 0,
+                          __type__: __type__,
+                          cannon_angle: getCannonAngle(),
+                          score: score,
+                          username: username,
+                          level: level,
+                          state: state,
+                          statecycle: statecycle,
+                          playerHealTime: playerHealTime,
+                          maxhealth: maxhealth,
+                          playerReheal: playerReheal,
+                          FOV: FOV,
+                          MouseX: MouseX_,
+                          MouseY: MouseY_,
+                          screenWidth: canvas.width,
+                          screenHeight: canvas.height,
+                        },
+                      })
+                    );
 
-            let basex = (((-cannon_widthFOV / 2) +
-              cannon_heightFOV) +
-              tankdatacannondata["offSet-x"]) - player.cannonW[i];
-            let basey = ((-cannon_heightFOV / 2) +
-              tankdatacannondata["offSet-y"]);
-
-            ctx.fillRect(basex, basey,
-              cannon_widthFOV,
-              cannon_heightFOV);
-
-
-            // Add a border to the cannon
-            ctx.strokeStyle = 'lightgrey'; // Set border color
-            ctx.lineWidth = 3; // Set border width
-            ctx.strokeRect(basex, basey,
-              cannon_widthFOV,
-              cannon_heightFOV);// Draw the border
-            // Restore the previous transformation matrix
-            ctx.restore();
-          }
-          else if (tankdatacannondata["type"] === "trapezoid" || tankdatacannondata["type"] === "directer") {
-            ctx.save();
-            ctx.translate(playerX - cavansX, playerY - cavansY);
-            let angle = player.cannon_angle;
-            let cannonheight = tankdatacannondata["cannon-height"]
-
-            let angle_offset = tankdatacannondata["offset-angle"]
-            ctx.rotate(angle + angle_offset);
-            console.log(angle)
-            // Draw the square
-            const cannonWidth_bottom = (tankdatacannondata["cannon-width-bottom"] * playerSize) * FOV
-
-            let basex = (((cannonWidth_bottom / 2) + cannon_heightFOV) + tankdatacannondata["offSet-x"]) - player.cannonW[i];
-            let basey = (((-cannon_heightFOV / 2) + cannon_heightFOV / 2) - tankdatacannondata["offSet-y"])
-
-            const cannonHeight = cannon_heightFOV
-            const cannonWidth_top = (tankdatacannondata["cannon-width-top"] * playerSize) * FOV
-
-            console.log((tankdatacannondata["cannon-width-top"] * playerSize) * FOV)
-            console.log((tankdatacannondata["cannon-width-bottom"] * playerSize) * FOV)
-            var canwB2 = cannonWidth_bottom / 2;
-            var canwH2 = cannonWidth_top / 2;
-            ctx.beginPath();
-            ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-            ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-            ctx.lineTo(basex, basey + canwH2);
-            ctx.lineTo(basex, basey - canwH2);
-            ctx.closePath(); // Close the path
-            ctx.fill();
-
-
-            // Add a border to the cannon
-            ctx.strokeStyle = 'lightgrey'; // Set border color
-            ctx.lineWidth = 3; // Set border width
-            ctx.beginPath();
-            ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-            ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-            ctx.lineTo(basex, basey + canwH2);
-            ctx.lineTo(basex, basey - canwH2);
-            ctx.closePath(); // Close the path
-            ctx.stroke(); // Draw the border
-            ctx.restore();
-          } else if (tankdatacannondata["type"] === "trap") {
-            let cannonwidth = tankdatacannondata["cannon-width"]
-            let cannonheight = tankdatacannondata["cannon-height"]
-            ctx.save();
-
-            ctx.translate(playerX - cavansX, playerY - cavansY);
-            let angle = player.cannon_angle;
-
-            let angle_offset = tankdatacannondata["offset-angle"]
-            let trapR = tankdatacannondata["trap-to-cannon-ratio"]
-            ctx.rotate(angle + angle_offset);
-            // Draw the square
-            let basex = ((-cannon_widthFOV / 2)
-              + cannonheight) +
-              tankdatacannondata["offSet-x"] - player.cannonW[i];
-            let reH = cannon_widthFOV * (1 - trapR)
-            let basey = (-
-              cannon_heightFOV / 2) + tankdatacannondata["offSet-y"]
-            ctx.fillRect(basex, basey, cannon_widthFOV - reH, cannon_heightFOV);
-            // Add a border to the cannon
-
-            ctx.strokeStyle = 'lightgrey'; // Set border color
-            ctx.lineWidth = 3; // Set border width
-            ctx.strokeRect(basex, basey, cannon_widthFOV - reH, cannon_heightFOV);
-            // Restore the previous transformation matrix
-            const cannonHeight = reH
-            const cannonWidth_top = cannon_heightFOV * 1.4
-            const cannonWidth_bottom = cannon_heightFOV
-
-
-            basex = basex + (cannon_widthFOV - trapR)
-
-
-            var canwB2 = cannonWidth_bottom / 2;
-            var canwH2 = cannonWidth_top / 2;
-            basey += canwB2
-            ctx.beginPath();
-            ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-            ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-            ctx.lineTo(basex, basey + canwH2);
-            ctx.lineTo(basex, basey - canwH2);
-            ctx.closePath(); // Close the path
-            ctx.fill();
-
-
-            // Add a border to the cannon
-            ctx.strokeStyle = 'lightgrey'; // Set border color
-            ctx.lineWidth = 3; // Set border width
-            ctx.beginPath();
-            ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-            ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-            ctx.lineTo(basex, basey + canwH2);
-            ctx.lineTo(basex, basey - canwH2);
-            ctx.closePath(); // Close the path
-            ctx.stroke(); // Draw the border
-            ctx.restore();
-          }
-
-
-
-ctx.fillStyle = '#b3b3b3';
-let tankdatacannondata = tankdatacannon[i]
-
-console.log(tankdatacannondata);
-let cannon_widthFOV = tankdatacannondata["cannon-width"] * FOVplayerz
-let cannon_heightFOV = tankdatacannondata["cannon-height"] * FOVplayerz
-if (tankdatacannondata["type"] === "basicCannon") {
-  ctx.save();
-  ctx.translate(playerX - cavansX, playerY - cavansY);
-  let angle = player.cannon_angle;
-
-  let angle_offset = tankdatacannondata["offset-angle"]
-  ctx.rotate(angle + angle_offset);
-  // Draw the square
-
-  let basex = (((-cannon_widthFOV / 2) +
-    cannon_heightFOV) +
-    tankdatacannondata["offSet-x"]) - player.cannonW[i];
-  let basey = ((-cannon_heightFOV / 2) +
-    tankdatacannondata["offSet-y"]);
-
-  ctx.fillRect(basex, basey,
-    cannon_widthFOV,
-    cannon_heightFOV);
-
-
-  // Add a border to the cannon
-  ctx.strokeStyle = 'lightgrey'; // Set border color
-  ctx.lineWidth = 3; // Set border width
-  ctx.strokeRect(basex, basey,
-    cannon_widthFOV,
-    cannon_heightFOV);// Draw the border
-  // Restore the previous transformation matrix
-  ctx.restore();
-}
-else if (tankdatacannondata["type"] === "trapezoid" || tankdatacannondata["type"] === "directer") {
-  ctx.save();
-  ctx.translate(playerX - cavansX, playerY - cavansY);
-  let angle = player.cannon_angle;
-  let cannonheight = tankdatacannondata["cannon-height"]
-
-  let angle_offset = tankdatacannondata["offset-angle"]
-  ctx.rotate(angle + angle_offset);
-  console.log(angle)
-  // Draw the square
-  const cannonWidth_bottom = (tankdatacannondata["cannon-width-bottom"] * playerSize) * FOV
-
-  let basex = (((cannonWidth_bottom / 2) + cannon_heightFOV) + tankdatacannondata["offSet-x"]) - cannonWidth[i];
-  let basey = (((-cannon_heightFOV / 2) + cannon_heightFOV / 2) - tankdatacannondata["offSet-y"])
-
-  const cannonHeight = cannon_heightFOV
-  const cannonWidth_top = (tankdatacannondata["cannon-width-top"] * playerSize) * FOV
-
-  console.log((tankdatacannondata["cannon-width-top"] * playerSize) * FOV)
-  console.log((tankdatacannondata["cannon-width-bottom"] * playerSize) * FOV)
-  var canwB2 = cannonWidth_bottom / 2;
-  var canwH2 = cannonWidth_top / 2;
-  ctx.beginPath();
-  ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-  ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-  ctx.lineTo(basex, basey + canwH2);
-  ctx.lineTo(basex, basey - canwH2);
-  ctx.closePath(); // Close the path
-  ctx.fill();
-
-
-  // Add a border to the cannon
-  ctx.strokeStyle = 'lightgrey'; // Set border color
-  ctx.lineWidth = 3; // Set border width
-  ctx.beginPath();
-  ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-  ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-  ctx.lineTo(basex, basey + canwH2);
-  ctx.lineTo(basex, basey - canwH2);
-  ctx.closePath(); // Close the path
-  ctx.stroke(); // Draw the border
-  ctx.restore();
-} else if (tankdatacannondata["type"] === "trap") {
-  let cannonwidth = tankdatacannondata["cannon-width"]
-  let cannonheight = tankdatacannondata["cannon-height"]
-  ctx.save();
-
-  ctx.translate(playerX - cavansX, playerY - cavansY);
-  let angle = player.cannon_angle;
-
-  let angle_offset = tankdatacannondata["offset-angle"]
-  let trapR = tankdatacannondata["trap-to-cannon-ratio"]
-  ctx.rotate(angle + angle_offset);
-  // Draw the square
-  let basex = ((-cannon_widthFOV / 2)
-    + cannonheight) +
-    tankdatacannondata["offSet-x"] - player.cannonW[i];
-  let reH = cannon_widthFOV * (1 - trapR)
-  let basey = (-
-    cannon_heightFOV / 2) + tankdatacannondata["offSet-y"]
-  ctx.fillRect(basex, basey, cannon_widthFOV - reH, cannon_heightFOV);
-  // Add a border to the cannon
-
-  ctx.strokeStyle = 'lightgrey'; // Set border color
-  ctx.lineWidth = 3; // Set border width
-  ctx.strokeRect(basex, basey, cannon_widthFOV - reH, cannon_heightFOV);
-  // Restore the previous transformation matrix
-  const cannonHeight = reH
-  const cannonWidth_top = cannon_heightFOV * 1.4
-  const cannonWidth_bottom = cannon_heightFOV
-
-
-  basex = basex + (cannon_widthFOV - trapR)
-
-
-  var canwB2 = cannonWidth_bottom / 2;
-  var canwH2 = cannonWidth_top / 2;
-  basey += canwB2
-  ctx.beginPath();
-  ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-  ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-  ctx.lineTo(basex, basey + canwH2);
-  ctx.lineTo(basex, basey - canwH2);
-  ctx.closePath(); // Close the path
-  ctx.fill();
-
-
-  // Add a border to the cannon
-  ctx.strokeStyle = 'lightgrey'; // Set border color
-  ctx.lineWidth = 3; // Set border width
-  ctx.beginPath();
-  ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-  ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-  ctx.lineTo(basex, basey + canwH2);
-  ctx.lineTo(basex, basey - canwH2);
-  ctx.closePath(); // Close the path
-  ctx.stroke(); // Draw the border
-  ctx.restore();
-}
+                    setTimeout(() => {
+                      cannonWidth = [];
+                      cannonFireData = [];
+                      console.log(Object.keys(tankdatacannon__).length);
+                      for (
+                        let i = 0;
+                        i < Object.keys(tankdatacannon__).length;
+                        i++
+                      ) {
+                        cannonWidth.push(0);
+                        cannonFireData.push(true)
+                      }
+                      console.log(cannonWidth);
+                    }, 100);
+                  });
+                }
+              }
+              level += 1;
+              let tonextlevel =
+                levels["level" + level] - levels["level" + (level - 1)];
+              progress =
+                (score - levels["level" + (level - 1)]) /
+                (levels["level" + level] - levels["level" + (level - 1)]);
+              playerSize += playerSize * 0.005;
+              while (score / levels["level" + level] >= 1) {
+                level += 1;
+                playerSize += playerSize * 0.005;
+                progress =
+                  (score - levels["level" + (level - 1)]) /
+                  (levels["level" + level] - levels["level" + (level - 1)]);
+              }
+            }

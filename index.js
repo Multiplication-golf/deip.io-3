@@ -5,6 +5,7 @@ const path = require("path");
 const SAT = require("sat");
 const { setTimeout } = require("timers");
 const WebSocket = require("ws");
+const crypto = require('crypto');
 
 const server = http.createServer(app);
 
@@ -229,6 +230,14 @@ for (let i = 0; i < getRandomInt(300, 400); i++) {
 
 var angle = 0;
 
+const algorithm = 'aes-256-cbc';
+const key = crypto.randomBytes(32);
+const iv = crypto.randomBytes(16);
+
+
+
+var serverseed = crypto.randomUUID()
+
 var invaled_requests = [];
 
 const UPDATE_INTERVAL = 85;
@@ -237,6 +246,7 @@ const connections = [];
 
 wss.on("connection", (socket) => {
   let connection = { socket: socket, playerId: null };
+  let handshaked = false
   connections.push(connection);
 
   socket.on("message", (message) => {
@@ -248,6 +258,16 @@ wss.on("connection", (socket) => {
       console.log(players);
       emit("playerJoined", data); // Emit playerJoined event to notify all clients
       emit("FoodUpdate", food_squares); // Emit FoodUpdate event to update food squares
+      return;
+    }
+    
+    if (type === "HANDSHAKE") {
+      if (handshaked) return
+      (function() {
+        handshaked = true
+        const handshake = Date.now() + "-" + (Math.floor(Math.random() * 1000) + (Date.now()*Math.random()) + (Date.now()/1387)+Math.random())*serverseed;
+        socket.send(JSON.stringify({type:"handshake", data:handshake}))
+      })();
       return;
     }
 
