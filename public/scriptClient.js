@@ -24,7 +24,10 @@
     // add shape-shape collsion - lower pryority
     // create drone tank - lower pryority
 
-    const socket = new WebSocket("https://deip-io3.glitch.me/");
+    const socket =
+      new /*skill issus are comming to my server mohaa ha ha*/ WebSocket(
+        "https://deip-io3.glitch.me/"
+      );
 
     let playerId = null; // Connect to the server
     const canvas = document.createElement("canvas");
@@ -80,330 +83,7 @@
           },
         ],
       },
-      twin: {
-        "size-m": 1,
-        "speed-m": 0.95,
-        "damage-m": 1,
-        "health-m": 1,
-        fov: 1,
-        "BodyDamage-m": 1,
-        "regen-m": 1,
-        "reaload-m": 1.3,
-        upgradeLevel: 30,
-        upgrades: ["twin", "sniper"],
-        cannons: [
-          {
-            type: "basicCannon",
-            "cannon-width": 90,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": -20,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 0.9,
-          },
-          {
-            type: "basicCannon",
-            "cannon-width": 90,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 20,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0.5,
-            reloadM: 1,
-            bullet_pentration: 0.9,
-          },
-        ],
-      },
-      flank: {
-        "size-m": 1,
-        "speed-m": 0.98,
-        "damage-m": 1,
-        "health-m": 1,
-        "regen-m": 1,
-        fov: 1,
-        "BodyDamage-m": 1.1,
-        "reaload-m": 1.2,
-        upgradeLevel: 30,
-        upgrades: ["twin", "sniper"],
-        cannons: [
-          {
-            type: "basicCannon",
-            "cannon-width": 90,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 0.8,
-          },
-          {
-            type: "basicCannon",
-            "cannon-width": 70,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 3.14159,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 0.8,
-          },
-        ],
-      },
-      sniper: {
-        "size-m": 1.05,
-        "speed-m": 0.9,
-        "damage-m": 1,
-        "health-m": 0.95,
-        fov: 1,
-        "BodyDamage-m": 1,
-        "regen-m": 1,
-        "reaload-m": 1.5,
-        cannons: [
-          {
-            type: "basicCannon",
-            "cannon-width": 120,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 1.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 1.6,
-          },
-        ],
-      },
-      "mechiane gun": {
-        "size-m": 1.05,
-        "speed-m": 1,
-        "damage-m": 1,
-        "health-m": 1,
-        fov: 1,
-        "BodyDamage-m": 1,
-        "reaload-m": 0.75,
-        "regen-m": 1,
-        upgradeLevel: 30,
-        upgrades: {
-          twin: 1,
-          sniper: 2,
-          flank: 3,
-          "mechiane gun": 4,
-        },
-        cannons: [
-          {
-            type: "trapezoid",
-            "cannon-width-top": 70,
-            "cannon-height": 50,
-            "cannon-width-bottom": 40,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1.05,
-            bulletSpeed: 1,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 0.9,
-          },
-        ],
-      },
-      spreader: {
-        "size-m": 1.05,
-        "speed-m": 1.5,
-        "damage-m": 0.9,
-        "health-m": 1.1,
-        fov: 1,
-        "BodyDamage-m": 1,
-        "reaload-m": 0.8,
-        "regen-m": 1,
-        upgradeLevel: 30,
-        upgrades: {
-          twin: 1,
-          sniper: 2,
-          flank: 3,
-          "mechiane gun": 4,
-        },
-        cannons: [
-          {
-            type: "trapezoid",
-            "cannon-width-top": 55,
-            "cannon-height": 40,
-            "cannon-width-bottom": 50,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1.05,
-            bulletSpeed: 0.9,
-            delay: 0.1,
-            reloadM: 1,
-            bullet_pentration: 0.9,
-          },
-          {
-            type: "basicCannon",
-            "cannon-width": 75,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 1,
-          },
-        ],
-      },
-      rammer: {
-        "size-m": 1,
-        "speed-m": 1.2,
-        "damage-m": 1,
-        "health-m": 1,
-        fov: 1,
-        "BodyDamage-m": 1,
-        "reaload-m": 0.7,
-        "regen-m": 1,
-        upgradeLevel: 30,
-        upgrades: ["twin", "sniper"],
-        cannons: [
-          {
-            type: "basicCannon",
-            "cannon-width": 90,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": -0.785398,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 0.9,
-          },
-          {
-            type: "basicCannon",
-            "cannon-width": 90,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0.785398,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 0.9,
-          },
-        ],
-      },
-      traper: {
-        "size-m": 1,
-        "speed-m": 0.95,
-        "damage-m": 1,
-        fov: 1,
-        "health-m": 0.95,
-        "BodyDamage-m": 1,
-        "regen-m": 1.1,
-        "max-traps": 10,
-        "reaload-m": 1.5,
-        cannons: [
-          {
-            type: "trap",
-            "cannon-width": 70,
-            "cannon-height": 30,
-            "trap-to-cannon-ratio": 0.8,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 1.5,
-            delay: 0,
-            reloadM: 1,
-            "life-time": 10,
-            bullet_pentration: 1.6,
-          },
-        ],
-      },
-      directer: {
-        "size-m": 1,
-        "speed-m": 1.05,
-        "damage-m": 1,
-        "health-m": 0.9,
-        "regen-m": 1,
-        fov: 1, // change later when fov is working
-        "BodyDamage-m": 1,
-        "reaload-m": 1.5,
-        upgradeLevel: 15,
-        "max-drones": 6,
-        upgrades: {
-          twin: 1,
-        },
-        cannons: [
-          {
-            type: "directer",
-            "cannon-width-top": 70,
-            "cannon-height": 25,
-            "cannon-width-bottom": 50,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 1,
-          },
-        ],
-      },
-      autobasic: {
-        "size-m": 1,
-        "speed-m": 1,
-        "damage-m": 1,
-        "health-m": 1,
-        "regen-m": 1,
-        fov: 1,
-        "BodyDamage-m": 1,
-        "reaload-m": 1,
-        upgradeLevel: 30,
-        upgrades: {},
-        cannons: [
-          {
-            type: "basicCannon",
-            "cannon-width": 90,
-            "cannon-height": 30,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 1,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 1,
-          },
-          {
-            type: "autoCannon",
-            "cannon-width": 30,
-            "cannon-height": 10,
-            "offSet-x": 0,
-            "offSet-y": 0,
-            "offset-angle": 0,
-            bulletSize: 0.8,
-            bulletSpeed: 0.5,
-            delay: 0,
-            reloadM: 1,
-            bullet_pentration: 1,
-          },
-        ],
-      },
-    };
+    }; // over right
     var grid = document.getElementById("grid");
     var types = [
       "basic",
@@ -415,16 +95,16 @@
       "rammer",
       "traper",
       "directer",
+      "autobasic",
     ];
-    
-    
-    var HANDSHAKE = null;
-    
-    
+
+    var HANDSHAKE = { null: [{ null: null }] };
+
     var players = {};
     var boardbullets = [];
     var bullets = [];
     var food_list = [];
+    var autocannons = [];
     var level = 0;
     var xp = 0;
     var FOV = 1; // senstive
@@ -442,8 +122,8 @@
     var playerSize = 1;
     var bodyDamage = 3;
     var __type__ = "basic";
-    var bullet_damage = 5;
-    var bullet_speed = 3;
+    var bullet_damage = 10;
+    var bullet_speed = 4;
     var bullet_size = 15;
     var sqrt23 = Math.sqrt(3) / 2;
     var vertices = [];
@@ -455,9 +135,9 @@
     var current_angle = 0;
     var MouseX_ = 0;
     var MouseY_ = 0;
-    var mapLeft = -5000; // This could be zero if you don't want any margin at the left
+    var mapLeft = -5000;
     var mapRight = 5000;
-    var mapTop = -5000; // Similar to mapLeft, this could be zero
+    var mapTop = -5000;
     var mapBottom = 5000;
     var playerMovementX = 0;
     var playerMovementY = 0;
@@ -481,6 +161,7 @@
     var canFire = true;
     var canFire2 = true;
     var firingInterval = null;
+    var movementTimeouts = [];
     var canW = canvas.width;
     var canH = canvas.height;
     var squareColor = "grey";
@@ -557,6 +238,10 @@
       };
     }
 
+    function send(type, data) {
+      socket.send(JSON.stringify({ type: type, data: data }));
+    }
+
     function generateUniquePlayerId() {
       return "player-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     }
@@ -602,47 +287,90 @@
                 playerHealth = maxhealth;
               }
 
-              socket.send(
-                JSON.stringify({
-                  type: "typeChange",
-                  data: {
-                    id: playerId,
-                    x: playerX,
-                    y: playerY,
-                    health: playerHealth,
-                    speed: playerSpeed,
-                    size: playerSize,
-                    bodyDamage: bodyDamage,
-                    cannonW: cannonWidth,
-                    cannonH: 0,
-                    type: __type__,
-                    cannon_angle: 0,
-                    score: score,
-                    username: username,
-                    level: level,
-                    state: state,
-                    statecycle: statecycle,
-                    playerHealTime: playerHealTime,
-                    maxhealth: maxhealth,
-                    playerReheal: playerReheal,
-                    FOV: FOV,
-                    MouseX: MouseX_,
-                    MouseY: MouseY_,
-                    screenWidth: canvas.width,
-                    screenHeight: canvas.height,
-                  },
-                })
-              );
+              send("typeChange", {
+                id: playerId,
+                x: playerX,
+                y: playerY,
+                health: playerHealth,
+                speed: playerSpeed,
+                size: playerSize,
+                bodyDamage: bodyDamage,
+                cannonW: cannonWidth,
+                cannonH: 0,
+                __type__: __type__,
+                cannon_angle: 0,
+                score: score,
+                username: username,
+                level: level,
+                state: state,
+                statecycle: statecycle,
+                playerHealTime: playerHealTime,
+                maxhealth: maxhealth,
+                playerReheal: playerReheal,
+                FOV: FOV,
+                MouseX: MouseX_,
+                MouseY: MouseY_,
+                screenWidth: canvas.width,
+                screenHeight: canvas.height,
+              });
+              console.log(__type__)
 
               setTimeout(() => {
                 cannonWidth = [];
                 cannonFireData = [];
-                console.log(Object.keys(tankdatacannon__).length);
                 for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
                   cannonWidth.push(0);
                   cannonFireData.push(true);
                 }
-                console.log(cannonWidth);
+                autocannons.forEach((popcannon) => {
+                  if (popcannon.playerid === playerId) {
+                    send("deletAuto", { CannonID: popcannon.CannonID });
+                  }
+                });
+                for (const cannon_ in tankdatacannon__) {
+                  let cannon = tankdatacannon__[cannon_];
+                  console.log(tankdatacannon__,cannon)
+                  if (cannon.type === "autoCannon") {
+                    let autoID = Math.random() * 1000 + Math.random() * 1000;
+                    send("autoCannonADD", {
+                      CannonID: autoID,
+                      playerid: playerId,
+                      angle: 0,
+                      _type_: cannon.type,
+                    });
+                    let cannon__ = cannon;
+                    let cannonINT;
+                    let tankdata = tankmeta[__type__];
+                    console.log(tankdata,tankdata["reaload-m"] * cannon["reloadM"] * __reload__,tankdata["reaload-m"] * cannon["reloadM"],750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__)
+                    cannonINT = setInterval(() => {
+                      var __tankdata__ = tankmeta[__type__];
+                      console.log(cannon__.playerid,playerId)
+                      console.log(cannon__)
+                      if (cannon__.playerid === playerId) {
+                        let cannon;
+                        let index = 0;
+                        for (const ___cannon___ in __tankdata__.cannons) {
+                          let cannon___ = __tankdata__.cannons[___cannon___];
+                          if (index === cannon__.autoindex) {
+                            cannon = cannon___;
+                          }
+                          index++;
+                        }
+                        send("Autofire", {
+                          playerId: playerId,
+                          playerX: playerX,
+                          playerY: playerY,
+                          cannon: cannon,
+                          bullet_damage: bullet_damage,
+                          bullet_speed: bullet_speed,
+                          bullet_size: bullet_size,
+                          bullet_pentration: bullet_pentration,
+                          _cannon: cannon__
+                        });
+                      }
+                    }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
+                  }
+                }
               }, 100);
             });
           }
@@ -665,6 +393,7 @@
     }
 
     socket.onopen = function () {
+      // new player or a skill issus
       setTimeout(() => {
         playerId = generateUniquePlayerId();
 
@@ -695,12 +424,14 @@
           screenHeight: canvas.height,
         };
 
-        socket.send(JSON.stringify({ type: "newPlayer", data: playerData }));
+        // setup
+        send("newPlayer", playerData);
 
-        socket.send(JSON.stringify({ type: "getFood", data: {} }));
-        
-        socket.send(JSON.stringify({ type: "HANDSHAKE", data: {} }))
-        draw();
+        send("getFood", {});
+
+        send("getTankMeta", {});
+
+        send("HANDSHAKE", {});
 
         var masseg = document.getElementById("mesage");
 
@@ -712,8 +443,11 @@
           if (message.type === "playerUpdated") {
             players[data.id] = data; // Update the local player data
             console.log("Player updated:", data); // Log the update
+          } else if (message.type === "RETURNtankmeta") {
+            tankmeta = data;
+            draw();
           } else if (type === "handshake") {
-            HANDSHAKE = data
+            HANDSHAKE = data;
           } else if (message.type === "updaterHeal") {
             if (!players[data.ID]) return;
             players[data.ID].playerHealTime = data.HEALTime;
@@ -733,6 +467,14 @@
                 "actual Health": players[data.ID].health,
               });
             }
+          } else if (type === "autoCannonUPDATE-ADD") {
+            autocannons = data;
+          } else if (type === "autoCannonUPDATE-ANGLE") {
+            autocannons.forEach((cannon_ooo) => {
+              if (cannon_ooo.CannonID === data.CannonID) {
+                cannon_ooo.angle = data.angle;
+              }
+            });
           } else if (message.type === "playerMoved") {
             players[data.id].x = data.x;
             players[data.id].y = data.y;
@@ -755,6 +497,8 @@
               document.getElementById("container").style.display = "none";
               document.getElementById("myCanvas").style.display = "none";
               clearInterval(healer);
+              socket.onmessage = {};
+              
               var old_element = document.body;
               var new_element = old_element.cloneNode(true);
               old_element.parentNode.replaceChild(new_element, old_element);
@@ -790,29 +534,19 @@
               playerHealTime = 0;
               state = "damaged";
               statecycle = 0;
-              socket.send(
-                JSON.stringify({
-                  type: "statechange",
-                  data: {
-                    state: state,
-                    statecycle: statecycle,
-                    playerID: playerId,
-                  },
-                })
-              );
+              send("statechange", {
+                state: state,
+                statecycle: statecycle,
+                playerID: playerId,
+              });
               setTimeout(() => {
-                state = "noramal";
+                state = "normal";
                 statecycle = 0;
-                socket.send(
-                  JSON.stringify({
-                    type: "statechange",
-                    data: {
-                      state: state,
-                      statecycle: statecycle,
-                      playerID: playerId,
-                    },
-                  })
-                );
+                send("statechange", {
+                  state: state,
+                  statecycle: statecycle,
+                  playerID: playerId,
+                });
               }, 1000);
             }
             if (data.player1.id === playerId) {
@@ -820,29 +554,19 @@
               playerHealTime = 0;
               state = "damaged";
               statecycle = 0;
-              socket.send(
-                JSON.stringify({
-                  type: "statechange",
-                  data: {
-                    state: state,
-                    statecycle: statecycle,
-                    playerID: playerId,
-                  },
-                })
-              );
+              send("statechange", {
+                state: state,
+                statecycle: statecycle,
+                playerID: playerId,
+              });
               setTimeout(() => {
-                state = "noramal";
+                state = "normal";
                 statecycle = 0;
-                socket.send(
-                  JSON.stringify({
-                    type: "statechange",
-                    data: {
-                      state: state,
-                      statecycle: statecycle,
-                      playerID: playerId,
-                    },
-                  })
-                );
+                send("statechange", {
+                  state: state,
+                  statecycle: statecycle,
+                  playerID: playerId,
+                });
               }, 1000);
             }
             players[data.player2.id].health = data.player2.health;
@@ -852,45 +576,38 @@
             console.log(data); // Log the player data
             players[data.id] = data; // Update the local player list
             if (playerId !== data.id) {
-              socket.send(
-                JSON.stringify({
-                  type: "updatePlayer",
-                  data: {
-                    id: playerId,
-                    x: playerX,
-                    y: playerY,
-                    health: playerHealth,
-                    speed: playerSpeed,
-                    size: playerSize,
-                    bodyDamage: bodyDamage,
-                    cannonW: cannonWidth,
-                    cannonH: 0,
-                    __type__: __type__,
-                    cannon_angle: 0,
-                    score: score,
-                    username: username,
-                    level: level,
-                    state: state,
-                    statecycle: statecycle,
-                    playerHealTime: playerHealTime,
-                    maxhealth: maxhealth,
-                    playerReheal: playerReheal,
-                    FOV: FOV,
-                    MouseX: MouseX_,
-                    MouseY: MouseY_,
-                    screenWidth: canvas.width,
-                    screenHeight: canvas.height,
-                  },
-                })
-              );
+              send("updatePlayer", {
+                id: playerId,
+                x: playerX,
+                y: playerY,
+                health: playerHealth,
+                speed: playerSpeed,
+                size: playerSize,
+                bodyDamage: bodyDamage,
+                cannonW: cannonWidth,
+                cannonH: 0,
+                __type__: __type__,
+                cannon_angle: 0,
+                score: score,
+                username: username,
+                level: level,
+                state: state,
+                statecycle: statecycle,
+                playerHealTime: playerHealTime,
+                maxhealth: maxhealth,
+                playerReheal: playerReheal,
+                FOV: FOV,
+                MouseX: MouseX_,
+                MouseY: MouseY_,
+                screenWidth: canvas.width,
+                screenHeight: canvas.height,
+              });
             }
             setTimeout(() => {
-              socket.send(
-                JSON.stringify({
-                  type: "healrate",
-                  data: { playerId: playerId, playerReheal: playerReheal },
-                })
-              );
+              send("healrate", {
+                playerId: playerId,
+                playerReheal: playerReheal,
+              });
             }, 3000);
           } else if (message.type === "playerScore") {
             players[data["bulletId"]].score += data["socrepluse"];
@@ -911,38 +628,23 @@
 
               if (data.playerID == playerId) {
                 playerHealth = data.playerHealth;
-                socket.send(
-                  JSON.stringify({
-                    type: "playerHealintterupted",
-                    data: { ID: playerId },
-                  })
-                );
+                send("playerHealintterupted", { ID: playerId });
                 playerHealTime = 0;
                 state = "damaged";
                 statecycle = 0;
-                socket.send(
-                  JSON.stringify({
-                    type: "statechange",
-                    data: {
-                      state: state,
-                      statecycle: statecycle,
-                      playerID: playerId,
-                    },
-                  })
-                );
+                send("statechange", {
+                  state: state,
+                  statecycle: statecycle,
+                  playerID: playerId,
+                });
                 setTimeout(() => {
-                  state = "noramal";
+                  state = "normal";
                   statecycle = 0;
-                  socket.send(
-                    JSON.stringify({
-                      type: "statechange",
-                      data: {
-                        state: state,
-                        statecycle: statecycle,
-                        playerID: playerId,
-                      },
-                    })
-                  );
+                  send("statechange", {
+                    state: state,
+                    statecycle: statecycle,
+                    playerID: playerId,
+                  });
                 }, 1000);
               }
             } else {
@@ -956,38 +658,23 @@
               if (data.PlayerId == playerId) {
                 state = "damaged";
                 statecycle = 0;
-                socket.send(
-                  JSON.stringify({
-                    type: "statechange",
-                    data: {
-                      state: state,
-                      statecycle: statecycle,
-                      playerID: playerId,
-                    },
-                  })
-                );
+                send("statechange", {
+                  state: state,
+                  statecycle: statecycle,
+                  playerID: playerId,
+                });
                 setTimeout(() => {
-                  state = "noramal";
+                  state = "normal";
                   statecycle = 0;
-                  socket.send(
-                    JSON.stringify({
-                      type: "statechange",
-                      data: {
-                        state: state,
-                        statecycle: statecycle,
-                        playerID: playerId,
-                      },
-                    })
-                  );
+                  send("statechange", {
+                    state: state,
+                    statecycle: statecycle,
+                    playerID: playerId,
+                  });
                 }, 1000);
                 playerHealth -= data.playerDamage;
                 playerHealTime = 0;
-                socket.send(
-                  JSON.stringify({
-                    type: "playerHealintterupted",
-                    data: { ID: playerId },
-                  })
-                );
+                send("playerHealintterupted", { ID: playerId });
               }
             } else {
               console.warn(
@@ -997,21 +684,29 @@
             }
           } else if (message.type === "bouceBack") {
             canmove = false;
+            movementTimeouts.forEach((timeout) => {
+              clearTimeout(timeout);
+            });
+            movementTimeouts = [];
             for (let i = 0; i < playerSpeed; i++) {
               setTimeout(() => {
-                movePlayer(data.dx, data.dy);
-              }, 25 * i);
+                movePlayer(
+                  data.response[1].overlapV.y / playerSpeed,
+                  data.response[1].overlapV.x / playerSpeed
+                );
+              }, 50 * i);
             }
             setTimeout(() => {
               canmove = true;
             }, 10 * playerSpeed);
           } else if (message.type === "type_Change") {
+            console.log(data)
             players[data.id] = data;
           } else if (message.type === "statechangeUpdate") {
             players[data.playerID].state = data.state;
             players[data.playerID].statecycle = data.statecycle;
           } else if (message.type === "playerCannonWidthUpdate") {
-            players[data.id].cannon_width = data.cannon_width;
+            players[data.id].cannonW = data.cannonW;
           }
         };
 
@@ -1023,33 +718,23 @@
           cavansY += dy;
 
           if (i in nolist) return; // just roll with it
-          socket.send(
-            JSON.stringify({
-              type: "playerMoved",
-              data: {
-                id: playerId,
-                x: playerX,
-                y: playerY,
-                dx: dx,
-                dy: dy,
-                last: last,
-              },
-            })
-          );
+          send("playerMoved", {
+            id: playerId,
+            x: playerX,
+            y: playerY,
+            dx: dx,
+            dy: dy,
+            last: last,
+          });
         };
 
         let healer = setInterval(() => {
           playerHealTime += 1;
-          socket.send(
-            JSON.stringify({
-              type: "AddplayerHealTime",
-              data: {
-                playerHealTime: playerHealTime,
-                ID: playerId,
-                maxhealth: maxhealth,
-              },
-            })
-          );
+          send("AddplayerHealTime", {
+            playerHealTime: playerHealTime,
+            ID: playerId,
+            maxhealth: maxhealth,
+          });
         }, 1000);
 
         function MathHypotenuse(x, y) {
@@ -1065,8 +750,8 @@
 
         const getCannonAngle = () => {
           return Math.atan2(
-            Math.abs(MouseY_) - (canvas.height / 2 - playerSize),
-            Math.abs(MouseX_) - (canvas.width / 2 - playerSize)
+            Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+            Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
           );
         };
 
@@ -1082,24 +767,14 @@
               distance < player.size * 41 + playerSize * 41 &&
               playerId_ != playerId
             ) {
-              socket.send(
-                JSON.stringify({
-                  type: "playerCollided",
-                  data: {
-                    id_other: playerId_,
-                    damagetaken: player.bodyDamage,
-                    damagegiven: bodyDamage,
-                    id_self: playerId,
-                  },
-                })
-              );
+              send("playerCollided", {
+                id_other: playerId_,
+                damagetaken: player.bodyDamage,
+                damagegiven: bodyDamage,
+                id_self: playerId,
+              });
               playerHealTime = 0;
-              socket.send(
-                JSON.stringify({
-                  type: "playerHealintterupted",
-                  data: { ID: playerId },
-                })
-              );
+              send("playerHealintterupted", { ID: playerId });
               canmove = false;
               setTimeout(() => {
                 canmove = true;
@@ -1121,30 +796,36 @@
             playerY + dy < mapBottom
           ) {
             for (let i = 0; i < playerSpeed / 3; i++) {
-              setTimeout(() => {
+              var movement = setTimeout(() => {
                 movePlayer(dx * 3, dy * 3, i === playerSpeed - 1 || i === 0);
               }, 75 * i);
+              movementTimeouts.push(movement);
             }
             checkCollisions(dx, dy);
+          } else {
+            for (let i = 0; i < playerSpeed / 3; i++) {
+              var movement = setTimeout(() => {
+                movePlayer(-dx * 3, -dy * 3, i === playerSpeed - 1 || i === 0);
+              }, 75 * i);
+              movementTimeouts.push(movement);
+            }
           }
         };
 
         function calculateTriangleVertices(cx, cy, size, angle) {
-          const height = sqrt23 * size; // Height of an equilateral triangle
+          const height = sqrt23 * size;
           const halfSize = size / 2;
 
-          const angleRad = angle * pi180; // Convert angle to radians
+          const angleRad = angle * pi180;
           const cosAngle = Math.cos(angleRad);
           const sinAngle = Math.sin(angleRad);
 
-          // Define vertices relative to the center
           let vertices = [
             { x: -halfSize, y: -height / 3 }, // Bottom-left
             { x: halfSize, y: -height / 3 }, // Bottom-right
             { x: 0, y: (2 * height) / 3 }, // Top
           ];
 
-          // Rotate and translate vertices
           for (let i = 0; i < vertices.length; i++) {
             const vertex = vertices[i];
             const rotatedX = vertex.x * cosAngle - vertex.y * sinAngle;
@@ -1219,44 +900,37 @@
               playerHealth = maxhealth;
             }
 
-            socket.send(
-              JSON.stringify({
-                type: "typeChange",
-                data: {
-                  id: playerId,
-                  x: playerX,
-                  y: playerY,
-                  health: playerHealth,
-                  speed: playerSpeed,
-                  size: playerSize,
-                  bodyDamage: bodyDamage,
-                  cannonW: cannonWidth,
-                  cannonH: 0,
-                  __type__: __type__,
-                  cannon_angle: getCannonAngle(),
-                  score: score,
-                  username: username,
-                  level: level,
-                  state: state,
-                  statecycle: statecycle,
-                  playerHealTime: playerHealTime,
-                  maxhealth: maxhealth,
-                  playerReheal: playerReheal,
-                  FOV: FOV,
-                  MouseX: MouseX_,
-                  MouseY: MouseY_,
-                  screenWidth: canvas.width,
-                  screenHeight: canvas.height,
-                },
-              })
-            );
+            send("typeChange", {
+              id: playerId,
+              x: playerX,
+              y: playerY,
+              health: playerHealth,
+              speed: playerSpeed,
+              size: playerSize,
+              bodyDamage: bodyDamage,
+              cannonW: cannonWidth,
+              cannonH: 0,
+              __type__: __type__,
+              cannon_angle: getCannonAngle(),
+              score: score,
+              username: username,
+              level: level,
+              state: state,
+              statecycle: statecycle,
+              playerHealTime: playerHealTime,
+              maxhealth: maxhealth,
+              playerReheal: playerReheal,
+              FOV: FOV,
+              MouseX: MouseX_,
+              MouseY: MouseY_,
+              screenWidth: canvas.width,
+              screenHeight: canvas.height,
+            });
             setTimeout(() => {
               cannonWidth = [];
-              console.log(Object.keys(tankdatacannon__).length);
               for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
                 cannonWidth.push(0);
               }
-              console.log(cannonWidth);
             }, 100);
           }
         });
@@ -1312,20 +986,15 @@
           MouseX_ = mousepos.x;
           MouseY_ = mousepos.y;
           let __angle__ = Math.atan2(
-            Math.abs(MouseY_) - (canvas.height / 2 - playerSize),
-            Math.abs(MouseX_) - (canvas.width / 2 - playerSize)
+            Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+            Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
           );
-          socket.send(
-            JSON.stringify({
-              type: "playerCannonMoved",
-              data: {
-                id: playerId,
-                cannon_angle: __angle__,
-                MouseX: MouseX_,
-                MouseY: MouseY_,
-              },
-            })
-          );
+          send("playerCannonMoved", {
+            id: playerId,
+            cannon_angle: __angle__,
+            MouseX: MouseX_,
+            MouseY: MouseY_,
+          });
         });
         let pi = Math.pi;
         setInterval(() => {
@@ -1335,20 +1004,26 @@
             // yes point 8 I can do math kids
             autoAngle = 0;
           }
-          console.log(autoAngle);
-          MouseX_ = cavansX + Math.abs(360 / Math.cos(autoAngle / 180));
-          MouseY_ = cavansY + Math.abs(360 / Math.sin(autoAngle / 180));
-          socket.send(
-            JSON.stringify({
-              type: "playerCannonMoved",
-              data: {
-                id: playerId,
-                cannon_angle: autoAngle,
-                MouseX: MouseX_,
-                MouseY: MouseY_,
-              },
-            })
+          let radians = (Math.PI / 180) * autoAngle;
+          MouseX_ =
+            cavansX +
+            500 * Math.cos(radians) +
+            (canvas.height / 2 - playerSize * FOV);
+          MouseY_ =
+            cavansY +
+            500 * Math.sin(radians) +
+            (canvas.width / 2 - playerSize * FOV);
+          let angle = Math.atan2(
+            Math.abs(MouseX_) - (canvas.height / 2 - playerSize * FOV),
+            Math.abs(MouseY_) - (canvas.width / 2 - playerSize * FOV)
           );
+          console.log(angle);
+          send("playerCannonMoved", {
+            id: playerId,
+            cannon_angle: autoAngle,
+            MouseX: MouseX_,
+            MouseY: MouseY_,
+          });
         }, 75);
 
         function generateRandomNumber(min, max) {
@@ -1356,29 +1031,23 @@
         }
 
         function fireOnce(evt, directer) {
-          console.log(canFire, autoFiring);
           let tankdata = tankmeta[__type__];
           let tankdatacannon = tankdata.cannons;
-          if (evt) {
-            let mouse = getMousePos(canvas, evt);
-            let mouseX = mouse.x;
-            let mouseY = mouse.y;
-            var angle = Math.atan2(
-              Math.abs(mouseY) - (canvas.height / 2 - playerSize),
-              Math.abs(mouseX) - (canvas.width / 2 - playerSize)
-            );
-          } else if (!evt) {
-            var angle = Math.atan2(
-              Math.abs(MouseY_) - (canvas.height / 2 - playerSize),
-              Math.abs(MouseX_) - (canvas.width / 2 - playerSize)
-            );
+          if (!autoFiring && !directer) {
+            if (evt.button === 2) return;
           }
+          var angle = Math.atan2(
+            Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+            Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
+          );
 
           // Fire all cannons
           tankdatacannon.forEach((cannon, i) => {
             if (!cannonFireData[i]) return;
+            cannonFireData[i] = false;
             setTimeout(() => {
               if (cannon.type === "autoCannon") return;
+
               //if (cannon.type === "directer" && !directer) return;
               let bullet_size_l = bullet_size * cannon["bulletSize"];
 
@@ -1416,21 +1085,17 @@
               for (let l = 0; l < 10; l++) {
                 setTimeout(() => {
                   cannonWidth[i] -= 1;
-                  socket.send(
-                    JSON.stringify({
-                      type: "playerCannonWidth",
-                      data: { id: playerId, cannon_width: cannonWidth },
-                    })
-                  );
+                  send("playerCannonWidth", {
+                    id: playerId,
+                    cannonW: cannonWidth,
+                  });
                 }, 10 * l);
                 setTimeout(() => {
                   cannonWidth[i] += 1;
-                  socket.send(
-                    JSON.stringify({
-                      type: "playerCannonWidth",
-                      data: { id: playerId, cannon_width: cannonWidth },
-                    })
-                  );
+                  send("playerCannonWidth", {
+                    id: playerId,
+                    cannonW: cannonWidth,
+                  });
                 }, 20 * l); // Updated to prevent overlap
               }
 
@@ -1504,9 +1169,7 @@
                 uniqueid: identdfire,
               };
 
-              socket.send(
-                JSON.stringify({ type: "bulletFired", data: bullet })
-              );
+              send("bulletFired", bullet);
             }, cannon.delay * 1000);
             if (!(cannonFireData[i] || dronetanks.includes(__type__))) {
               setTimeout(() => {
@@ -1520,19 +1183,20 @@
           let tankdata = tankmeta[__type__];
           let tankdatacannon = tankdata["cannons"];
           if (autoFiring) return;
+          if (evt.button === 2) return;
           tankdatacannon.forEach((cannon, i) => {
             firingInterval = setInterval(
               (event = evt, MouseY__ = MouseY_, MouseX__ = MouseX_) => {
                 canFire2 = false;
                 let angle = Math.atan2(
-                  Math.abs(MouseY__) - (canvas.height / 2 - playerSize),
-                  Math.abs(MouseX__) - (canvas.width / 2 - playerSize)
+                  Math.abs(MouseY__) - (canvas.height / 2 - playerSize * FOV),
+                  Math.abs(MouseX__) - (canvas.width / 2 - playerSize * FOV)
                 );
                 if (autoFiring) return;
 
                 let tankdatacannondata = tankdatacannon[i];
                 setTimeout(() => {
-                  if (cannon.type === "autoCannon") return;
+                  if (cannon.type === "autoCannon" || cannon.type === "autoCannon") return;
                   let bullet_size_l = bullet_size * cannon["bulletSize"];
 
                   let randomNumber = generateRandomNumber(-0.2, 0.2);
@@ -1570,21 +1234,17 @@
                   for (let l = 0; l < 10; l++) {
                     setTimeout(() => {
                       cannonWidth[i] -= 1;
-                      socket.send(
-                        JSON.stringify({
-                          type: "playerCannonWidth",
-                          data: { id: playerId, cannon_width: cannonWidth },
-                        })
-                      );
+                      send("playerCannonWidth", {
+                        id: playerId,
+                        cannonW: cannonWidth,
+                      });
                     }, 10 * l);
                     setTimeout(() => {
                       cannonWidth[i] += 1;
-                      socket.send(
-                        JSON.stringify({
-                          type: "playerCannonWidth",
-                          data: { id: playerId, cannon_width: cannonWidth },
-                        })
-                      );
+                      send("playerCannonWidth", {
+                        id: playerId,
+                        cannonW: cannonWidth,
+                      });
                     }, 20 * l); // Updated to prevent overlap
                   }
 
@@ -1664,9 +1324,7 @@
                     id: playerId,
                     uniqueid: identdfire,
                   };
-                  socket.send(
-                    JSON.stringify({ type: "bulletFired", data: bullet })
-                  );
+                  send("bulletFired", bullet);
                 }, tankdatacannondata["delay"] * 1000);
               },
               750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__
@@ -1685,7 +1343,7 @@
         });
 
         let __tankdata__ = tankmeta[__type__];
-        setInterval(() => {
+        function autoengine() {
           __tankdata__ = tankmeta[__type__];
           if (!dronetanks.includes(__type__) && autoFiring) {
             __tankdata__ = tankmeta[__type__];
@@ -1696,35 +1354,22 @@
             fireOnce();
           }
           if (dronetanks.includes(__type__)) {
-            if (drones <= tankmeta[__type__]["max-drones"]) {
-              fireOnce(null, true);
-              drones += 1;
+            console.log(tankmeta[__type__]["cannons"])
+            for (var cannon in tankmeta[__type__]["cannons"]) {
+              if (drones <= tankmeta[__type__]["max-drones"] && cannon.type === "directer") {
+                fireOnce(null, true);
+                drones += 1;
+              }
             }
           }
-          console.log(__tankdata__);
-          __tankdata__.cannons.forEach((cannon) => {
-            console.log(cannon.type);
-            if (cannon.type === "autoCannon") {
-              socket.send(
-                JSON.stringify({
-                  type: "Autofire",
-                  data: {
-                    playerId: playerId,
-                    playerX: playerX,
-                    playerY: playerY,
-                    cannon: cannon,
-                    bullet_damage: bullet_damage,
-                    bullet_speed: bullet_speed,
-                    bullet_size: bullet_size,
-                    bullet_pentration: bullet_pentration,
-                  },
-                })
-              );
-              console.log("auto");
-            }
-          });
+
+          setTimeout(() => {
+            autoengine();
+          }, 750 * __tankdata__["reaload-m"]);
+        }
+        setTimeout(() => {
+          autoengine();
         }, 750 * __tankdata__["reaload-m"]);
-        console.log(__tankdata__["reaload-m"]);
 
         document.addEventListener("mousedown", (evt) => {
           if (!dronetanks.includes(__type__)) {
@@ -1743,41 +1388,27 @@
         var start;
         start = setInterval(() => {
           statecycle += 1;
-          socket.send(
-            JSON.stringify({
-              type: "statechange",
-              data: {
-                state: state,
-                statecycle: statecycle,
-                playerID: playerId,
-              },
-            })
-          );
+          send("statechange", {
+            state: state,
+            statecycle: statecycle,
+            playerID: playerId,
+          });
         }, 50);
         setTimeout(() => {
+          start = null;
           state = "normal";
-          socket.send(
-            JSON.stringify({
-              type: "statechange",
-              data: {
-                state: state,
-                statecycle: statecycle,
-                playerID: playerId,
-              },
-            })
-          );
+          send("statechange", {
+            state: state,
+            statecycle: statecycle,
+            playerID: playerId,
+          });
           // make sure the server got the mesage
           setTimeout(() => {
-            socket.send(
-              JSON.stringify({
-                type: "statechange",
-                data: {
-                  state: state,
-                  statecycle: statecycle,
-                  playerID: playerId,
-                },
-              })
-            );
+            send("statechange", {
+              state: state,
+              statecycle: statecycle,
+              playerID: playerId,
+            });
           }, 300);
         }, 5000);
       }, 300);
@@ -1996,6 +1627,10 @@
           realy - cavansY > 0 &&
           realy < canvas.height + cavansY
         ) {
+          if (bullet.transparency) {
+            console.log(bullet.transparency)
+            ctx.globalAlpha = bullet.transparency;
+          }
           ctx.beginPath();
           if (bullet.type === "basic") {
             if (bullet.id === playerId) {
@@ -2099,6 +1734,7 @@
 
             ctx.restore();
           }
+          ctx.globalAlpha = 1
         }
       });
       for (let playerId__ in players) {
@@ -2106,7 +1742,6 @@
           let player = players[playerId__];
 
           let tankdata = tankmeta[player.__type__];
-          console.log(tankdata, player);
 
           let tankdatacannon = tankdata["cannons"];
 
@@ -2131,7 +1766,6 @@
               let angle_offset = tankdatacannondata["offset-angle"];
               ctx.rotate(angle + angle_offset);
               // Draw the square
-
               let basex =
                 -cannon_widthFOV / 2 +
                 cannon_heightFOV +
@@ -2158,7 +1792,6 @@
 
               let angle_offset = tankdatacannondata["offset-angle"];
               ctx.rotate(angle + angle_offset);
-              console.log(angle);
               // Draw the square
               const cannonWidth_bottom =
                 tankdatacannondata["cannon-width-bottom"] * playerSize * FOV;
@@ -2177,12 +1810,6 @@
               const cannonWidth_top =
                 tankdatacannondata["cannon-width-top"] * playerSize * FOV;
 
-              console.log(
-                tankdatacannondata["cannon-width-top"] * playerSize * FOV
-              );
-              console.log(
-                tankdatacannondata["cannon-width-bottom"] * playerSize * FOV
-              );
               var canwB2 = cannonWidth_bottom / 2;
               var canwH2 = cannonWidth_top / 2;
               ctx.beginPath();
@@ -2269,7 +1896,7 @@
               ctx.closePath(); // Close the path
               ctx.stroke(); // Draw the border
               ctx.restore();
-            } 
+            }
           }
 
           ctx.beginPath();
@@ -2296,6 +1923,7 @@
           ctx.lineWidth = 5;
           ctx.strokeStyle = "darkred";
           ctx.stroke();
+          ctx.closePath();
 
           // Draw background bar
           ctx.fillStyle = "black";
@@ -2315,7 +1943,7 @@
             healthWidth,
             10 * playerSize * FOV
           );
-          // cannons on top of player 
+          // cannons on top of player
           for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
             ctx.fillStyle = "#b3b3b3";
             let tankdatacannondata = tankdatacannon[i];
@@ -2323,10 +1951,17 @@
               tankdatacannondata["cannon-width"] * FOVplayerz;
             let cannon_heightFOV =
               tankdatacannondata["cannon-height"] * FOVplayerz;
+            let cannonangle;
+            autocannons.forEach((cannonA) => {
+              if (cannonA.playerid === playerId__ && cannonA.autoindex-1 === i) {
+                cannonangle = cannonA.angle;
+              }
+            });
             if (tankdatacannondata["type"] === "autoCannon") {
               ctx.save();
               ctx.translate(playerX - cavansX, playerY - cavansY);
-              let angle = player.cannon_angle;
+              console.log("cannonangle", cannonangle);
+              let angle = cannonangle;
 
               let angle_offset = tankdatacannondata["offset-angle"];
               ctx.rotate(angle + angle_offset);
@@ -2348,10 +1983,11 @@
               ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV); // Draw the border
               // Restore the previous transformation matrix
               ctx.rotate(-(angle + angle_offset));
-              ctx.arc(0,0,cannon_heightFOV,
-                        0,
-                        2 * Math.PI,
-                        false)
+              ctx.beginPath();
+              ctx.arc(0, 0, cannon_widthFOV / 3, 0, 2 * Math.PI, false);
+              ctx.fill();
+              ctx.stroke();
+              ctx.closePath();
               ctx.restore();
             }
           }
@@ -2618,14 +2254,20 @@
       setTimeout(() => {
         document.getElementById("start").style.display = "none";
         document.getElementById("game").style.display = "block";
-        console.log(
-          `Username: ${username}`,
-          document.getElementById("start").style.display
-        );
+        if (username !== "A") {
+          document.addEventListener("contextmenu", (event) =>
+            event.preventDefault()
+          );
+        }
         ongame();
       }, 100);
     } else {
-      alert("Please enter a username.");
+      setTimeout(() => {
+        username = "unknown";
+        document.getElementById("start").style.display = "none";
+        document.getElementById("game").style.display = "block";
+        ongame();
+      }, 100);
     }
   });
 })();
