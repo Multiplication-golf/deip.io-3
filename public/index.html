@@ -66,24 +66,78 @@
           background-color: #f0f0f0; /* Placeholder background */
           position: absolute;
       }
+      .
     </style>
   </head>
   <body>
     <div id="start" class="container">
-        <h1>Welcome to Deip.io 3!</h1>
-        <input type="text" id="username" placeholder="Enter your username">
-        <button id="playButton">Play</button>
+      <h1>Welcome to Deip.io 3!</h1>
+      <input type="text" id="username" placeholder="Enter your username" />
+      <button id="playButton">Play</button>
     </div>
-    <div id="game" style="display:none">
-      <img src="you died.gif" style="width:99.9vw; position:absolute; height:99.9vh; top:0; left:0;  display: none;" id="die"/>
-      <div style="overflow: hidden; width:99.9vw; height:99.9vh; top:0; left:0; position:absolute;" id="container">
-      <p id="players" style="z-index:100000000000; position:absolute; top:0; left:0;"></p>
-        <div style="display: grid;
-          grid-template-columns: repeat(125, 80px);
-          grid-template-rows: repeat(125, 80px);
-          grid-gap: 0px;
-          width:10000px;height:10000px;position:absolute; top: -5000px; left: -5000px;" id="grid"></div>
+    <div id="game" style="display: none">
+      <img
+        src="you died.gif"
+        style="
+          width: 99.9vw;
+          position: absolute;
+          height: 99.9vh;
+          top: 0;
+          left: 0;
+          display: none;
+        "
+        id="die"
+      />
+      <div
+        style="
+          overflow: hidden;
+          width: 99.9vw;
+          height: 99.9vh;
+          top: 0;
+          left: 0;
+          position: absolute;
+        "
+        id="container"
+      >
+        <div
+          style="
+            position: relative;
+            width: 900px;
+            height: 60px;
+            top: 94.7vh;
+            left: calc(27vw);
+            z-index:6;
+          "
+        >
+          <img
+            src="barXP.png"
+            style="width: 100%; height: 100%; user-select: none"
+          />
         </div>
+        <p
+          id="players"
+          style="z-index: 100000000000; position: absolute; top: 0; left: 0"
+        ></p>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(125, 80px);
+            grid-template-rows: repeat(125, 80px);
+            grid-gap: 0px;
+            width: 10000px;
+            height: 10000px;
+            position: absolute;
+            top: -5000px;
+            left: -5000px;
+            -khtml-user-select: none;
+            -o-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            user-select: none;
+          "
+          id="grid"
+        ></div>
+      </div>
       <style>
         @keyframes move {
           0% {
@@ -96,9 +150,18 @@
           }
         }
       </style>
-      <div id="tanktiles" style="width: 15vw; height: 15vw; position: absolute; top: 0; left: -10vw; display: none; z-index:2000;">
-        
-      </div>
+      <div
+        id="tanktiles"
+        style="
+          width: 15vw;
+          height: 15vw;
+          position: absolute;
+          top: 0;
+          left: -10vw;
+          display: none;
+          z-index: 2000;
+        "
+      ></div>
     </div>
     <script src="scriptClient.js"></script>
   </body>
