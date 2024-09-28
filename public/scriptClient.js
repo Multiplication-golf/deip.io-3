@@ -229,6 +229,16 @@
       level60: 167264.0,
       level61: 100000000000000000000000000000000000000000000000000,
     };
+    let statsTree = {
+      Health: 1,
+      "Body Damage": 1,
+      Regen: 1,
+      "Bullet Pentration": 1,
+      "Bullet Speed": 1,
+      "Bullet Damage": 1,
+      "Bullet Reload": 1,
+      Speed: 1,
+    };
 
     function getMousePos(canvas, evt) {
       const rect = boundrectcanvas;
@@ -313,7 +323,7 @@
                 screenWidth: canvas.width,
                 screenHeight: canvas.height,
               });
-              console.log(__type__)
+              console.log(__type__);
 
               setTimeout(() => {
                 cannonWidth = [];
@@ -329,7 +339,7 @@
                 });
                 for (const cannon_ in tankdatacannon__) {
                   let cannon = tankdatacannon__[cannon_];
-                  console.log(tankdatacannon__,cannon)
+                  console.log(tankdatacannon__, cannon);
                   if (cannon.type === "autoCannon") {
                     let autoID = Math.random() * 1000 + Math.random() * 1000;
                     send("autoCannonADD", {
@@ -341,12 +351,26 @@
                     let cannon__ = cannon;
                     let cannonINT;
                     let tankdata = tankmeta[__type__];
-                    console.log(tankdata,tankdata["reaload-m"] * cannon["reloadM"] * __reload__,tankdata["reaload-m"] * cannon["reloadM"],750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__)
+                    console.log(
+                      tankdata,
+                      tankdata["reaload-m"] * cannon["reloadM"] * __reload__,
+                      tankdata["reaload-m"] * cannon["reloadM"],
+                      750 *
+                        tankdata["reaload-m"] *
+                        cannon["reloadM"] *
+                        __reload__
+                    );
+                    let _CAN = {
+                      CannonID: autoID,
+                      playerid: playerId,
+                      angle: 0,
+                      _type_: cannon.type,
+                    };
                     cannonINT = setInterval(() => {
                       var __tankdata__ = tankmeta[__type__];
-                      console.log(cannon__.playerid,playerId)
-                      console.log(cannon__)
-                      if (cannon__.playerid === playerId) {
+                      console.log(_CAN.playerid, playerId);
+                      console.log(_CAN);
+                      if (_CAN.playerid === playerId) {
                         let cannon;
                         let index = 0;
                         for (const ___cannon___ in __tankdata__.cannons) {
@@ -360,12 +384,12 @@
                           playerId: playerId,
                           playerX: playerX,
                           playerY: playerY,
-                          cannon: cannon,
+                          cannon: cannon__,
                           bullet_damage: bullet_damage,
                           bullet_speed: bullet_speed,
                           bullet_size: bullet_size,
                           bullet_pentration: bullet_pentration,
-                          _cannon: cannon__
+                          _cannon: cannon__,
                         });
                       }
                     }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
@@ -422,6 +446,16 @@
           MouseY: MouseY_,
           screenWidth: canvas.width,
           screenHeight: canvas.height,
+          statsTree: {
+            Health: 1,
+            "Body Damage": 1,
+            Regen: 1,
+            "Bullet Pentration": 1,
+            "Bullet Speed": 1,
+            "Bullet Damage": 1,
+            "Bullet Reload": 1,
+            Speed: 1,
+          },
         };
 
         // setup
@@ -440,23 +474,23 @@
 
           const { type, data } = message;
 
-          if (message.type === "playerUpdated") {
+          if (type === "playerUpdated") {
             players[data.id] = data; // Update the local player data
             console.log("Player updated:", data); // Log the update
-          } else if (message.type === "RETURNtankmeta") {
+          } else if (type === "RETURNtankmeta") {
             tankmeta = data;
             draw();
           } else if (type === "handshake") {
             HANDSHAKE = data;
-          } else if (message.type === "updaterHeal") {
+          } else if (type === "updaterHeal") {
             if (!players[data.ID]) return;
             players[data.ID].playerHealTime = data.HEALTime;
-          } else if (message.type === "playerHeal") {
+          } else if (type === "playerHeal") {
             players[data.ID].health = data.HEALTH;
             if (data.ID === playerId) {
               playerHealth = data.HEALTH;
             } // Log the update
-          } else if (message.type === "playerHealthCheck") {
+          } else if (type === "playerHealthCheck") {
             if (!(players[data.ID].health === data.HEALTH)) {
               players[data.ID].health = data.HEALTH;
               // yes hackty hackers you getting a waring
@@ -475,12 +509,12 @@
                 cannon_ooo.angle = data.angle;
               }
             });
-          } else if (message.type === "playerMoved") {
+          } else if (type === "playerMoved") {
             players[data.id].x = data.x;
             players[data.id].y = data.y;
-          } else if (message.type === "playerCannonUpdated") {
+          } else if (type === "playerCannonUpdated") {
             players[data.id].cannon_angle = data.cannon_angle;
-          } else if (message.type === "playerLeft") {
+          } else if (type === "playerLeft") {
             let id = data.playerId;
             players = Object.entries(players).reduce(
               (newPlayers, [key, value]) => {
@@ -491,14 +525,14 @@
               },
               {}
             );
-          } else if (message.type === "playerDied") {
+          } else if (type === "playerDied") {
             if (data["playerID"] === playerId) {
               document.getElementById("die").style.display = "block";
               document.getElementById("container").style.display = "none";
               document.getElementById("myCanvas").style.display = "none";
               clearInterval(healer);
               socket.onmessage = {};
-              
+
               var old_element = document.body;
               var new_element = old_element.cloneNode(true);
               old_element.parentNode.replaceChild(new_element, old_element);
@@ -527,7 +561,7 @@
               },
               {}
             );
-          } else if (message.type === "playerDamaged") {
+          } else if (type === "playerDamaged") {
             players[data.player1.id].health = data.player1.health;
             if (data.player2.id === playerId) {
               playerHealth = data.player2.health;
@@ -570,9 +604,9 @@
               }, 1000);
             }
             players[data.player2.id].health = data.player2.health;
-          } else if (message.type === "bulletUpdate") {
+          } else if (type === "bulletUpdate") {
             bullets = data;
-          } else if (message.type === "playerJoined") {
+          } else if (type === "playerJoined") {
             console.log(data); // Log the player data
             players[data.id] = data; // Update the local player list
             if (playerId !== data.id) {
@@ -609,19 +643,19 @@
                 playerReheal: playerReheal,
               });
             }, 3000);
-          } else if (message.type === "playerScore") {
+          } else if (type === "playerScore") {
             players[data["bulletId"]].score += data["socrepluse"];
             if (data["bulletId"] === playerId) {
               score = players[data["bulletId"]].score;
             }
             levelHANDLER();
-          } else if (message.type === "dronekilled") {
+          } else if (type === "dronekilled") {
             if (data.droneID === playerId) {
               drones -= 1;
             }
-          } else if (message.type === "FoodUpdate") {
+          } else if (type === "FoodUpdate") {
             food_list = data;
-          } else if (message.type === "bulletDamage") {
+          } else if (type === "bulletDamage") {
             if (players[data.playerID]) {
               bullets = data.BULLETS; // Check if the player exists
               players[data.playerID].health = data.playerHealth;
@@ -650,7 +684,7 @@
             } else {
               //console.warn("Received bulletDamage for an unknown player:", data.playerID);
             }
-          } else if (message.type === "shapeDamage") {
+          } else if (type === "shapeDamage") {
             if (players[data.PlayerId]) {
               food_list = data.shapes; // Check if the player exists
               players[data.PlayerId].health -= data.playerDamage;
@@ -682,7 +716,7 @@
                 data.PlayerId
               );
             }
-          } else if (message.type === "bouceBack") {
+          } else if (type === "bouceBack") {
             canmove = false;
             movementTimeouts.forEach((timeout) => {
               clearTimeout(timeout);
@@ -691,21 +725,20 @@
             for (let i = 0; i < playerSpeed; i++) {
               setTimeout(() => {
                 movePlayer(
-                  data.response[1].overlapV.y / playerSpeed,
-                  data.response[1].overlapV.x / playerSpeed
+                  -(data.response[1].overlapV.x / playerSpeed),
+                  -(data.response[1].overlapV.y / playerSpeed)
                 );
               }, 50 * i);
             }
             setTimeout(() => {
               canmove = true;
             }, 10 * playerSpeed);
-          } else if (message.type === "type_Change") {
-            console.log(data)
+          } else if (type === "type_Change") {
             players[data.id] = data;
-          } else if (message.type === "statechangeUpdate") {
+          } else if (type === "statechangeUpdate") {
             players[data.playerID].state = data.state;
             players[data.playerID].statecycle = data.statecycle;
-          } else if (message.type === "playerCannonWidthUpdate") {
+          } else if (type === "playerCannonWidthUpdate") {
             players[data.id].cannonW = data.cannonW;
           }
         };
@@ -802,10 +835,51 @@
               movementTimeouts.push(movement);
             }
             checkCollisions(dx, dy);
-          } else {
+          } else if (playerX + dx > mapLeft && dy === 0) {
+            console.log("wall left");
+            movementTimeouts.forEach((timeout) => {
+              clearTimeout(timeout);
+            });
+            movementTimeouts = [];
             for (let i = 0; i < playerSpeed / 3; i++) {
               var movement = setTimeout(() => {
-                movePlayer(-dx * 3, -dy * 3, i === playerSpeed - 1 || i === 0);
+                movePlayer(-3, 0, i === playerSpeed - 1 || i === 0);
+              }, 75 * i);
+              movementTimeouts.push(movement);
+            }
+          } else if (playerX + dx < mapRight && dy === 0) {
+            console.log("wall right");
+            movementTimeouts.forEach((timeout) => {
+              clearTimeout(timeout);
+            });
+            movementTimeouts = [];
+            for (let i = 0; i < playerSpeed / 3; i++) {
+              var movement = setTimeout(() => {
+                movePlayer(3, 0, i === playerSpeed - 1 || i === 0);
+              }, 75 * i);
+              movementTimeouts.push(movement);
+            }
+          } else if (playerY + 2500 > mapTop ) {
+            console.log("wall top");
+            movementTimeouts.forEach((timeout) => {
+              clearTimeout(timeout);
+            });
+            movementTimeouts = [];
+            for (let i = 0; i < playerSpeed / 3; i++) {
+              var movement = setTimeout(() => {
+                movePlayer(0, 3, i === playerSpeed - 1 || i === 0);
+              }, 75 * i);
+              movementTimeouts.push(movement);
+            }
+          } else if (playerY - 2500 < mapBottom) {
+            console.log("wall bottom");
+            movementTimeouts.forEach((timeout) => {
+              clearTimeout(timeout);
+            });
+            movementTimeouts = [];
+            for (let i = 0; i < playerSpeed / 3; i++) {
+              var movement = setTimeout(() => {
+                movePlayer(0, -3, i === playerSpeed - 1 || i === 0);
               }, 75 * i);
               movementTimeouts.push(movement);
             }
@@ -1005,17 +1079,11 @@
             autoAngle = 0;
           }
           let radians = (Math.PI / 180) * autoAngle;
-          MouseX_ =
-            cavansX +
-            500 * Math.cos(radians) +
-            (canvas.height / 2 - playerSize * FOV);
-          MouseY_ =
-            cavansY +
-            500 * Math.sin(radians) +
-            (canvas.width / 2 - playerSize * FOV);
+          MouseX_ = (50 * Math.cos(radians)) + (canvas.width / 2 - playerSize * FOV);
+          MouseY_ = (50 * Math.sin(radians)) + (canvas.height / 2 - playerSize * FOV);
           let angle = Math.atan2(
-            Math.abs(MouseX_) - (canvas.height / 2 - playerSize * FOV),
-            Math.abs(MouseY_) - (canvas.width / 2 - playerSize * FOV)
+            MouseY_ - (canvas.height / 2 - playerSize * FOV),
+            MouseX_ - (canvas.width / 2 - playerSize * FOV)
           );
           console.log(angle);
           send("playerCannonMoved", {
@@ -1047,6 +1115,7 @@
             cannonFireData[i] = false;
             setTimeout(() => {
               if (cannon.type === "autoCannon") return;
+              if (!directer && cannon.type === "directer") return;
 
               //if (cannon.type === "directer" && !directer) return;
               let bullet_size_l = bullet_size * cannon["bulletSize"];
@@ -1067,6 +1136,13 @@
                   cannon["cannon-height"] -
                   bullet_size_l * 2 -
                   (cannon["cannon-width-top"] / 2) * Math.random();
+              } else {
+                var xxx = cannon["cannon-width-top"] - bullet_size_l * 1.5;
+                var yyy =
+                  cannon["cannon-height"] -
+                  bullet_size_l * 2 -
+                  cannon["cannon-width-top"] / 2;
+                var angle_ = angle + cannon["offset-angle"];
               }
 
               let rotated_offset_x =
@@ -1168,6 +1244,7 @@
                 id: playerId,
                 uniqueid: identdfire,
               };
+              console.log(bullet);
 
               send("bulletFired", bullet);
             }, cannon.delay * 1000);
@@ -1183,7 +1260,9 @@
           let tankdata = tankmeta[__type__];
           let tankdatacannon = tankdata["cannons"];
           if (autoFiring) return;
-          if (evt.button === 2) return;
+          if (!autoFiring && evt) {
+            if (evt.button === 2) return;
+          }
           tankdatacannon.forEach((cannon, i) => {
             firingInterval = setInterval(
               (event = evt, MouseY__ = MouseY_, MouseX__ = MouseX_) => {
@@ -1196,7 +1275,11 @@
 
                 let tankdatacannondata = tankdatacannon[i];
                 setTimeout(() => {
-                  if (cannon.type === "autoCannon" || cannon.type === "autoCannon") return;
+                  if (
+                    cannon.type === "autoCannon" ||
+                    cannon.type === "autoCannon"
+                  )
+                    return;
                   let bullet_size_l = bullet_size * cannon["bulletSize"];
 
                   let randomNumber = generateRandomNumber(-0.2, 0.2);
@@ -1215,6 +1298,24 @@
                       cannon["cannon-height"] -
                       bullet_size_l * 2 -
                       (cannon["cannon-width-top"] / 2) * Math.random();
+                  } else if (cannon["type"] === "directer") {
+                    var bulletdistance = 100;
+                    var type = "directer";
+                    var health = 10;
+                    const rawvertices = calculateTriangleVertices(
+                      bullet_start_x,
+                      bullet_start_y,
+                      bullet_size_l,
+                      0
+                    );
+                    vertices = rawvertices;
+                  } else {
+                    var xxx = cannon["cannon-width-top"] - bullet_size_l * 1.5;
+                    var yyy =
+                      cannon["cannon-height"] -
+                      bullet_size_l * 2 -
+                      cannon["cannon-width-top"] / 2;
+                    var angle_ = angle + cannon["offset-angle"];
                   }
 
                   let rotated_offset_x =
@@ -1354,12 +1455,23 @@
             fireOnce();
           }
           if (dronetanks.includes(__type__)) {
-            console.log(tankmeta[__type__]["cannons"])
+            console.log(
+              tankmeta[__type__]["cannons"],
+              tankmeta[__type__]["cannons"][0]["max-drones"]
+            );
+            let i = 0;
             for (var cannon in tankmeta[__type__]["cannons"]) {
-              if (drones <= tankmeta[__type__]["max-drones"] && cannon.type === "directer") {
+              console.log(drones);
+              if (
+                drones <= tankmeta[__type__]["cannons"][i]["max-drones"] &&
+                tankmeta[__type__]["cannons"][i].type === "directer"
+              ) {
+                console.log("fire");
                 fireOnce(null, true);
+                cannonFireData[i] = true;
                 drones += 1;
               }
+              i++;
             }
           }
 
@@ -1413,9 +1525,20 @@
         }, 5000);
       }, 300);
     };
-    function drawRoundedLevelBar(ctx, x, y, width, height, radius, progress) {
+    function drawRoundedLevelBar(
+      ctx,
+      x,
+      y,
+      width,
+      height,
+      radius,
+      progress,
+      barcolor,
+      barXP,
+      filllevel
+    ) {
       // Full bar
-      ctx.fillStyle = "#ddd";
+      ctx.fillStyle = barcolor;
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
       ctx.lineTo(x + width - radius, y);
@@ -1436,7 +1559,7 @@
 
       // Filled bar (progress)
       const filledWidth = width * progress;
-      ctx.fillStyle = "#00f";
+      ctx.fillStyle = barXP;
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
       if (filledWidth > radius) {
@@ -1483,10 +1606,12 @@
       ctx.closePath();
 
       ctx.fill();
+      if (!filllevel) return;
       ctx.fillStyle = "black";
+      ctx.strokeStyle = "white";
       ctx.textAlign = "center";
       ctx.font = "bold 40px Courier New";
-      ctx.fillText(level, canvas.width / 2, canvas.height - 40);
+      ctx.fillText(level, canvas.width / 2, canvas.height - 60);
     }
 
     function draw() {
@@ -1628,7 +1753,7 @@
           realy < canvas.height + cavansY
         ) {
           if (bullet.transparency) {
-            console.log(bullet.transparency)
+            console.log(bullet.transparency);
             ctx.globalAlpha = bullet.transparency;
           }
           ctx.beginPath();
@@ -1734,7 +1859,7 @@
 
             ctx.restore();
           }
-          ctx.globalAlpha = 1
+          ctx.globalAlpha = 1;
         }
       });
       for (let playerId__ in players) {
@@ -1953,7 +2078,10 @@
               tankdatacannondata["cannon-height"] * FOVplayerz;
             let cannonangle;
             autocannons.forEach((cannonA) => {
-              if (cannonA.playerid === playerId__ && cannonA.autoindex-1 === i) {
+              if (
+                cannonA.playerid === playerId__ &&
+                cannonA.autoindex - 1 === i
+              ) {
                 cannonangle = cannonA.angle;
               }
             });
@@ -2240,8 +2368,37 @@
         barWidth,
         barHeight,
         borderRadius,
-        progress + 0.05
+        progress + 0.05,
+        "black",
+        "#9c8c03",
+        true
       );
+      let I_ = 0;
+      for (const stat in statsTree) {
+        let stat_ = statsTree[stat];
+        drawRoundedLevelBar(
+          ctx,
+          20,
+          canvas.height - 30 * I_ - 40,
+          140,
+          25,
+          borderRadius,
+          stat_ / 8,
+          "black",
+          "red",
+          "darkgrey",
+          false
+        );
+        ctx.textAlign = "center";
+        ctx.font = "bold 15px Geneva";
+        ctx.fillStyle = "white";
+        ctx.fillText(
+          `${stat}:${stat_}`,
+          20 + 140 / 2,
+          canvas.height - 30 * I_ - 40 + 17.5
+        );
+        I_++;
+      }
 
       requestAnimationFrame(draw);
     }

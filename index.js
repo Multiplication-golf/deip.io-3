@@ -322,7 +322,6 @@ var tankmeta = {
     "BodyDamage-m": 1,
     "reaload-m": 1.5,
     upgradeLevel: 15,
-    "max-drones": 6,
     upgrades: {
       twin: 1,
     },
@@ -337,6 +336,7 @@ var tankmeta = {
         "offset-angle": 0,
         bulletSize: 1,
         bulletSpeed: 0.5,
+        "max-drones": 6,
         delay: 0,
         reloadM: 1,
         bullet_pentration: 1,
@@ -378,7 +378,7 @@ var tankmeta = {
         bulletSize: 0.8,
         bulletSpeed: 0.5,
         delay: 0,
-        reloadM: 0.5,
+        reloadM: 1.5,
         bullet_pentration: 0.9,
       },
     ],
@@ -390,9 +390,11 @@ function getRandomInt(min, max) {
   const maxFloored = Math.floor(max);
   return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
 }
+
 function between(x, min, max) {
   return x >= min && x <= max;
 }
+
 function MathHypotenuse(x, y) {
   return Math.sqrt(x * x + y * y);
 }
@@ -1115,6 +1117,7 @@ wss.on("connection", (socket) => {
         }
       } catch (error) {
         console.log(error);
+        return
       }
 
       emit("playerDamaged", {
@@ -1249,13 +1252,13 @@ setInterval(() => {
         );
 
         if (distance > 50) return;
-        var bullet_speed = bullet.speed || 10;
+        var bullet_speed = bullet.speed;
 
         if (
           distance < bullet.size * 2 + bullet_.size * 2 &&
           bullet.id !== bullet_.id
         ) {
-          if ((!bullet_.speed || !bullet_speed) && bullet.type === "trap")
+          if ((bullet_speed !== 0 && bullet_speed !== 0) &&(!bullet_.speed || !bullet_speed) && bullet.type === "trap")
             return;
           bullet.bullet_distance -=
             bullet_.speed *
@@ -1270,7 +1273,8 @@ setInterval(() => {
           distance < bullet.size * 1.25 + bullet_.size * 1.25 &&
           bullet.id === bullet_.id &&
           bullet.uniqueid !== bullet_.uniqueid &&
-          bullet.type === bullet_.type
+          bullet.type === bullet_.type &&
+          (bullet_speed !== 0 && bullet_speed !== 0)
         ) {
           newX__ = bullet.size * -0.9 * Math.sin(bullet.angle - bullet_.angle);
           newY__ = bullet.size * -0.9 * Math.cos(bullet.angle - bullet_.angle);
@@ -1310,7 +1314,8 @@ setInterval(() => {
     }
     if (
       bullet.bullet_distance - bullet.distanceTraveled < 10 &&
-      bullet.bullet_distance > 20
+      bullet.bullet_distance > 20 &&
+      bullet.type !== "directer"
     ) {
       bullet.transparency = (bullet.bullet_distance - bullet.distanceTraveled)/10    
     } else if (bullet.bullet_distance < 10) {
@@ -1576,6 +1581,15 @@ setInterval(() => {
           bullet.size / (bullet.bullet_pentration + 10) +
           2.5 * (bullet.size - 4);
         bullet.bullet_distance -= 1; // for drones
+        if (
+          bullet.bullet_distance - bullet.distanceTraveled < 10 &&
+          bullet.bullet_distance > 20 &&
+          bullet.type !== "directer"
+        ) {
+          bullet.transparency = (bullet.bullet_distance - bullet.distanceTraveled)/10    
+        } else if (bullet.bullet_distance < 10) {
+          bullet.transparency = bullet.bullet_distance / 10;
+        }
       }
     });
     return return_;
