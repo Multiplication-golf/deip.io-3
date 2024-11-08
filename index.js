@@ -9,17 +9,6 @@ const crypto = require("crypto");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// fix memory leak with dead players-fixed
-// fix auto rotion with cannon-started
-// fix game loop with nested functions-fixed
-// fix level up bar-FIXED-sure
-// fix bullet error with player-to-player combat-fixed
-// TODO:
-// fix leader board error
-//fix large pegon render health bar
-// fix upgrade points for level up
-// extra -- Add fancy graphics
-
 app.use(express.static(path.join(__dirname, "public")));
 var port = process.env.PORT;
 let players = {};
@@ -38,7 +27,7 @@ let ColorUpgrades = [
   "#5181fc",
   "#5c14f7",
 ];
-var levels = {
+const levels = {
   0: 15,
   1: 28,
   2: 44,
@@ -141,7 +130,7 @@ var levels = {
   99: 486614,
   100: 501480,
 };
-var tankmeta = {
+const tankmeta = {
   basic: {
     "size-m": 1,
     "speed-m": 1,
@@ -162,7 +151,7 @@ var tankmeta = {
       traper: 7,
       directer: 8,
       autobasic: 9,
-      autoduo:10,
+      autoduo: 10,
     },
     cannons: [
       {
@@ -510,6 +499,7 @@ var tankmeta = {
     "health-m": 1,
     "regen-m": 1,
     fov: 1,
+    AutoRoting: true,
     "BodyDamage-m": 1,
     "reaload-m": 1,
     upgradeLevel: 30,
@@ -650,6 +640,46 @@ function toSATPolygon(vertices) {
 }
 var response = new SAT.Response();
 // Function to check collision between circle and polygon using SAT.js
+
+function normalizeAngle(angle) {
+  return angle % 360;
+}
+
+function rotatePointAroundPlayer(cannonOffsetX, cannonOffsetY, playerRotation) {
+  // Convert player rotation to radians for math
+  const playerRotationRad = playerRotation * (Math.PI / 180);
+
+  // Rotate cannon's offset position based on player rotation
+  const rotatedX =
+    cannonOffsetX * Math.cos(playerRotationRad) -
+    cannonOffsetY * Math.sin(playerRotationRad);
+  const rotatedY =
+    cannonOffsetX * Math.sin(playerRotationRad) +
+    cannonOffsetY * Math.cos(playerRotationRad);
+
+  return [rotatedX, rotatedY];
+}
+
+// Check if the target angle is within the cannon's swivel range, accounting for player rotation
+function isTargetInSwivelRange(playerRotation, targetAngle,logging, offset_degress) {
+  // Normalize player's rotation and target angle
+  playerRotation = normalizeAngle(playerRotation+offset_degress);
+  targetAngle = normalizeAngle(targetAngle);
+
+  // Define the swivel range around the player's current rotation
+  const minSwivelAngle = normalizeAngle(playerRotation - 90); // 90 degrees left of player
+  const maxSwivelAngle = normalizeAngle(playerRotation + 90); // 90 degrees right of player
+  
+
+  // Check if the target is within the swivel range
+  if (minSwivelAngle <= maxSwivelAngle) {
+    return (minSwivelAngle <= targetAngle && targetAngle <= maxSwivelAngle);
+  } else {
+    // Handle the case where angles wrap around 0°
+    return (targetAngle >= minSwivelAngle || targetAngle <= maxSwivelAngle);
+  }
+}
+
 function isBulletCollidingWithPolygon(circle, polygonVertices) {
   var circleSAT;
   circleSAT = new SAT.Circle(new SAT.Vector(circle.x, circle.y), circle.size);
@@ -921,11 +951,8 @@ wss.on("connection", (socket) => {
           };
         }
       }
-      console.log(leader_board.shown);
       emit("boardUpdate", leader_board.shown);
-      console.log(leader_board);
 
-      //leader_board = {shown:[],hidden:[]};
       return;
     }
 
@@ -959,7 +986,10 @@ wss.on("connection", (socket) => {
         let cannons = 0;
         autocannons.forEach((cannon) => {
           if (cannon.playerid === data.playerid) {
-            if (cannon._type_ === "autoCannon" || cannon._type_ === "SwivelAutoCannon") {
+            if (
+              cannon._type_ === "autoCannon" ||
+              cannon._type_ === "SwivelAutoCannon"
+            ) {
               cannons += 1;
             }
           }
@@ -1052,6 +1082,14 @@ wss.on("connection", (socket) => {
       }
       return;
     }
+    
+    if (type === "auto-x-update") {
+      autocannons.forEach((cannon) => {
+        if (cannon.CannonID === data.autoID) {
+          cannon["x+"] = data.angle
+        }
+      })
+    }
 
     if (type === "playerMoved") {
       if (!players[data.id]) return;
@@ -1131,7 +1169,6 @@ wss.on("connection", (socket) => {
             emit("boardUpdate", {
               leader_board: leader_board.shown,
             });
-            console.log("player ram --", leader_board);
 
             let respawnrai = item["respawn-raidis"] || 4500;
             let x, y;
@@ -1267,6 +1304,7 @@ wss.on("connection", (socket) => {
     if (type === "Autofire") {
       let maxdistance = 5000;
       let fire_at = null;
+      let cannon = data.cannon;
       for (const playerID in players) {
         let player = players[playerID];
         if (playerID !== data.playerId) {
@@ -1284,12 +1322,29 @@ wss.on("connection", (socket) => {
             item.y - data.playerY
           );
           if (distance < maxdistance) {
-            maxdistance = distance;
-            fire_at = item;
+            let angle = Math.atan2(
+              item.y - players[data.playerId].y, // y difference
+              item.x - players[data.playerId].x // x difference
+            );
+            if (tankmeta[players[data.playerId].__type__]["cannons"][data.extracannon_].type === "SwivelAutoCannon") {
+              if (tankmeta[players[data.playerId].__type__]["cannons"][data.extracannon_]["offSet-x-multpliyer"] === -1) {
+                if (isTargetInSwivelRange(players[data.playerId].cannon_angle, angle * 180/pi,true,180)) {
+                  maxdistance = distance;
+                  fire_at = item;
+                }
+              } else {
+                if (isTargetInSwivelRange(players[data.playerId].cannon_angle, angle * 180/pi,true,0)) {
+                  maxdistance = distance;
+                  fire_at = item;
+                }
+              }
+            } else {
+              maxdistance = distance;
+              fire_at = item;
+            }
           }
         });
       }
-      let cannon = data.cannon;
       let speedUP = 0;
       if (fire_at === null) return;
 
@@ -1312,7 +1367,10 @@ wss.on("connection", (socket) => {
         var bulletdistance = 100;
         var __type = "directer";
         var health = 10;
-      } else if (cannon["type"] === "autoCannon" || cannon["type"] === "SwivelAutoCannon") {
+      } else if (
+        cannon["type"] === "autoCannon" ||
+        cannon["type"] === "SwivelAutoCannon"
+      ) {
         var bulletdistance =
           (bullet_speed__ + speedUP) * 100 * (data.bullet_size / 6);
         var __type = "basic";
@@ -1326,12 +1384,11 @@ wss.on("connection", (socket) => {
       let bullet_size_l = data.bullet_size * cannon["bulletSize"];
 
       let randomNumber = generateRandomNumber(-0.2, 0.2);
-      
-      var offSet_x = cannon["offSet-x"]
+
+      var offSet_x = cannon["offSet-x"];
       if (cannon["offSet-x"] === "playerX") {
-        offSet_x = players[data.playerId].size/2
+        offSet_x = (players[data.playerId].size / 2) * 40;
       }
-      console.log(offSet_x)
 
       if (cannon["type"] === "basicCannon" || cannon["type"] === "trap") {
         var xxx = cannon["cannon-width"] - bullet_size_l * 1.5;
@@ -1344,7 +1401,10 @@ wss.on("connection", (socket) => {
           cannon["cannon-height"] -
           bullet_size_l * 2 -
           (cannon["cannon-width-top"] / 2) * Math.random();
-      } else if (cannon["type"] === "autoCannon" || cannon["type"] === "SwivelAutoCannon") {
+      } else if (
+        cannon["type"] === "autoCannon" ||
+        cannon["type"] === "SwivelAutoCannon"
+      ) {
         var xxx = cannon["cannon-width"] - bullet_size_l * 0.2;
         var yyy = cannon["cannon-height"] - bullet_size_l * 1.2;
         var angle_ = angle + cannon["offset-angle"];
@@ -1356,6 +1416,7 @@ wss.on("connection", (socket) => {
       let rotated_offset_y =
         (offSet_x + xxx) * Math.sin(angle_) +
         (cannon["offSet-y"] + yyy) * Math.cos(angle_);
+      console.log(rotated_offset_x, rotated_offset_y);
       let bullet_start_x = data.playerX + rotated_offset_x;
       let bullet_start_y = data.playerY + rotated_offset_y;
       // lol
@@ -1560,7 +1621,7 @@ wss.on("connection", (socket) => {
 
     if (type === "deletAuto") {
       autocannons.filter((cannons___0_0) => {
-        console.log(connection.playerId === cannons___0_0.playerid); //
+        console.log(connection.playerId === cannons___0_0.playerid);
         if (cannons___0_0.playerid === connection.playerId) {
           return false;
         }
@@ -1897,11 +1958,20 @@ setInterval(() => {
     let maxdistance = 5000;
     let fire_at__ = null;
     let target_enity_type = null;
+    let tankdatacannon__ =
+      tankmeta[players[cannon.playerid].__type__]["cannons"];
     for (const playerID in players) {
       let player = players[playerID];
       if (playerID !== cannon.playerid && players[cannon.playerid]) {
+        var offSet_x = tankdatacannon__[cannon.autoindex]["offSet-x"];
+        if (tankdatacannon__[cannon.autoindex]["offSet-x"] === "playerX") {
+          offSet_x = players[cannon.playerid].size * 40;
+        }
+        if (tankdatacannon__[cannon.autoindex]["offSet-x-multpliyer"]) {
+          offSet_x *= -1;
+        }
         var distance = MathHypotenuse(
-          player.x - players[cannon.playerid].x,
+          player.x - (players[cannon.playerid].x + offSet_x),
           player.y - players[cannon.playerid].y
         );
         if (distance < maxdistance) {
@@ -1913,15 +1983,37 @@ setInterval(() => {
     }
     if (maxdistance > 1300) {
       food_squares.forEach((item) => {
+        var offSet_x = tankdatacannon__[cannon.autoindex]["offSet-x"];
+        if (tankdatacannon__[cannon.autoindex]["offSet-x"] === "playerX") {
+          offSet_x = players[cannon.playerid].size * 40;
+        }
+        if (tankdatacannon__[cannon.autoindex]["offSet-x-multpliyer"]) {
+          offSet_x *= -1;
+        }
         var distance = MathHypotenuse(
-          item.x - players[cannon.playerid].x,
+          item.x - (players[cannon.playerid].x + offSet_x),
           item.y - players[cannon.playerid].y
         );
         if (distance < maxdistance) {
-          maxdistance = distance;
-          fire_at__ = item;
-
-          target_enity_type = "food";
+          let angle = Math.atan2(
+            item.y - players[cannon.playerid].y, // y difference
+            item.x - players[cannon.playerid].x // x difference
+          );
+          var playerRadangle = (players[cannon.playerid].angle * pi) / 180;
+          if (players[cannon.playerid].type === "SwivelAutoCannon") {
+            if (isTargetInSwivelRange(angle, players[cannon.playerid].angle,false)) {
+              console.log(
+                isTargetInSwivelRange(angle, players[cannon.playerid].angle,false)
+              );
+              maxdistance = distance;
+              fire_at__ = item;
+              target_enity_type = "food";
+            }
+          } else {
+            maxdistance = distance;
+            fire_at__ = item;
+            target_enity_type = "food";
+          }
         }
       });
     }
@@ -1929,9 +2021,9 @@ setInterval(() => {
       console.log("target_enity_type", target_enity_type, cannon.targetAngle);
       if (cannon.targetID !== fire_at__.playerId) {
         if (cannon.angle < cannon.targetAngle) {
-          cannon.angle += (cannon.targetAngle-cannon.angle)/5;
+          cannon.angle += (cannon.targetAngle - cannon.angle) / 5;
         } else if (cannon.angle > cannon.targetAngle) {
-          cannon.angle -= (cannon.angle-cannon.targetAngle)/5;
+          cannon.angle -= (cannon.angle - cannon.targetAngle) / 5;
         }
       }
     }
@@ -2016,7 +2108,7 @@ setInterval(() => {
     }
     let return_ = true;
     if (item.isdead) {
-      item.transparency = 1-((Date.now() - item.deathtime) / 150);
+      item.transparency = 1 - (Date.now() - item.deathtime) / 150;
       console.log(item.transparency);
     }
     bullets.forEach((bullet) => {
@@ -2188,7 +2280,7 @@ setInterval(() => {
               fooditem__XX.angle
             );
             fooditem__XX.vertices = rawvertices;
-          }//
+          } //
           if (type === "pentagon") {
             const rawvertices = calculateRotatedPentagonVertices(
               fooditem__XX.x,
@@ -2226,7 +2318,6 @@ setInterval(() => {
             item.isdead = true;
           }
 
-
           return_ = false;
         } else {
           item.health -= damage;
@@ -2254,12 +2345,10 @@ setInterval(() => {
       }
     });
     if (return_ === true && !(item.isdead === true)) {
-      if (item.isdead) console.log("return_",return_);
       return return_;
     }
     if (item.isdead) {
-      if (Date.now() >= item.deathtime+150) {
-        console.log("dead")
+      if (Date.now() >= item.deathtime + 150) {
         return false;
       }
     }

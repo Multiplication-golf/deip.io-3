@@ -99,7 +99,7 @@
       "autobasic",
     ];
 
-    var HANDSHAKE = { null: [{ null: null }] };
+    var HANDSHAKE = { null: [{ null: null }],null: [{ null: null }],null: [{ null: null }] };
 
     var players = {};
     var boardbullets = [];
@@ -111,6 +111,7 @@
     var FOV = 1; // senstive
     var autoFiring = false;
     var autoRotating = false;
+    var lockautoRotating = false
     var autoAngle = 0;
     var playerX = canvas.width / 2;
     var playerY = canvas.height / 2;
@@ -258,8 +259,9 @@
         setTimeout(() => {
           window.location.reload();
         }, 1000);
-        alert("There is a disconnection.");
-
+        setTimeout(() => {
+          alert("There is a disconnection.");
+        },0);
         errors++;
       }
     }
@@ -315,6 +317,10 @@
               maxhealth *= tankdata["health-m"];
               if (playerHealth > maxhealth) {
                 playerHealth = maxhealth;
+              }
+              if (tankdata["AutoRoting"]) {
+                autoRotating = true
+                lockautoRotating = true
               }
 
               send("typeChange", {
@@ -380,7 +386,6 @@
                       _type_: cannon.type,
                     });
                     let cannon__ = cannon;
-                    let cannonINT;
                     let tankdata = tankmeta[__type__];
                     let _CAN = {
                       CannonID: autoID,
@@ -388,7 +393,7 @@
                       angle: 0,
                       _type_: cannon.type,
                     };
-                    cannonINT = () => {
+                    function cannonINT() {
                       var __tankdata__ = tankmeta[__type__];
                       if (_CAN.playerid === playerId) {
                         let cannon;
@@ -400,14 +405,38 @@
                           }
                           index++;
                         }
-                        var offSet_x = cannon["offSet-x"];
-                        if (cannon["offSet-x"] === "playerX") {
+                        var offSet_x = tankdatacannon__[cannon_]["offSet-x"];
+                        if (tankdatacannon__[cannon_]["offSet-x"] === "playerX") {
                           offSet_x = playerSize* 40 * FOV;
                         }
-                        if (cannon["offSet-x-multpliyer"]) {
+                        if (tankdatacannon__[cannon_]["offSet-x-multpliyer"]) {
                           offSet_x *= -1;
                         }
-                        send("Autofire", {
+                        let angle0 = Math.atan2(
+                          Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+                          Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
+                        );
+                        if (tankdatacannon__[cannon_].type === "SwivelAutoCannon") {
+                          var [x,y] = rotatePointAroundPlayer(offSet_x, 0, angle0 * (180/Math.PI))
+                        }
+          
+                        //ctx.translate((canW / 2)+x,y+canH / 2);
+                        if (tankdatacannon__[cannon_].type === "SwivelAutoCannon") {
+                          send("Autofire", {
+                            playerId: playerId,
+                            playerX: playerX+x,
+                            playerY: playerY+y,
+                            cannon: cannon__,
+                            bullet_damage: bullet_damage,
+                            bullet_speed: bullet_speed,
+                            bullet_size: bullet_size,
+                            bullet_pentration: bullet_pentration,
+                            extracannon_:cannon_,
+                            _cannon: _CAN,
+                          });
+                        }
+                        if (tankdatacannon__[cannon_].type === "autoCannon") {
+                          send("Autofire", {
                           playerId: playerId,
                           playerX: playerX-offSet_x,
                           playerY: playerY,
@@ -416,9 +445,13 @@
                           bullet_speed: bullet_speed,
                           bullet_size: bullet_size,
                           bullet_pentration: bullet_pentration,
+                          extracannon_:cannon_,
                           _cannon: _CAN,
                         });
+                        }
+                        
                       }
+                      console.log("fire")
                       setTimeout(() => {
                         cannonINT();
                       }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
@@ -426,7 +459,8 @@
                     setTimeout(() => {
                       cannonINT();
                     }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
-                    autoIntevals.push(cannonINT);
+                    console.log("fire",750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__)
+                    autoIntevals.push({cannonINT:cannonINT,autoID:autoID});
                   }
                 }
               }, 100);
@@ -1135,6 +1169,7 @@
           } else if (keysPressed["="]) {
             FOV += 0.1;
           } else if (keysPressed["e"]) {
+            if (lockautoRotating) return
             autoFiring = !autoFiring;
             if (!autoFiring) {
               canFire = true;
@@ -1240,6 +1275,7 @@
         var container = document.getElementById("container");
         document.addEventListener("mousemove", (evt) => {
           if (autoRotating) return;
+          if (lockautoRotating) return;
           var mousepos = getMousePos(container, evt);
           MouseX_ = mousepos.x;
           MouseY_ = mousepos.y;
@@ -1256,7 +1292,8 @@
         });
         let pi = Math.pi;
         setInterval(() => {
-          if (!autoRotating) return;
+          if (!autoRotating && !lockautoRotating) return;
+          
           autoAngle += 1;
           if (359.8 <= autoAngle) {
             // yes point 8 I can do math kids
@@ -1277,7 +1314,12 @@
             MouseX: MouseX_,
             MouseY: MouseY_,
           });
+          autoIntevals.forEach((Inteval) => {
+            send("auto-x-update", {autoID:Inteval.autoID,angle:autoAngle})
+          })
         }, 75);
+        
+      
 
         function generateRandomNumber(min, max) {
           return Math.random() * (max - min) + min;
@@ -1802,6 +1844,20 @@
         ctx.fillText(level, canvas.width / 2, canvas.height - 60);
       }
     }
+    function rotatePointAroundPlayer(cannonOffsetX, cannonOffsetY, playerRotation) {
+  // Convert player rotation to radians for math
+      const playerRotationRad = playerRotation * (Math.PI / 180);
+
+      // Rotate cannon's offset position based on player rotation
+      const rotatedX =
+        cannonOffsetX * Math.cos(playerRotationRad) -
+        cannonOffsetY * Math.sin(playerRotationRad);
+      const rotatedY =
+        cannonOffsetX * Math.sin(playerRotationRad) +
+        cannonOffsetY * Math.cos(playerRotationRad);
+
+      return [rotatedX, rotatedY];
+    }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1818,7 +1874,6 @@
           ctx.save();
           if (item.transparency) {
             ctx.globalAlpha = item.transparency;
-            console.log(item.transparency);
             if (item.transparency < 0) {
               ctx.globalAlpha = 0;
             }
@@ -2290,6 +2345,7 @@
             });
             if (tankdatacannondata["type"] === "autoCannon" || tankdatacannondata["type"] === "SwivelAutoCannon") {
               ctx.save();
+              var [x,y] = rotatePointAroundPlayer()
               ctx.translate(playerX - cavansX, playerY - cavansY);
               let angle = cannonangle;
 
@@ -2519,6 +2575,65 @@
           ctx.stroke(); // Draw the border
           ctx.restore();
         }
+        if (tankdatacannondata["type"] === "SwivelAutoCannon") {
+          ctx.save();
+          let cannonangle;
+          autocannons.forEach((cannonA) => {
+            if (cannonA.playerid === playerId && cannonA.autoindex === i) {
+              cannonangle = cannonA.angle;
+            }
+          });
+          var offSet_x = tankdatacannondata["offSet-x"];
+          if (tankdatacannondata["offSet-x"] === "playerX") {
+            offSet_x = playerSize* 40 * FOV;
+          }
+          if (tankdatacannondata["offSet-x-multpliyer"]) {
+            offSet_x *= -1;
+          }
+          let angle0 = Math.atan2(
+            Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+            Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
+          );
+          var [x,y] = rotatePointAroundPlayer(offSet_x, 0, angle0 * (180/Math.PI))
+          
+          ctx.translate((canW / 2)+x,y+canH / 2);
+          
+          let angle = cannonangle;
+
+          let angle_offset = tankdatacannondata["offset-angle"];
+          ctx.rotate(angle + angle_offset);
+          // Draw the square
+
+
+          let basex =
+            -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
+          let basey = -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+          ctx.beginPath();
+          ctx.fillRect(
+            basex - 5,
+            basey - 2.5,
+            cannon_widthFOV + 10,
+            cannon_heightFOV + 5
+          );
+
+          ctx.strokeStyle = "lightgrey"; // Set border color
+          ctx.lineWidth = 3; // Set border width
+          ctx.strokeRect(
+            basex - 5,
+            basey - 2.5,
+            cannon_widthFOV + 10,
+            cannon_heightFOV + 5
+          ); // Draw the border
+          // Restore the previous transformation matrix
+          ctx.rotate(-(angle + angle_offset));
+          ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
+
+          ctx.fill();
+          ctx.stroke();
+          ctx.closePath();
+          ctx.restore();
+        }
       }
 
       ctx.beginPath();
@@ -2614,7 +2729,7 @@
             cannonangle = cannonA.angle;
           }
         });
-        if (tankdatacannondata["type"] === "autoCannon" || tankdatacannondata["type"] === "SwivelAutoCannon") {
+        if (tankdatacannondata["type"] === "autoCannon") {
           ctx.save();
           var offSet_x = tankdatacannondata["offSet-x"];
           if (tankdatacannondata["offSet-x"] === "playerX") {
@@ -2623,8 +2738,13 @@
           if (tankdatacannondata["offSet-x-multpliyer"]) {
             offSet_x *= -1;
           }
-          ctx.translate((canW / 2)+offSet_x, canH / 2);
-          console.log(offSet_x)
+          let angle0 = Math.atan2(
+            Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+            Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
+          );
+          var [x,y] = rotatePointAroundPlayer(offSet_x, 0, angle0 * (180/Math.PI))
+          
+          ctx.translate((canW / 2)+x,y+canH / 2);
           
           let angle = cannonangle;
 
@@ -2854,7 +2974,7 @@ console.log(
   "color:white",
   "Don't run scripts in here from stragers (Or anyone). Just don't",
   "color:red",
-  "Good person -> just click the X button of dev tools",
+  "A good person is a person that clicks the X button of dev tools",
   "color:white",
   "\n\n\n\n",
   "color:red",
