@@ -258,7 +258,7 @@
       } else {
         setTimeout(() => {
           window.location.reload();
-        }, 1000);
+        }, 1);
         setTimeout(() => {
           alert("There is a disconnection.");
         },0);
@@ -1314,7 +1314,9 @@
             MouseX: MouseX_,
             MouseY: MouseY_,
           });
+          console.log(autoIntevals)
           autoIntevals.forEach((Inteval) => {
+            console.log(Inteval.autoID)
             send("auto-x-update", {autoID:Inteval.autoID,angle:autoAngle})
           })
         }, 75);

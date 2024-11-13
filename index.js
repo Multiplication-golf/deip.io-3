@@ -9,6 +9,8 @@ const crypto = require("crypto");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+//TODO: fix upgrade for multi-level upgrade tank choice
+
 app.use(express.static(path.join(__dirname, "public")));
 var port = process.env.PORT;
 let players = {};
@@ -661,22 +663,26 @@ function rotatePointAroundPlayer(cannonOffsetX, cannonOffsetY, playerRotation) {
 }
 
 // Check if the target angle is within the cannon's swivel range, accounting for player rotation
-function isTargetInSwivelRange(playerRotation, targetAngle,logging, offset_degress) {
+function isTargetInSwivelRange(
+  playerRotation,
+  targetAngle,
+  logging,
+  offset_degress
+) {
   // Normalize player's rotation and target angle
-  playerRotation = normalizeAngle(playerRotation+offset_degress);
+  playerRotation = normalizeAngle(playerRotation + offset_degress);
   targetAngle = normalizeAngle(targetAngle);
 
   // Define the swivel range around the player's current rotation
-  const minSwivelAngle = normalizeAngle(playerRotation - 90); // 90 degrees left of player
-  const maxSwivelAngle = normalizeAngle(playerRotation + 90); // 90 degrees right of player
-  
+  const minSwivelAngle = normalizeAngle(playerRotation - 85); // 90 degrees left of player
+  const maxSwivelAngle = normalizeAngle(playerRotation + 85); // 90 degrees right of player
 
   // Check if the target is within the swivel range
   if (minSwivelAngle <= maxSwivelAngle) {
-    return (minSwivelAngle <= targetAngle && targetAngle <= maxSwivelAngle);
+    return minSwivelAngle <= targetAngle && targetAngle <= maxSwivelAngle;
   } else {
     // Handle the case where angles wrap around 0°
-    return (targetAngle >= minSwivelAngle || targetAngle <= maxSwivelAngle);
+    return targetAngle >= minSwivelAngle || targetAngle <= maxSwivelAngle;
   }
 }
 
@@ -1081,14 +1087,30 @@ wss.on("connection", (socket) => {
         });
       }
       return;
-    }
-    
+    } //
+
     if (type === "auto-x-update") {
       autocannons.forEach((cannon) => {
         if (cannon.CannonID === data.autoID) {
-          cannon["x+"] = data.angle
+          if (cannon._type_ === "SwivelAutoCannon") {
+            var tankdatacannondata =
+              tankmeta[players[cannon.playerid].__type__].cannons[
+                cannon.autoindex
+              ];
+            var offSet_x = tankdatacannondata["offSet-x"];
+            if (tankdatacannondata["offSet-x"] === "playerX") {
+              offSet_x = players[cannon.playerid].size * 40;
+            }
+            if (tankdatacannondata["offSet-x-multpliyer"]) {
+              offSet_x *= -1;
+            }
+            var [X, Y] = rotatePointAroundPlayer(offSet_x, 0, data.angle);
+            cannon["x_"] = -X;
+            cannon["y_"] = -Y;
+          }
         }
-      })
+      });
+      return;
     }
 
     if (type === "playerMoved") {
@@ -1310,8 +1332,48 @@ wss.on("connection", (socket) => {
         if (playerID !== data.playerId) {
           var distance = MathHypotenuse(player.x - data.x, player.y - data.y);
           if (distance < maxdistance) {
-            maxdistance = distance;
-            fire_at = player;
+            let angle = Math.atan2(
+              player.y - players[data.playerId].y, // y difference
+              player.x - players[data.playerId].x // x difference
+            );
+            if (
+              tankmeta[players[data.playerId].__type__]["cannons"][
+                data.extracannon_
+              ].type === "SwivelAutoCannon"
+            ) {
+              if (
+                tankmeta[players[data.playerId].__type__]["cannons"][
+                  data.extracannon_
+                ]["offSet-x-multpliyer"] === -1
+              ) {
+                if (
+                  isTargetInSwivelRange(
+                    players[data.playerId].cannon_angle,
+                    (angle * 180) / pi,
+                    true,
+                    180
+                  )
+                ) {
+                  maxdistance = distance;
+                  fire_at = player;
+                }
+              } else {
+                if (
+                  isTargetInSwivelRange(
+                    players[data.playerId].cannon_angle,
+                    (angle * 180) / pi,
+                    true,
+                    0
+                  )
+                ) {
+                  maxdistance = distance;
+                  fire_at = player;
+                }
+              }
+            } else {
+              maxdistance = distance;
+              fire_at = player;
+            }
           }
         }
       }
@@ -1326,14 +1388,36 @@ wss.on("connection", (socket) => {
               item.y - players[data.playerId].y, // y difference
               item.x - players[data.playerId].x // x difference
             );
-            if (tankmeta[players[data.playerId].__type__]["cannons"][data.extracannon_].type === "SwivelAutoCannon") {
-              if (tankmeta[players[data.playerId].__type__]["cannons"][data.extracannon_]["offSet-x-multpliyer"] === -1) {
-                if (isTargetInSwivelRange(players[data.playerId].cannon_angle, angle * 180/pi,true,180)) {
+            if (
+              tankmeta[players[data.playerId].__type__]["cannons"][
+                data.extracannon_
+              ].type === "SwivelAutoCannon"
+            ) {
+              if (
+                tankmeta[players[data.playerId].__type__]["cannons"][
+                  data.extracannon_
+                ]["offSet-x-multpliyer"] === -1
+              ) {
+                if (
+                  isTargetInSwivelRange(
+                    players[data.playerId].cannon_angle,
+                    (angle * 180) / pi,
+                    true,
+                    180
+                  )
+                ) {
                   maxdistance = distance;
                   fire_at = item;
                 }
               } else {
-                if (isTargetInSwivelRange(players[data.playerId].cannon_angle, angle * 180/pi,true,0)) {
+                if (
+                  isTargetInSwivelRange(
+                    players[data.playerId].cannon_angle,
+                    (angle * 180) / pi,
+                    true,
+                    0
+                  )
+                ) {
                   maxdistance = distance;
                   fire_at = item;
                 }
@@ -1416,7 +1500,6 @@ wss.on("connection", (socket) => {
       let rotated_offset_y =
         (offSet_x + xxx) * Math.sin(angle_) +
         (cannon["offSet-y"] + yyy) * Math.cos(angle_);
-      console.log(rotated_offset_x, rotated_offset_y);
       let bullet_start_x = data.playerX + rotated_offset_x;
       let bullet_start_y = data.playerY + rotated_offset_y;
       // lol
@@ -1460,11 +1543,11 @@ wss.on("connection", (socket) => {
 
       bullets.push(bullet);
       var [_index_, CO] = finder_(data);
-      autocannons[CO].angle = angle_;
+      /*autocannons[CO].angle = angle_;
       emit("autoCannonUPDATE-ANGLE", {
         angle: angle_,
         cannon_ID: data._cannon.CannonID,
-      });
+      });*/
       return;
     }
 
@@ -1531,7 +1614,6 @@ wss.on("connection", (socket) => {
             players[data.ID].health = players[data.ID].maxhealth;
             clearInterval(healer);
           }
-          console.log(players[data.ID].Regenspeed);
           if (players[data.ID].playerHealTime < players[data.ID].Regenspeed) {
             players[data.ID].health -= players[data.ID].playerReheal;
             clearInterval(healer);
@@ -1621,7 +1703,6 @@ wss.on("connection", (socket) => {
 
     if (type === "deletAuto") {
       autocannons.filter((cannons___0_0) => {
-        console.log(connection.playerId === cannons___0_0.playerid);
         if (cannons___0_0.playerid === connection.playerId) {
           return false;
         }
@@ -1874,7 +1955,7 @@ setInterval(() => {
         } else {
           player.health -=
             (bullet.bullet_damage - 3.8) / (player.size + 6 / bullet.speed);
-          bullet.bullet_distance /=
+          bullet.bullet_distance -=
             bullet.size / (bullet.bullet_pentration + 10);
         }
 
@@ -1990,24 +2071,63 @@ setInterval(() => {
         if (tankdatacannon__[cannon.autoindex]["offSet-x-multpliyer"]) {
           offSet_x *= -1;
         }
-        var distance = MathHypotenuse(
-          item.x - (players[cannon.playerid].x + offSet_x),
-          item.y - players[cannon.playerid].y
-        );
-        if (distance < maxdistance) {
-          let angle = Math.atan2(
-            item.y - players[cannon.playerid].y, // y difference
-            item.x - players[cannon.playerid].x // x difference
+        if (cannon["x_"]) {
+          var distance = MathHypotenuse(
+            item.x - (players[cannon.playerid].x + cannon["x_"]),
+            item.y - (players[cannon.playerid].y + cannon["y_"])
           );
+        } else {
+          var distance = MathHypotenuse(
+            item.x - (players[cannon.playerid].x + offSet_x),
+            item.y - players[cannon.playerid].y
+          );
+        }
+        if (distance < maxdistance) {
+          if (cannon._type_ === "SwivelAutoCannon") {
+            var angle = Math.atan2(
+              item.y - (players[cannon.playerid].y), // y difference
+              item.x - (players[cannon.playerid].x) // x difference
+            );
+          } else {
+            var angle = Math.atan2(
+              item.y - players[cannon.playerid].y, // y difference
+              item.x - (players[cannon.playerid].x + offSet_x) // x difference
+            );
+          }
+
           var playerRadangle = (players[cannon.playerid].angle * pi) / 180;
-          if (players[cannon.playerid].type === "SwivelAutoCannon") {
-            if (isTargetInSwivelRange(angle, players[cannon.playerid].angle,false)) {
-              console.log(
-                isTargetInSwivelRange(angle, players[cannon.playerid].angle,false)
-              );
-              maxdistance = distance;
-              fire_at__ = item;
-              target_enity_type = "food";
+          
+          if (cannon._type_ === "SwivelAutoCannon") {
+            if (
+              tankmeta[players[cannon.playerid].__type__]["cannons"][
+                cannon.autoindex
+              ]["offSet-x-multpliyer"] === -1
+            ) {
+              if (
+                isTargetInSwivelRange(
+                  players[cannon.playerid].cannon_angle,
+                  angle * (180/pi),
+                  true,
+                  180
+                )
+              ) {
+                maxdistance = distance;
+                fire_at__ = item;
+                target_enity_type = "food";
+              }
+            } else {
+              if (
+                isTargetInSwivelRange(
+                  players[cannon.playerid].cannon_angle,
+                  angle * (180/pi),
+                  true,
+                  0
+                )
+              ) {
+                maxdistance = distance;
+                fire_at__ = item;
+                target_enity_type = "food";
+              }
             }
           } else {
             maxdistance = distance;
@@ -2018,7 +2138,6 @@ setInterval(() => {
       });
     }
     if (target_enity_type === "player" && fire_at__) {
-      console.log("target_enity_type", target_enity_type, cannon.targetAngle);
       if (cannon.targetID !== fire_at__.playerId) {
         if (cannon.angle < cannon.targetAngle) {
           cannon.angle += (cannon.targetAngle - cannon.angle) / 5;
@@ -2048,11 +2167,13 @@ setInterval(() => {
         });
       }
     }
-    if (fire_at__ !== undefined) {
-      let angle = Math.atan2(
-        fire_at__.y - players[cannon.playerid].y, // y difference
-        fire_at__.x - players[cannon.playerid].x // x difference
+    if (fire_at__ !== undefined && fire_at__ !== null) {
+      
+      var angle = Math.atan2(
+        fire_at__.y - (players[cannon.playerid].y), // y difference
+        fire_at__.x - (players[cannon.playerid].x) // x difference
       );
+
       cannon.targetAngle = angle;
       cannon.targetEntity = fire_at__;
       if (target_enity_type === "player") {
@@ -2109,7 +2230,6 @@ setInterval(() => {
     let return_ = true;
     if (item.isdead) {
       item.transparency = 1 - (Date.now() - item.deathtime) / 150;
-      console.log(item.transparency);
     }
     bullets.forEach((bullet) => {
       let distance = MathHypotenuse(item.x - bullet.x, item.y - bullet.y);
