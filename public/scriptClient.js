@@ -99,7 +99,11 @@
       "autobasic",
     ];
 
-    var HANDSHAKE = { null: [{ null: null }],null: [{ null: null }],null: [{ null: null }] };
+    var HANDSHAKE = {
+      null: [{ null: null }],
+      null: [{ null: null }],
+      null: [{ null: null }],
+    };
 
     var players = {};
     var boardbullets = [];
@@ -111,7 +115,7 @@
     var FOV = 1; // senstive
     var autoFiring = false;
     var autoRotating = false;
-    var lockautoRotating = false
+    var lockautoRotating = false;
     var autoAngle = 0;
     var playerX = canvas.width / 2;
     var playerY = canvas.height / 2;
@@ -261,7 +265,7 @@
         }, 1);
         setTimeout(() => {
           alert("There is a disconnection.");
-        },0);
+        }, 0);
         errors++;
       }
     }
@@ -271,6 +275,204 @@
         Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
       );
     };
+    function levelUpgrader(tankdata) {
+      if (level === tankdata["upgradeLevel"]) {
+        var tankstiles = document.getElementById("tanktiles");
+        tankstiles.style.display = "block";
+        tankstiles.style.left = 0;
+        tankstiles.style.animation = "2s 1 move";
+        tankstiles.innerHTML = "";
+        var upgrade = tankdata["upgrades"];
+
+        for (let i = 0; i < Object.keys(upgrade).length; i++) {
+          var img__ = document.createElement("img");
+          var tileImg = Object.values(upgrade)[i];
+          tankstiles.appendChild(img__);
+
+          img__.src = "tanktiles/" + tileImg + ".png";
+          img__.style = "width: 6vw; height: 6vw; margin: 10px; z-index: 100;";
+
+          img__.addEventListener("click", function () {
+            event.stopPropagation();
+            tankstiles.style.display = "none";
+            __type__ = Object.keys(upgrade)[i];
+            players[playerId].type = __type__;
+            tankdata = tankmeta[__type__];
+            var tankdatacannon__ = tankdata["cannons"];
+            playerSize *= tankdata["size-m"];
+            playerSpeed *= tankdata["speed-m"];
+            bullet_damage *= tankdata["damage-m"];
+            playerReheal *= tankdata["regen-m"];
+            bodyDamage *= tankdata["BodyDamage-m"];
+            maxhealth *= tankdata["health-m"];
+            if (playerHealth > maxhealth) {
+              playerHealth = maxhealth;
+            }
+            if (tankdata["AutoRoting"]) {
+              autoRotating = true;
+              lockautoRotating = true;
+            }
+
+            send("typeChange", {
+              id: playerId,
+              x: playerX,
+              y: playerY,
+              health: playerHealth,
+              speed: playerSpeed,
+              size: playerSize,
+              bodyDamage: bodyDamage,
+              cannonW: cannonWidth,
+              cannonH: 0,
+              __type__: __type__,
+              cannon_angle: getCannonAngle(),
+              score: score,
+              username: username,
+              level: level,
+              state: state,
+              statecycle: statecycle,
+              playerHealTime: playerHealTime,
+              maxhealth: maxhealth,
+              playerReheal: playerReheal,
+              FOV: FOV,
+              MouseX: MouseX_,
+              Regenspeed: 30,
+              MouseY: MouseY_,
+              screenWidth: canvas.width,
+              screenHeight: canvas.height,
+              statsTree: {
+                Health: statsTree.Health,
+                "Body Damage": statsTree["Body Damage"],
+                Regen: statsTree.Regen,
+                "Bullet Pentration": statsTree["Bullet Pentration"],
+                "Bullet Speed": statsTree["Bullet Speed"],
+                "Bullet Damage": statsTree["Bullet Damage"],
+                "Bullet Reload": statsTree["Bullet Reload"],
+                Speed: statsTree.Speed,
+              },
+            });
+
+            setTimeout(() => {
+              cannonWidth = [];
+              cannonFireData = [];
+              for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                cannonWidth.push(0);
+                cannonFireData.push(true);
+              }
+              autocannons.forEach((popcannon) => {
+                if (popcannon.playerid === playerId) {
+                  send("deletAuto", { CannonID: popcannon.CannonID });
+                  clearInterval(popcannon);
+                  popcannon = null;
+                }
+              });
+              for (const cannon_ in tankdatacannon__) {
+                let cannon = tankdatacannon__[cannon_];
+                if (
+                  cannon.type === "autoCannon" ||
+                  cannon.type === "SwivelAutoCannon"
+                ) {
+                  let autoID = Math.random() * 1000 + Math.random() * 1000;
+                  send("autoCannonADD", {
+                    CannonID: autoID,
+                    playerid: playerId,
+                    angle: 0,
+                    _type_: cannon.type,
+                  });
+                  let cannon__ = cannon;
+                  let tankdata = tankmeta[__type__];
+                  let _CAN = {
+                    CannonID: autoID,
+                    playerid: playerId,
+                    angle: 0,
+                    _type_: cannon.type,
+                  };
+                  function cannonINT() {
+                    var __tankdata__ = tankmeta[__type__];
+                    if (_CAN.playerid === playerId) {
+                      let cannon;
+                      let index = 0;
+                      for (const ___cannon___ in __tankdata__.cannons) {
+                        let cannon___ = __tankdata__.cannons[___cannon___];
+                        if (index === cannon__.autoindex) {
+                          cannon = cannon___;
+                        }
+                        index++;
+                      }
+                      var offSet_x = tankdatacannon__[cannon_]["offSet-x"];
+                      if (tankdatacannon__[cannon_]["offSet-x"] === "playerX") {
+                        offSet_x = playerSize * 40 * FOV;
+                      }
+                      if (tankdatacannon__[cannon_]["offSet-x-multpliyer"]) {
+                        offSet_x *= -1;
+                      }
+                      let angle0 = Math.atan2(
+                        Math.abs(MouseY_) -
+                          (canvas.height / 2 - playerSize * FOV),
+                        Math.abs(MouseX_) -
+                          (canvas.width / 2 - playerSize * FOV)
+                      );
+                      if (
+                        tankdatacannon__[cannon_].type === "SwivelAutoCannon"
+                      ) {
+                        var [x, y] = rotatePointAroundPlayer(
+                          offSet_x,
+                          0,
+                          angle0 * (180 / Math.PI)
+                        );
+                      }
+
+                      //ctx.translate((canW / 2)+x,y+canH / 2);
+                      if (
+                        tankdatacannon__[cannon_].type === "SwivelAutoCannon"
+                      ) {
+                        send("Autofire", {
+                          playerId: playerId,
+                          playerX: playerX + x,
+                          playerY: playerY + y,
+                          cannon: cannon__,
+                          bullet_damage: bullet_damage,
+                          bullet_speed: bullet_speed,
+                          bullet_size: bullet_size,
+                          bullet_pentration: bullet_pentration,
+                          extracannon_: cannon_,
+                          _cannon: _CAN,
+                        });
+                      }
+                      if (tankdatacannon__[cannon_].type === "autoCannon") {
+                        send("Autofire", {
+                          playerId: playerId,
+                          playerX: playerX - offSet_x,
+                          playerY: playerY,
+                          cannon: cannon__,
+                          bullet_damage: bullet_damage,
+                          bullet_speed: bullet_speed,
+                          bullet_size: bullet_size,
+                          bullet_pentration: bullet_pentration,
+                          extracannon_: cannon_,
+                          _cannon: _CAN,
+                        });
+                      }
+                    }
+                    console.log("fire");
+                    setTimeout(() => {
+                      cannonINT();
+                    }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
+                  }
+                  setTimeout(() => {
+                    cannonINT();
+                  }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
+                  console.log(
+                    "fire",
+                    750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__
+                  );
+                  autoIntevals.push({ cannonINT: cannonINT, autoID: autoID });
+                }
+              }
+            }, 100);
+          });
+        }
+      }
+    }
 
     function generateUniquePlayerId() {
       return "player-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
@@ -285,188 +487,7 @@
         // Add transition property
 
         let tankdata = tankmeta[__type__];
-        if (level === tankdata["upgradeLevel"]) {
-          var tankstiles = document.getElementById("tanktiles");
-          tankstiles.style.display = "block";
-          tankstiles.style.left = 0;
-          tankstiles.style.animation = "2s 1 move";
-          tankstiles.innerHTML = "";
-          var upgrade = tankdata["upgrades"];
-
-          for (let i = 0; i < Object.keys(upgrade).length; i++) {
-            var img__ = document.createElement("img");
-            var tileImg = Object.values(upgrade)[i];
-            tankstiles.appendChild(img__);
-
-            img__.src = "tanktiles/" + tileImg + ".png";
-            img__.style =
-              "width: 6vw; height: 6vw; margin: 10px; z-index: 100;";
-
-            img__.addEventListener("click", function () {
-              event.stopPropagation();
-              tankstiles.style.display = "none";
-              __type__ = Object.keys(upgrade)[i];
-              players[playerId].type = __type__;
-              tankdata = tankmeta[__type__];
-              var tankdatacannon__ = tankdata["cannons"];
-              playerSize *= tankdata["size-m"];
-              playerSpeed *= tankdata["speed-m"];
-              bullet_damage *= tankdata["damage-m"];
-              playerReheal *= tankdata["regen-m"];
-              bodyDamage *= tankdata["BodyDamage-m"];
-              maxhealth *= tankdata["health-m"];
-              if (playerHealth > maxhealth) {
-                playerHealth = maxhealth;
-              }
-              if (tankdata["AutoRoting"]) {
-                autoRotating = true
-                lockautoRotating = true
-              }
-
-              send("typeChange", {
-                id: playerId,
-                x: playerX,
-                y: playerY,
-                health: playerHealth,
-                speed: playerSpeed,
-                size: playerSize,
-                bodyDamage: bodyDamage,
-                cannonW: cannonWidth,
-                cannonH: 0,
-                __type__: __type__,
-                cannon_angle: getCannonAngle(),
-                score: score,
-                username: username,
-                level: level,
-                state: state,
-                statecycle: statecycle,
-                playerHealTime: playerHealTime,
-                maxhealth: maxhealth,
-                playerReheal: playerReheal,
-                FOV: FOV,
-                MouseX: MouseX_,
-                Regenspeed: 30,
-                MouseY: MouseY_,
-                screenWidth: canvas.width,
-                screenHeight: canvas.height,
-                statsTree: {
-                  Health: statsTree.Health,
-                  "Body Damage": statsTree["Body Damage"],
-                  Regen: statsTree.Regen,
-                  "Bullet Pentration": statsTree["Bullet Pentration"],
-                  "Bullet Speed": statsTree["Bullet Speed"],
-                  "Bullet Damage": statsTree["Bullet Damage"],
-                  "Bullet Reload": statsTree["Bullet Reload"],
-                  Speed: statsTree.Speed,
-                },
-              });
-
-              setTimeout(() => {
-                cannonWidth = [];
-                cannonFireData = [];
-                for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
-                  cannonWidth.push(0);
-                  cannonFireData.push(true);
-                }
-                autocannons.forEach((popcannon) => {
-                  if (popcannon.playerid === playerId) {
-                    send("deletAuto", { CannonID: popcannon.CannonID });
-                    clearInterval(popcannon);
-                    popcannon = null;
-                  }
-                });
-                for (const cannon_ in tankdatacannon__) {
-                  let cannon = tankdatacannon__[cannon_];
-                  if (cannon.type === "autoCannon" || cannon.type === "SwivelAutoCannon") {
-                    let autoID = Math.random() * 1000 + Math.random() * 1000;
-                    send("autoCannonADD", {
-                      CannonID: autoID,
-                      playerid: playerId,
-                      angle: 0,
-                      _type_: cannon.type,
-                    });
-                    let cannon__ = cannon;
-                    let tankdata = tankmeta[__type__];
-                    let _CAN = {
-                      CannonID: autoID,
-                      playerid: playerId,
-                      angle: 0,
-                      _type_: cannon.type,
-                    };
-                    function cannonINT() {
-                      var __tankdata__ = tankmeta[__type__];
-                      if (_CAN.playerid === playerId) {
-                        let cannon;
-                        let index = 0;
-                        for (const ___cannon___ in __tankdata__.cannons) {
-                          let cannon___ = __tankdata__.cannons[___cannon___];
-                          if (index === cannon__.autoindex) {
-                            cannon = cannon___;
-                          }
-                          index++;
-                        }
-                        var offSet_x = tankdatacannon__[cannon_]["offSet-x"];
-                        if (tankdatacannon__[cannon_]["offSet-x"] === "playerX") {
-                          offSet_x = playerSize* 40 * FOV;
-                        }
-                        if (tankdatacannon__[cannon_]["offSet-x-multpliyer"]) {
-                          offSet_x *= -1;
-                        }
-                        let angle0 = Math.atan2(
-                          Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
-                          Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
-                        );
-                        if (tankdatacannon__[cannon_].type === "SwivelAutoCannon") {
-                          var [x,y] = rotatePointAroundPlayer(offSet_x, 0, angle0 * (180/Math.PI))
-                        }
-          
-                        //ctx.translate((canW / 2)+x,y+canH / 2);
-                        if (tankdatacannon__[cannon_].type === "SwivelAutoCannon") {
-                          send("Autofire", {
-                            playerId: playerId,
-                            playerX: playerX+x,
-                            playerY: playerY+y,
-                            cannon: cannon__,
-                            bullet_damage: bullet_damage,
-                            bullet_speed: bullet_speed,
-                            bullet_size: bullet_size,
-                            bullet_pentration: bullet_pentration,
-                            extracannon_:cannon_,
-                            _cannon: _CAN,
-                          });
-                        }
-                        if (tankdatacannon__[cannon_].type === "autoCannon") {
-                          send("Autofire", {
-                          playerId: playerId,
-                          playerX: playerX-offSet_x,
-                          playerY: playerY,
-                          cannon: cannon__,
-                          bullet_damage: bullet_damage,
-                          bullet_speed: bullet_speed,
-                          bullet_size: bullet_size,
-                          bullet_pentration: bullet_pentration,
-                          extracannon_:cannon_,
-                          _cannon: _CAN,
-                        });
-                        }
-                        
-                      }
-                      console.log("fire")
-                      setTimeout(() => {
-                        cannonINT();
-                      }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
-                    };
-                    setTimeout(() => {
-                      cannonINT();
-                    }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
-                    console.log("fire",750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__)
-                    autoIntevals.push({cannonINT:cannonINT,autoID:autoID});
-                  }
-                }
-              }, 100);
-            });
-          }
-        }
+        levelUpgrader(tankdata);
         level += 1;
         console.log(level);
         let tonextlevel = levels[level] - levels[level - 1];
@@ -480,6 +501,8 @@
           playerSize += playerSize * 0.005;
           progress =
             (score - levels[level - 1]) / (levels[level] - levels[level - 1]);
+          let tankdata = tankmeta[__type__];
+          levelUpgrader(tankdata);
         }
       }
     }
@@ -1053,7 +1076,7 @@
         document.addEventListener("keydown", (event) => {
           keysPressed[event.key] = true;
           if (keysPressed["]"]) {
-            players[playerId].score += 15;
+            players[playerId].score += 25;
             score = players[playerId].score;
             levelHANDLER();
           } else if (
@@ -1169,7 +1192,7 @@
           } else if (keysPressed["="]) {
             FOV += 0.1;
           } else if (keysPressed["e"]) {
-            if (lockautoRotating) return
+            if (lockautoRotating) return;
             autoFiring = !autoFiring;
             if (!autoFiring) {
               canFire = true;
@@ -1293,7 +1316,7 @@
         let pi = Math.pi;
         setInterval(() => {
           if (!autoRotating && !lockautoRotating) return;
-          
+
           autoAngle += 1;
           if (359.8 <= autoAngle) {
             // yes point 8 I can do math kids
@@ -1314,14 +1337,11 @@
             MouseX: MouseX_,
             MouseY: MouseY_,
           });
-          console.log(autoIntevals)
           autoIntevals.forEach((Inteval) => {
-            console.log(Inteval.autoID)
-            send("auto-x-update", {autoID:Inteval.autoID,angle:autoAngle})
-          })
+            console.log(Inteval.autoID);
+            send("auto-x-update", { autoID: Inteval.autoID, angle: autoAngle });
+          });
         }, 75);
-        
-      
 
         function generateRandomNumber(min, max) {
           return Math.random() * (max - min) + min;
@@ -1343,7 +1363,11 @@
             if (!cannonFireData[i]) return;
             cannonFireData[i] = false;
             setTimeout(() => {
-              if (cannon.type === "autoCannon" || cannon.type === "SwivelAutoCannon") return;
+              if (
+                cannon.type === "autoCannon" ||
+                cannon.type === "SwivelAutoCannon"
+              )
+                return;
               if (!directer && cannon.type === "directer") return;
 
               //if (cannon.type === "directer" && !directer) return;
@@ -1365,6 +1389,10 @@
                   cannon["cannon-height"] -
                   bullet_size_l * 2 -
                   (cannon["cannon-width-top"] / 2) * Math.random();
+              } else if (cannon["type"] === "AutoBulletCannon") {
+                var xxx = cannon["cannon-width"] - bullet_size_l * 1.5;
+                var yyy = cannon["cannon-height"] - bullet_size_l * 2;
+                var angle_ = angle + cannon["offset-angle"];
               } else {
                 var xxx = cannon["cannon-width-top"] - bullet_size_l * 1.5;
                 var yyy =
@@ -1449,6 +1477,10 @@
                   0
                 );
                 vertices = rawvertices;
+              } else if (cannon["type"] === "AutoBulletCannon") {
+                var bulletdistance = bullet_speed__ * 105 * (bullet_size / 6);
+                var type = "AutoBullet";
+                var health = 8;
               }
 
               let cannon_life = cannon["life-time"] || 0;
@@ -1474,6 +1506,7 @@
                 uniqueid: identdfire,
               };
 
+              console.log(bullet);
               send("bulletFired", bullet);
             }, cannon.delay * 1000);
             if (!(cannonFireData[i] || dronetanks.includes(__type__))) {
@@ -1846,8 +1879,12 @@
         ctx.fillText(level, canvas.width / 2, canvas.height - 60);
       }
     }
-    function rotatePointAroundPlayer(cannonOffsetX, cannonOffsetY, playerRotation) {
-  // Convert player rotation to radians for math
+    function rotatePointAroundPlayer(
+      cannonOffsetX,
+      cannonOffsetY,
+      playerRotation
+    ) {
+      // Convert player rotation to radians for math
       const playerRotationRad = playerRotation * (Math.PI / 180);
 
       // Rotate cannon's offset position based on player rotation
@@ -2118,9 +2155,30 @@
             ctx.stroke();
 
             ctx.restore();
+          } else if (bullet.type === "AutoBullet") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let realsize = bullet.size * FOV;
+
+            ctx.arc(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY)),
+              realsize,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
           }
           ctx.globalAlpha = 1;
-        }
+        } 
       });
       for (let playerId__ in players) {
         if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
@@ -2281,6 +2339,45 @@
               ctx.closePath(); // Close the path
               ctx.stroke(); // Draw the border
               ctx.restore();
+            } else if (tankdatacannondata["type"] === "AutoBulletCannon") {
+              ctx.save();
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+              let angle = player.cannon_angle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+              ctx.beginPath();
+              ctx.arc(
+                playerX - cavansX + cannon_widthFOV / 5,
+                playerY - cavansY,
+                (player.size * FOV * 40) / 10,
+                0,
+                2 * Math.PI,
+                false
+              );
+              ctx.fill();
+              ctx.lineWidth = 5;
+              ctx.strokeStyle = "lightgrey";
+              ctx.stroke();
+              ctx.closePath();
+
+              let basex =
+                -cannon_widthFOV / 2 +
+                cannon_heightFOV +
+                tankdatacannondata["offSet-x"] -
+                player.cannonW[i];
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+              ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
+
+              // Add a border to the cannon
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV); // Draw the border
+              // Restore the previous transformation matrix
+              ctx.restore();
             }
           }
 
@@ -2345,9 +2442,9 @@
                 cannonangle = cannonA.angle;
               }
             });
-            if (tankdatacannondata["type"] === "autoCannon" || tankdatacannondata["type"] === "SwivelAutoCannon") {
+            if (tankdatacannondata["type"] === "autoCannon") {
               ctx.save();
-              var [x,y] = rotatePointAroundPlayer()
+              var [x, y] = rotatePointAroundPlayer();
               ctx.translate(playerX - cavansX, playerY - cavansY);
               let angle = cannonangle;
 
@@ -2365,6 +2462,66 @@
                 cannon_heightFOV +
                 offSet_x -
                 player.cannonW[i];
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+              ctx.beginPath();
+              ctx.fillRect(
+                basex - 5,
+                basey - 2.5,
+                cannon_widthFOV + 10,
+                cannon_heightFOV + 5
+              );
+
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(
+                basex - 5,
+                basey - 2.5,
+                cannon_widthFOV + 10,
+                cannon_heightFOV + 5
+              ); // Draw the border
+              // Restore the previous transformation matrix
+              ctx.rotate(-(angle + angle_offset));
+              ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
+
+              ctx.fill();
+              ctx.stroke();
+              ctx.closePath();
+              ctx.restore();
+            }
+            if (tankdatacannondata["type"] === "SwivelAutoCannon") {
+              ctx.save();
+              let cannonangle;
+              autocannons.forEach((cannonA) => {
+                if (cannonA.playerid === player.id && cannonA.autoindex === i) {
+                  cannonangle = cannonA.angle;
+                }
+              });
+              var offSet_x = tankdatacannondata["offSet-x"];
+              if (tankdatacannondata["offSet-x"] === "playerX") {
+                offSet_x = playerSize * 40 * FOV;
+              }
+              if (tankdatacannondata["offSet-x-multpliyer"]) {
+                offSet_x *= -1;
+              }
+              let angle0 = player.cannon_angle;
+              var [x, y] = rotatePointAroundPlayer(
+                offSet_x,
+                0,
+                angle0 * (180 / Math.PI)
+              );
+
+              ctx.translate(canW / 2 + x, y + canH / 2);
+
+              let angle = cannonangle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+
+              let basex =
+                -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
               let basey =
                 -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
 
@@ -2458,6 +2615,7 @@
             cannon_heightFOV +
             tankdatacannondata["offSet-x"] -
             cannonWidth[i];
+
           let basey = -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
           ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
           // Add a border to the cannon
@@ -2587,7 +2745,7 @@
           });
           var offSet_x = tankdatacannondata["offSet-x"];
           if (tankdatacannondata["offSet-x"] === "playerX") {
-            offSet_x = playerSize* 40 * FOV;
+            offSet_x = playerSize * 40 * FOV;
           }
           if (tankdatacannondata["offSet-x-multpliyer"]) {
             offSet_x *= -1;
@@ -2596,16 +2754,19 @@
             Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
             Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
           );
-          var [x,y] = rotatePointAroundPlayer(offSet_x, 0, angle0 * (180/Math.PI))
-          
-          ctx.translate((canW / 2)+x,y+canH / 2);
-          
+          var [x, y] = rotatePointAroundPlayer(
+            offSet_x,
+            0,
+            angle0 * (180 / Math.PI)
+          );
+
+          ctx.translate(canW / 2 + x, y + canH / 2);
+
           let angle = cannonangle;
 
           let angle_offset = tankdatacannondata["offset-angle"];
           ctx.rotate(angle + angle_offset);
           // Draw the square
-
 
           let basex =
             -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
@@ -2632,6 +2793,41 @@
           ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
 
           ctx.fill();
+          ctx.stroke();
+          ctx.closePath();
+          ctx.restore();
+        } else if (tankdatacannondata["type"] === "AutoBulletCannon") {
+          ctx.save();
+          // Translate to the center of the square
+          ctx.translate(canW / 2, canH / 2);
+          let angle_offset = tankdatacannondata["offset-angle"];
+          ctx.rotate(angle + angle_offset);
+          // Draw the square
+
+          let basex =
+            -cannon_widthFOV / 2 +
+            cannon_heightFOV +
+            tankdatacannondata["offSet-x"] -
+            cannonWidth[i];
+          let basey = -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+          ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
+          // Add a border to the cannon
+          ctx.strokeStyle = "lightgrey"; // Set border color
+          ctx.lineWidth = 3; // Set border width
+          ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV); // Draw the border
+          // Restore the previous transformation matrix
+          ctx.beginPath();
+          ctx.arc(
+            basex+40 + cannon_widthFOV / 4,
+            basey+cannon_heightFOV/2,
+            (playerSize * FOV * 40) / 4,
+            0,
+            2 * Math.PI,
+            false
+          );
+          ctx.fill();
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = "lightgrey";
           ctx.stroke();
           ctx.closePath();
           ctx.restore();
@@ -2735,7 +2931,7 @@
           ctx.save();
           var offSet_x = tankdatacannondata["offSet-x"];
           if (tankdatacannondata["offSet-x"] === "playerX") {
-            offSet_x = playerSize* 40 * FOV;
+            offSet_x = playerSize * 40 * FOV;
           }
           if (tankdatacannondata["offSet-x-multpliyer"]) {
             offSet_x *= -1;
@@ -2744,16 +2940,19 @@
             Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
             Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
           );
-          var [x,y] = rotatePointAroundPlayer(offSet_x, 0, angle0 * (180/Math.PI))
-          
-          ctx.translate((canW / 2)+x,y+canH / 2);
-          
+          var [x, y] = rotatePointAroundPlayer(
+            offSet_x,
+            0,
+            angle0 * (180 / Math.PI)
+          );
+
+          ctx.translate(canW / 2 + x, y + canH / 2);
+
           let angle = cannonangle;
 
           let angle_offset = tankdatacannondata["offset-angle"];
           ctx.rotate(angle + angle_offset);
           // Draw the square
-
 
           let basex =
             -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
@@ -2961,6 +3160,9 @@
         username = "unknown";
         document.getElementById("start").style.display = "none";
         document.getElementById("game").style.display = "block";
+        document.addEventListener("contextmenu", (event) =>
+          event.preventDefault()
+        );
         ongame();
       }, 100);
     }
