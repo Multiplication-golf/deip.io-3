@@ -1868,7 +1868,7 @@ wss.on("connection", (socket) => {
         function auto_bullet() {
           let maxdistance = 5000;
           let fire_at = null;
-          let cannon = data.cannon;
+          let cannon = tankmeta[players[data.id].__type__]["cannons"][autoindex];
           for (const playerID in players) {
             let player = players[playerID];
             if (playerID !== bullet.id) {
@@ -1907,13 +1907,13 @@ wss.on("connection", (socket) => {
           let speedUP = 0;
           if (fire_at === null) return;
 
-          let cannon_life = cannon["life-time"] || 0;
           if (players[bullet.id].statsTree["Bullet Speed"] !== 1) {
             speedUP =
               players[bullet.id].statsTree["Bullet Speed"] * levelmultiplyer;
           }
+          let cannon_life = 0
 
-          let bullet_speed__ = data.bullet_speed * cannon["bulletSpeed"];
+          let bullet_speed__ = ((data.speed/1.3) * cannon["bulletSpeed"])*5;
           var bulletdistance =
             (bullet_speed__ + speedUP) * 100 * (bullet.size / 6);
           var __type = "basic";
@@ -1924,7 +1924,7 @@ wss.on("connection", (socket) => {
             fire_at.x - bullet.x // x difference
           );
 
-          let bullet_size_l = bullet.size * cannon["bulletSize"];
+          let bullet_size_l = (bullet.size * cannon["bulletSize"])/1.8;
 
           let randomNumber = generateRandomNumber(-0.2, 0.2);
 
@@ -1943,8 +1943,8 @@ wss.on("connection", (socket) => {
           let rotated_offset_y =
             (offSet_x + xxx) * Math.sin(angle_) +
             (cannon["offSet-y"] + yyy) * Math.cos(angle_);
-          let bullet_start_x = data.playerX + rotated_offset_x;
-          let bullet_start_y = data.playerY + rotated_offset_y;
+          let bullet_start_x = data.x + rotated_offset_x;
+          let bullet_start_y = data.y + rotated_offset_y;
           // lol
           let identdfire =
             (Date.now() + Math.random()) * Date.now() * 3 * Math.random();
@@ -1978,8 +1978,8 @@ wss.on("connection", (socket) => {
             y: bullet_start_y,
             lifespan: cannon_life,
             health: health,
-            xstart: data.playerX,
-            ystart: data.playerY,
+            xstart: data.x,
+            ystart: data.y,
             id: bullet.id,
             uniqueid: identdfire,
             Zlevel: 2,
@@ -1991,6 +1991,7 @@ wss.on("connection", (socket) => {
             bullet_intervals.forEach((intervals) => {
               if (intervals.id === bullet.uniqueid) {
                 canfire = intervals.canfire
+                console.log(intervals)
               }
             })
             if (!canfire) return
@@ -2003,7 +2004,7 @@ wss.on("connection", (socket) => {
               __reload__ *= levelmultiplyer;
             }
             auto_bullet();
-          }, 750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__);
+          }, (750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__)*2);
         }
         setTimeout(() => {
           __reload__ = 1;
@@ -2015,8 +2016,8 @@ wss.on("connection", (socket) => {
             __reload__ *= levelmultiplyer;
           }
           auto_bullet();
-        }, 750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__);
-        
+        }, (750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__)*2);
+        console.log(750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__)
         bullet_intervals.push({canfire:true,id:bullet.uniqueid})
       }
       emit("bulletUpdate", bullets); // Broadcast to all clients
@@ -2313,6 +2314,12 @@ setInterval(() => {
         return true;
       });
     }
+    bullet_intervals.forEach((__bullet_) => {
+      if (bullet.uniqueid === __bullet_.id) {
+        __bullet_.canfire = false
+        __bullet_.isdead = true // kill in the next tick
+      }
+    })
     return false;
   });
 
