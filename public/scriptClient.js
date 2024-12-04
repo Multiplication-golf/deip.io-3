@@ -276,17 +276,27 @@
       );
     };
     function levelUpgrader(tankdata) {
-      if (level === tankdata["upgradeLevel"]) {
-        var tankstiles = document.getElementById("tanktiles");
-        tankstiles.style.display = "block";
-        tankstiles.style.left = 0;
-        tankstiles.style.animation = "2s 1 move";
-        tankstiles.innerHTML = "";
-        var upgrade = tankdata["upgrades"];
+      var out = false
+      if (tankdata["upgrades"] == undefined ) return
+      for (let i = 0; i < Object.keys(tankdata["upgrades"]).length; i++) {
+        var KEY = Object.keys(tankdata["upgrades"])[i]
+        console.log(level,tankdata["upgrades"][KEY]["level"])
+        
+        if (level >= tankdata["upgrades"][KEY]["level"]-1) {
+          if (out === false) {
+            var tankstiles = document.getElementById("tanktiles");
+            tankstiles.style.display = "block";
+            tankstiles.style.left = 0;
+            tankstiles.style.animation = "2s 1 move";
+            tankstiles.innerHTML = "";
+            out = true;
+          }
+          
+          var upgrade = tankdata["upgrades"][KEY]
 
-        for (let i = 0; i < Object.keys(upgrade).length; i++) {
           var img__ = document.createElement("img");
-          var tileImg = Object.values(upgrade)[i];
+          var tileImg = upgrade.img;
+          console.log(upgrade,tileImg)
           tankstiles.appendChild(img__);
 
           img__.src = "tanktiles/" + tileImg + ".png";
@@ -295,8 +305,9 @@
           img__.addEventListener("click", function () {
             event.stopPropagation();
             tankstiles.style.display = "none";
-            __type__ = Object.keys(upgrade)[i];
-            players[playerId].type = __type__;
+            __type__ = Object.keys(tankdata["upgrades"])[i];
+            console.log(__type__)
+            players[playerId].__type__ = __type__;
             tankdata = tankmeta[__type__];
             var tankdatacannon__ = tankdata["cannons"];
             playerSize *= tankdata["size-m"];
@@ -468,14 +479,7 @@
         }
       }
     }
-    function decompressData(data) {
-      try {
-        const restored = JSON.parse(pako.inflate(data, { to: 'string' }));
-        return restored
-      } catch (err) {
-        console.error("Decompression or JSON Parsing failed:", err);
-      }
-    }
+    /*function decompressData(r){try{let e=JSON.parse(pako.inflate(r,{to:"string"}));return e}catch(t){console.error("Decompression or JSON Parsing failed:",t)}}*/
 
     function generateUniquePlayerId() {
       return "player-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
@@ -537,6 +541,7 @@
           MouseY: MouseY_,
           screenWidth: canvas.width,
           screenHeight: canvas.height,
+          visible: true,
           statsTree: {
             Health: 1,
             "Body Damage": 1,
@@ -886,8 +891,18 @@
             players[data.playerID].statecycle = data.statecycle;
           } else if (type === "playerCannonWidthUpdate") {
             players[data.id].cannonW = data.cannonW;
+          } else if (type === "playerCannonUpdatedInactive") {
+            MouseX_ = data.MouseX_;
+            MouseY_ = data.MouseY_;
           }
         };
+
+        document.addEventListener("visibilitychange", (event) => {
+          send("windowStateChange", {
+            vis: document.visibilityState,
+            id: playerId,
+          });
+        });
 
         const movePlayer = (dx, dy, last, i) => {
           movementTimeouts.shift();
@@ -1197,6 +1212,7 @@
               canFire = true;
             }
           } else if (keysPressed["c"]) {
+            send("browserunHidden", { id: playerId });
             autoRotating = !autoRotating;
           } else if (keysPressed["h"]) {
             __type__ = types[typeindex];
@@ -1762,6 +1778,7 @@
             autoengine();
           }, 750 * __tankdata__["reaload-m"] * __reload__);
         }
+
         setTimeout(() => {
           autoengine();
         }, 750 * __tankdata__["reaload-m"] * __reload__);
@@ -1789,6 +1806,7 @@
             playerID: playerId,
           });
         }, 50);
+
         setTimeout(() => {
           start = null;
           state = "normal";
@@ -1907,6 +1925,7 @@
         ctx.fillText(level, canvas.width / 2, canvas.height - 60);
       }
     }
+
     function rotatePointAroundPlayer(
       cannonOffsetX,
       cannonOffsetY,
@@ -2064,6 +2083,7 @@
           ctx.globalAlpha = 1;
         }
       });
+      let unZbullets = [];
       bullets.forEach((bullet) => {
         var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
         var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
@@ -2073,7 +2093,49 @@
           realy - cavansY > 0 &&
           realy < canvas.height + cavansY
         ) {
-          if (bullet.Zlevel && bullet.id === playerId) {
+          if (bullet.Zlevel !== 3) {
+            unZbullets.push(bullet);
+            return;
+          }
+          if (bullet.transparency) {
+            ctx.globalAlpha = bullet.transparency;
+          }
+          ctx.beginPath();
+
+          if (bullet.type === "basic") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let realsize = bullet.size * FOV;
+
+            ctx.arc(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY)),
+              realsize,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+          }
+        }
+      });
+      unZbullets.forEach((bullet) => {
+        var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
+        var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
+        if (
+          realx > 0 + cavansX &&
+          realx < canvas.width + cavansX &&
+          realy - cavansY > 0 &&
+          realy < canvas.height + cavansY
+        ) {
+          if (bullet.Zlevel === 2 && bullet.id === playerId) {
             zlevelbullets.push(bullet);
             return;
           }

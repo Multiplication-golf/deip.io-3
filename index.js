@@ -9,8 +9,6 @@ const crypto = require("crypto");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-
-
 //TODO: fix upgrade for multi-level upgrade tank choice//
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -146,19 +144,19 @@ const tankmeta = {
     fov: 1,
     "BodyDamage-m": 1,
     "reaload-m": 1,
-    upgradeLevel: 15,
+
     upgrades: {
-      twin: 1,
-      flank: 2,
-      sniper: 3,
-      "mechiane gun": 4,
-      spreader: 5,
-      rammer: 6,
-      traper: 7,
-      directer: 8,
-      autobasic: 9,
-      autoduo: 10,
-      autoShooter: 11,
+      twin: { img: 1, level: 15 },
+      flank: { img: 2, level: 15 },
+      sniper: { img: 3, level: 15 },
+      "mechiane gun": { img: 4, level: 15 },
+      spreader: { img: 5, level: 15 },
+      rammer: { img: 6, level: 15 },
+      traper: { img: 7, level: 15 },
+      directer: { img: 8, level: 15 },
+      autobasic: { img: 9, level: 15 },
+      autoduo: { img: 10, level: 15 },
+      autoShooter: { img: 11, level: 30 },
     },
     cannons: [
       {
@@ -265,6 +263,7 @@ const tankmeta = {
     "BodyDamage-m": 1,
     "regen-m": 1,
     "reaload-m": 1.5,
+    upgrades: {},
     cannons: [
       {
         type: "basicCannon",
@@ -571,6 +570,7 @@ const tankmeta = {
 };
 
 var levelmultiplyer = 1.2;
+
 function getRandomInt(min, max) {
   const minCeiled = Math.ceil(min);
   const maxFloored = Math.floor(max);
@@ -945,7 +945,19 @@ function rearrange() {
   leader_board.shown.reverse(); // huh
 }
 
-
+function confirmplayerradia(_x, _y) {
+  let trueorfalse = true;
+  for (const player in players) {
+    var player_ = players[player];
+    if (
+      between(player_.x, _x - (player_.size + 50), _x + (player_.size + 50)) ||
+      between(player_.y, _y - (player_.size + 50), _y + (player_.size + 50))
+    ) {
+      trueorfalse = false;
+    }
+  }
+  return trueorfalse;
+}
 
 var angle = 0;
 
@@ -1014,6 +1026,12 @@ wss.on("connection", (socket) => {
     if (type === "newPlayer") {
       players[data.id] = data;
       connection.playerId = data.id; // bind call
+      connections.forEach((con) => {
+        if (con.socket === connection.socket) {
+          con.playerId = data.id;
+          console.log("con.playerId", con.playerId);
+        }
+      });
       console.log(players);
       emit("playerJoined", data); // Emit playerJoined event to notify all clients
       emit("FoodUpdate", food_squares); // Emit FoodUpdate event to update food squares
@@ -1070,7 +1088,7 @@ wss.on("connection", (socket) => {
     if (type === "browserHidden") {
       var autoAngle = data.autoAngle;
       var turnhide = setInterval(() => {
-        autoAngle += 0.2/10;
+        autoAngle += 0.2 / 10;
         if (359.8 <= autoAngle) {
           // yes point 8 I can do math kids
           autoAngle = 0;
@@ -1094,12 +1112,17 @@ wss.on("connection", (socket) => {
         players[data.id].MouseX = MouseX_;
         players[data.id].MouseY = MouseY_;
         var data_ = {
-              id: data.id,
-              cannon_angle: autoAngle,
-              MouseX: MouseX_,
-              MouseY: MouseY_,
-            }
-        broadcast("playerCannonUpdated", data_, socket);
+          id: data.id,
+          cannon_angle: autoAngle,
+          MouseX: MouseX_,
+          MouseY: MouseY_,
+        };
+        smartbroadcast("playerCannonUpdated", data_, socket);
+
+        emit("playerCannonUpdatedInactive", {
+          MouseX_: MouseX_,
+          MouseY_: MouseY_,
+        });
         data.autoIntevals.forEach((Inteval) => {
           autocannons.forEach((cannon) => {
             if (cannon.CannonID === Inteval.autoID) {
@@ -1124,16 +1147,26 @@ wss.on("connection", (socket) => {
         });
       }, 75);
       hidden_broswers.push({ interval: turnhide, id: data.id });
-      return
+      return;
     }
+
     if (type === "browserunHidden") {
       hidden_broswers.filter((interval) => {
         if (data.id === interval.id) {
-          clearInterval(interval.interval)
-          return false
+          clearInterval(interval.interval);
+          return false;
         }
-        return true 
-      })
+        return true;
+      });
+      return;
+    }
+
+    if (type === "windowStateChange") {
+      if (players[data.id] === undefined) return;
+      var truefalse = data.vis === "visible";
+      players[data.id].visible = truefalse;
+      console.log(players[data.id].visible);
+      return;
     }
 
     if (type === "autoCannonADD") {
@@ -1239,7 +1272,7 @@ wss.on("connection", (socket) => {
         });
       }
       return;
-    } //
+    }
 
     if (type === "auto-x-update") {
       autocannons.forEach((cannon) => {
@@ -1480,6 +1513,7 @@ wss.on("connection", (socket) => {
       if (hasfoodchanged) {
         emit("FoodUpdate", food_squares);
       }
+      emit("playerMovedScreen");
       broadcast("playerMoved", data, socket);
       return;
     }
@@ -1720,7 +1754,7 @@ wss.on("connection", (socket) => {
       players[data.id].cannon_angle = data.cannon_angle;
       players[data.id].MouseX = data.MouseX;
       players[data.id].MouseY = data.MouseY;
-      broadcast("playerCannonUpdated", data, socket);
+      smartbroadcast("playerCannonUpdated", data, socket);
       return;
     }
 
@@ -2060,7 +2094,7 @@ wss.on("connection", (socket) => {
             ystart: data.y,
             id: bullet.id,
             uniqueid: identdfire,
-            Zlevel: 2,
+            Zlevel: 3,
           };
 
           bullets.push(bullet____);
@@ -2098,7 +2132,7 @@ wss.on("connection", (socket) => {
             i < players[data.id].statsTree["Bullet Reload"];
             ++i
           ) {
-            __reload__ *= levelmultiplyer;
+            __reload__ /= levelmultiplyer;
           }
           auto_bullet();
         }, 750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__ * 2);
@@ -2166,8 +2200,6 @@ wss.on("connection", (socket) => {
     emit("playerLeft", { playerID: connection.playerId });
   });
 });
-
-var tempToPush = [];
 
 setInterval(() => {
   // Filter and update bullets
@@ -2417,7 +2449,7 @@ setInterval(() => {
         tankmeta[players[cannon.playerid].__type__]["cannons"];
     } else if (cannon._type_ === "bulletAuto") {
       let par_ = findBullet(cannon.playerid);
-      if (par_ == null) return;
+      if (par_ == null || players[par_.id] === undefined) return;
       var tankdatacannon__ = tankmeta[players[par_.id].__type__]["cannons"];
     }
 
@@ -2585,7 +2617,7 @@ setInterval(() => {
           });
         }
       } else {
-        moveCannonAngle();
+        moveCannonAngle(cannon);
       }
     }
     if (fire_at__ !== undefined && fire_at__ !== null) {
@@ -2620,7 +2652,7 @@ setInterval(() => {
   // Emit updated bullet positions
   emit("bulletUpdate", bullets);
 
-  tempToPush = [];
+  let tempToPush = [];
   food_squares = food_squares.filter((item, index) => {
     item.x = item.centerX + item.scalarX * Math.cos(angle);
     item.y = item.centerY + item.scalarY * Math.sin(angle);
@@ -2663,6 +2695,204 @@ setInterval(() => {
     let return_ = true;
     if (item.isdead) {
       item.transparency = 1 - (Date.now() - item.deathtime) / 150;
+    }
+    for (const playerId in players) {
+      var player = players[playerId];
+      const distanceX = Math.abs(player.x - item.x);
+      const distanceY = Math.abs(player.y - item.y);
+      // for speed
+      let size__ = player.size * 80 + item.size * 1.5;
+      if (!(distanceX < size__ && distanceY < size__)) return true;
+
+      var collisionCheck = isPlayerCollidingWithPolygon(player, item.vertices);
+
+      if (collisionCheck[0]) {
+        let damageplayer = item.body_damage;
+        let damageother = player["bodyDamage"];
+        player.health -= damageplayer;
+
+        if (player.health < 0) {
+          emit("playerDied", {
+            playerID: player.id,
+            rewarder: null,
+            reward: null,
+          });
+          players = Object.entries(players).reduce(
+            (newPlayers, [key, value]) => {
+              if (key !== player.id) {
+                newPlayers[key] = value;
+              }
+              return newPlayers;
+            },
+            {}
+          );
+        }
+
+        emit("bouceBack", { response: collisionCheck, playerID: player.id });
+        if (0 > item.health) {
+          player.score += item.score_add;
+          emit("playerScore", {
+            bulletId: player.id,
+            socrepluse: item.score_add,
+          });
+          leader_board.hidden.forEach((__index__) => {
+            if (__index__.id === player.id) {
+              __index__.score += item.score_add;
+              let isshown = false;
+              leader_board.shown.forEach(() => {
+                if (__index__.id === player.id) {
+                  isshown = true;
+                }
+              });
+              if (leader_board.shown[10]) {
+                if (leader_board.shown[10].score < __index__.score) {
+                  leader_board.shown[10] = __index__;
+                }
+              } else if (!leader_board.shown[10] && !isshown) {
+                leader_board.shown.push(__index__);
+              }
+            }
+          });
+          leader_board.shown.forEach((__index__) => {
+            if (__index__.id === player.id) {
+              __index__.score += item.score_add;
+            }
+          });
+          rearrange();
+          emit("boardUpdate", {
+            leader_board: leader_board.shown,
+          });
+
+          cors_taken.filter((cor) => {
+            if (cor.id === item.randomID) {
+              return false;
+            } else {
+              return true;
+            }
+          });
+
+          let respawnrai = item["respawn-raidis"] || 4500;
+          let x, y;
+          do {
+            x = getRandomInt(-respawnrai, respawnrai);
+            y = getRandomInt(-respawnrai, respawnrai);
+          } while (
+            cors_taken.some(
+              (c) =>
+                between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)
+            )
+          );
+          let randID = Math.random() * index * Date.now();
+
+          cors_taken.push({ x, y, id: randID });
+
+          const valueOp = getRandomInt(1, 15);
+          var type = "";
+          var color = "";
+          var health_max = "";
+          var score_add = 0;
+          var body_damage = 0;
+          if (!item["respawn-raidis"]) {
+            switch (true) {
+              case between(valueOp, 1, 10): // Adjusted to 1-6 for square
+                type = "square";
+                color = "Gold";
+                health_max = 10;
+                score_add = 10;
+                body_damage = 2;
+                break;
+              case between(valueOp, 11, 13): // Adjusted to 7-8 for triangle
+                type = "triangle";
+                color = "Red";
+                health_max = 15;
+                score_add = 15;
+                body_damage = 3.5;
+                break;
+              case between(valueOp, 14, 15): // Adjusted to 9-10 for pentagon
+                type = "pentagon";
+                color = "#579bfa";
+                health_max = 100;
+                score_add = 120;
+                body_damage = 4;
+                break;
+            }
+          } else {
+            const valueOp2 = getRandomInt(1, 10);
+
+            type = "pentagon";
+            color = "#579bfa";
+            health_max = 100;
+            score_add = 120;
+            body_damage = 4;
+            if (valueOp2 === 5) {
+              var size = 150;
+              score_add = 3000;
+              health_max = 1000;
+              body_damage = 9;
+            } else {
+              var size = 50;
+            }
+          }
+          let fooditem = {
+            type: type,
+            health: health_max,
+            maxhealth: health_max,
+            size: size,
+            angle: getRandomInt(0, 180),
+            x: x,
+            y: y,
+            centerX: x,
+            centerY: y,
+            body_damage: body_damage,
+            scalarX: getRandomInt(-100, 100),
+            scalarY: getRandomInt(-100, 100),
+            vertices: null,
+            color: color,
+            score_add: score_add,
+            randomID: randID,
+          };
+          if (type === "square") {
+            const rawvertices = calculateSquareVertices(
+              fooditem.x,
+              fooditem.y,
+              fooditem.size,
+              fooditem.angle
+            );
+            fooditem.vertices = rawvertices;
+          }
+          if (type === "triangle") {
+            const rawvertices = calculateTriangleVertices(
+              fooditem.x,
+              fooditem.y,
+              fooditem.size,
+              fooditem.angle
+            );
+            fooditem.vertices = rawvertices;
+          }
+          if (type === "pentagon") {
+            const rawvertices = calculateRotatedPentagonVertices(
+              fooditem.x,
+              fooditem.y,
+              fooditem.size,
+              fooditem.angle
+            );
+            fooditem.vertices = rawvertices;
+          }
+
+          food_squares.push(fooditem);
+          emit("bulletUpdate", bullets);
+
+          return false;
+        } else {
+          item.health -= damageother;
+        }
+
+        emit("shapeDamage", {
+          PlayerId: player.id,
+          playerDamage: damageplayer,
+          shapes: food_squares,
+        });
+      }
     }
     bullets.forEach((bullet) => {
       let distance = MathHypotenuse(item.x - bullet.x, item.y - bullet.y);
@@ -2740,7 +2970,9 @@ setInterval(() => {
           } while (
             cors_taken.some(
               (c) =>
-                between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)
+                between(x, c.x - 50, c.x + 50) &&
+                between(y, c.y - 50, c.y + 50) &&
+                confirmplayerradia(x, y)
             )
           );
 
@@ -2798,7 +3030,7 @@ setInterval(() => {
               type: type,
               health: health_max,
               maxhealth: health_max,
-              size: 50,
+              size: size,
               angle: getRandomInt(0, 180),
               x: x,
               y: y,
@@ -2862,8 +3094,10 @@ setInterval(() => {
             );
             fooditem__XX.vertices = rawvertices;
           }
-          console.log("befor", food_squares.length);
-          tempToPush.push(fooditem__XX);
+          if (!item.isdead) {
+            tempToPush.push(fooditem__XX);
+          }
+
           bullet.bullet_distance -=
             (bullet.size * 40) / bullet.bullet_pentration +
             bullet.size * 3 +
@@ -2907,7 +3141,7 @@ setInterval(() => {
         }
       }
     });
-    if (return_ === true && !(item.isdead === true)) {
+    if (return_ === true && !item.isdead) {
       return return_;
     }
     if (item.isdead) {
@@ -2923,7 +3157,6 @@ setInterval(() => {
     food_squares.push(item);
   });
 
-
   emit("FoodUpdate", food_squares);
 }, UPDATE_INTERVAL);
 
@@ -2937,8 +3170,16 @@ function emit(type, data) {
 function broadcast(type, data, senderConn) {
   const message = JSON.stringify({ type, data });
   connections.forEach((conn) => {
-    // Exclude the sender connection if provided
     if (conn.socket !== senderConn) {
+      conn.socket.send(message);
+    }
+  });
+}
+function smartbroadcast(type, data, senderConn) {
+  const message = JSON.stringify({ type, data });
+  connections.forEach((conn) => {
+    if (conn.playerId == null || players[conn.playerId] == undefined) return;
+    if (conn.socket !== senderConn && players[conn.playerId].visible) {
       conn.socket.send(message);
     }
   });
