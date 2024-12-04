@@ -150,8 +150,8 @@
     var score = 0;
     var leader_board = [];
     var firingIntervals = {};
-    var barWidth = 600;
-    var barHeight = 30;
+    var barWidth = 0.3125 * canvas.width;
+    var barHeight = 0.02909796314 * canvas.height;
     var borderRadius = 10;
     var playerReheal = 1;
     var maxhealth = 100;
@@ -276,17 +276,27 @@
       );
     };
     function levelUpgrader(tankdata) {
-      if (level === tankdata["upgradeLevel"]) {
-        var tankstiles = document.getElementById("tanktiles");
-        tankstiles.style.display = "block";
-        tankstiles.style.left = 0;
-        tankstiles.style.animation = "2s 1 move";
-        tankstiles.innerHTML = "";
-        var upgrade = tankdata["upgrades"];
+      var out = false
+      if (tankdata["upgrades"] == undefined ) return
+      for (let i = 0; i < Object.keys(tankdata["upgrades"]).length; i++) {
+        var KEY = Object.keys(tankdata["upgrades"])[i]
+        console.log(level,tankdata["upgrades"][KEY]["level"])
+        
+        if (level >= tankdata["upgrades"][KEY]["level"]-1) {
+          if (out === false) {
+            var tankstiles = document.getElementById("tanktiles");
+            tankstiles.style.display = "block";
+            tankstiles.style.left = 0;
+            tankstiles.style.animation = "2s 1 move";
+            tankstiles.innerHTML = "";
+            out = true;
+          }
+          
+          var upgrade = tankdata["upgrades"][KEY]
 
-        for (let i = 0; i < Object.keys(upgrade).length; i++) {
           var img__ = document.createElement("img");
-          var tileImg = Object.values(upgrade)[i];
+          var tileImg = upgrade.img;
+          console.log(upgrade,tileImg)
           tankstiles.appendChild(img__);
 
           img__.src = "tanktiles/" + tileImg + ".png";
@@ -295,8 +305,9 @@
           img__.addEventListener("click", function () {
             event.stopPropagation();
             tankstiles.style.display = "none";
-            __type__ = Object.keys(upgrade)[i];
-            players[playerId].type = __type__;
+            __type__ = Object.keys(tankdata["upgrades"])[i];
+            console.log(__type__)
+            players[playerId].__type__ = __type__;
             tankdata = tankmeta[__type__];
             var tankdatacannon__ = tankdata["cannons"];
             playerSize *= tankdata["size-m"];
@@ -453,7 +464,6 @@
                         });
                       }
                     }
-                    console.log("fire");
                     setTimeout(() => {
                       cannonINT();
                     }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
@@ -461,10 +471,6 @@
                   setTimeout(() => {
                     cannonINT();
                   }, 750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__);
-                  console.log(
-                    "fire",
-                    750 * tankdata["reaload-m"] * cannon["reloadM"] * __reload__
-                  );
                   autoIntevals.push({ cannonINT: cannonINT, autoID: autoID });
                 }
               }
@@ -473,6 +479,7 @@
         }
       }
     }
+    /*function decompressData(r){try{let e=JSON.parse(pako.inflate(r,{to:"string"}));return e}catch(t){console.error("Decompression or JSON Parsing failed:",t)}}*/
 
     function generateUniquePlayerId() {
       return "player-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
@@ -481,7 +488,6 @@
       let tonextlevel = levels[level] - levels[level - 1];
       progress =
         (score - levels[level - 1]) / (levels[level] - levels[level - 1]);
-      console.log(levels[level], progress);
       if (score / levels[level] >= 1) {
         upgradePoints += 1;
         // Add transition property
@@ -489,14 +495,12 @@
         let tankdata = tankmeta[__type__];
         levelUpgrader(tankdata);
         level += 1;
-        console.log(level);
         let tonextlevel = levels[level] - levels[level - 1];
         progress =
           (score - levels[level - 1]) / (levels[level] - levels[level - 1]);
         playerSize += playerSize * 0.005;
         while (score / levels[level] >= 1) {
           level += 1;
-          console.log(level);
           upgradePoints += 1;
           playerSize += playerSize * 0.005;
           progress =
@@ -537,6 +541,7 @@
           MouseY: MouseY_,
           screenWidth: canvas.width,
           screenHeight: canvas.height,
+          visible: true,
           statsTree: {
             Health: 1,
             "Body Damage": 1,
@@ -573,7 +578,6 @@
             draw();
           } else if (type === "Levels") {
             levels = data;
-            console.log(levels);
           } else if (type === "handshake") {
             HANDSHAKE = data;
           } else if (type === "updaterHeal") {
@@ -887,8 +891,18 @@
             players[data.playerID].statecycle = data.statecycle;
           } else if (type === "playerCannonWidthUpdate") {
             players[data.id].cannonW = data.cannonW;
+          } else if (type === "playerCannonUpdatedInactive") {
+            MouseX_ = data.MouseX_;
+            MouseY_ = data.MouseY_;
           }
         };
+
+        document.addEventListener("visibilitychange", (event) => {
+          send("windowStateChange", {
+            vis: document.visibilityState,
+            id: playerId,
+          });
+        });
 
         const movePlayer = (dx, dy, last, i) => {
           movementTimeouts.shift();
@@ -1076,7 +1090,7 @@
         document.addEventListener("keydown", (event) => {
           keysPressed[event.key] = true;
           if (keysPressed["]"]) {
-            players[playerId].score += 25;
+            players[playerId].score += 50;
             score = players[playerId].score;
             levelHANDLER();
           } else if (
@@ -1198,6 +1212,7 @@
               canFire = true;
             }
           } else if (keysPressed["c"]) {
+            send("browserunHidden", { id: playerId });
             autoRotating = !autoRotating;
           } else if (keysPressed["h"]) {
             __type__ = types[typeindex];
@@ -1313,34 +1328,55 @@
             MouseY: MouseY_,
           });
         });
+        let hidden = false;
         let pi = Math.pi;
         setInterval(() => {
           if (!autoRotating && !lockautoRotating) return;
+          if (!document.hidden) {
+            // do what you need
 
-          autoAngle += 1;
-          if (359.8 <= autoAngle) {
-            // yes point 8 I can do math kids
-            autoAngle = 0;
+            autoAngle += 1;
+            if (359.8 <= autoAngle) {
+              // yes point 8 I can do math kids
+              autoAngle = 0;
+            }
+            let radians = (Math.PI / 180) * autoAngle;
+            MouseX_ =
+              50 * Math.cos(radians) + (canvas.width / 2 - playerSize * FOV);
+            MouseY_ =
+              50 * Math.sin(radians) + (canvas.height / 2 - playerSize * FOV);
+            let angle = Math.atan2(
+              MouseY_ - (canvas.height / 2 - playerSize * FOV),
+              MouseX_ - (canvas.width / 2 - playerSize * FOV)
+            );
+            send("playerCannonMoved", {
+              id: playerId,
+              cannon_angle: autoAngle,
+              MouseX: MouseX_,
+              MouseY: MouseY_,
+            });
+            autoIntevals.forEach((Inteval) => {
+              send("auto-x-update", {
+                autoID: Inteval.autoID,
+                angle: autoAngle,
+              });
+            });
+            if (hidden) {
+              send("browserunHidden", { id: playerId });
+              hidden = false;
+            }
+          } else if (document.hidden && !hidden) {
+            send("browserHidden", {
+              autoAngle: autoAngle,
+              id: playerId,
+              autoIntevals: autoIntevals,
+              playerSize: playerSize,
+              FOV: FOV,
+              canvaswidth: canvas.width,
+              canvasheight: canvas.height,
+            });
+            hidden = true;
           }
-          let radians = (Math.PI / 180) * autoAngle;
-          MouseX_ =
-            50 * Math.cos(radians) + (canvas.width / 2 - playerSize * FOV);
-          MouseY_ =
-            50 * Math.sin(radians) + (canvas.height / 2 - playerSize * FOV);
-          let angle = Math.atan2(
-            MouseY_ - (canvas.height / 2 - playerSize * FOV),
-            MouseX_ - (canvas.width / 2 - playerSize * FOV)
-          );
-          send("playerCannonMoved", {
-            id: playerId,
-            cannon_angle: autoAngle,
-            MouseX: MouseX_,
-            MouseY: MouseY_,
-          });
-          autoIntevals.forEach((Inteval) => {
-            console.log(Inteval.autoID);
-            send("auto-x-update", { autoID: Inteval.autoID, angle: autoAngle });
-          });
         }, 75);
 
         function generateRandomNumber(min, max) {
@@ -1506,7 +1542,6 @@
                 uniqueid: identdfire,
               };
 
-              console.log(bullet);
               send("bulletFired", bullet);
             }, cannon.delay * 1000);
             if (!(cannonFireData[i] || dronetanks.includes(__type__))) {
@@ -1570,6 +1605,10 @@
                       0
                     );
                     vertices = rawvertices;
+                  } else if (cannon["type"] === "AutoBulletCannon") {
+                    var xxx = cannon["cannon-width"] - bullet_size_l * 1.5;
+                    var yyy = cannon["cannon-height"] - bullet_size_l * 2;
+                    var angle_ = angle + cannon["offset-angle"];
                   } else {
                     var xxx = cannon["cannon-width-top"] - bullet_size_l * 1.5;
                     var yyy =
@@ -1662,6 +1701,11 @@
                       0
                     );
                     vertices = rawvertices;
+                  } else if (cannon["type"] === "AutoBulletCannon") {
+                    var bulletdistance =
+                      bullet_speed__ * 105 * (bullet_size / 6);
+                    var type = "AutoBullet";
+                    var health = 8;
                   }
 
                   let cannon_life = cannon["life-time"] || 0;
@@ -1734,6 +1778,7 @@
             autoengine();
           }, 750 * __tankdata__["reaload-m"] * __reload__);
         }
+
         setTimeout(() => {
           autoengine();
         }, 750 * __tankdata__["reaload-m"] * __reload__);
@@ -1761,6 +1806,7 @@
             playerID: playerId,
           });
         }, 50);
+
         setTimeout(() => {
           start = null;
           state = "normal";
@@ -1879,6 +1925,7 @@
         ctx.fillText(level, canvas.width / 2, canvas.height - 60);
       }
     }
+
     function rotatePointAroundPlayer(
       cannonOffsetX,
       cannonOffsetY,
@@ -1904,10 +1951,10 @@
         var realx = item.x - item.size * (FOV - 1);
         var realy = item.y - item.size * (FOV - 1);
         if (
-          realx > 0 + cavansX &&
-          realx < canvas.width + cavansX &&
-          realy - cavansY > 0 &&
-          realy < canvas.height + cavansY &&
+          realx + item.size > 0 + cavansX &&
+          realx < canvas.width + cavansX + item.size &&
+          realy - cavansY > 0 - item.size &&
+          realy - item.size < canvas.height + cavansY &&
           item.health > 0
         ) {
           ctx.save();
@@ -2036,6 +2083,7 @@
           ctx.globalAlpha = 1;
         }
       });
+      let unZbullets = [];
       bullets.forEach((bullet) => {
         var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
         var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
@@ -2045,7 +2093,49 @@
           realy - cavansY > 0 &&
           realy < canvas.height + cavansY
         ) {
-          if (bullet.Zlevel && bullet.id === playerId) {
+          if (bullet.Zlevel !== 3) {
+            unZbullets.push(bullet);
+            return;
+          }
+          if (bullet.transparency) {
+            ctx.globalAlpha = bullet.transparency;
+          }
+          ctx.beginPath();
+
+          if (bullet.type === "basic") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let realsize = bullet.size * FOV;
+
+            ctx.arc(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY)),
+              realsize,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+          }
+        }
+      });
+      unZbullets.forEach((bullet) => {
+        var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
+        var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
+        if (
+          realx > 0 + cavansX &&
+          realx < canvas.width + cavansX &&
+          realy - cavansY > 0 &&
+          realy < canvas.height + cavansY
+        ) {
+          if (bullet.Zlevel === 2 && bullet.id === playerId) {
             zlevelbullets.push(bullet);
             return;
           }
@@ -2153,8 +2243,6 @@
 
             ctx.fill();
             ctx.stroke();
-
-            ctx.restore();
           } else if (bullet.type === "AutoBullet") {
             if (bullet.id === playerId) {
               ctx.fillStyle = "blue";
@@ -2176,9 +2264,52 @@
             ctx.lineWidth = 5;
             ctx.stroke();
             ctx.closePath();
+            let autoCAN_ = null;
+            autocannons.forEach((can) => {
+              if (can.playerid === bullet.uniqueid) {
+                autoCAN_ = can;
+              }
+            });
+            ctx.save();
+            ctx.translate(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY))
+            );
+            var cannon_widthFOV = bullet.size / 2;
+            var cannon_heightFOV = bullet.size / 2;
+            ctx.rotate(autoCAN_.angle);
+            let basex = -cannon_widthFOV / 2 + cannon_heightFOV;
+            let basey = -cannon_heightFOV / 2;
+
+            ctx.fillStyle = "#b3b3b3";
+            ctx.fillRect(
+              basex,
+              basey - 5,
+              cannon_widthFOV + 15,
+              cannon_heightFOV + 10
+            );
+
+            ctx.strokeStyle = "lightgrey"; // Set border color
+            ctx.lineWidth = 3; // Set border width
+            ctx.strokeRect(
+              basex,
+              basey - 5,
+              cannon_widthFOV + 15,
+              cannon_heightFOV + 10
+            ); // Draw the border
+            // Restore the previous transformation matrix
+            ctx.rotate(-autoCAN_.angle);
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.arc(0, 0, cannon_widthFOV / 2 + 7, 0, 2 * Math.PI, false);
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
           }
+          ctx.restore();
           ctx.globalAlpha = 1;
-        } 
+        }
       });
       for (let playerId__ in players) {
         if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
@@ -2818,8 +2949,8 @@
           // Restore the previous transformation matrix
           ctx.beginPath();
           ctx.arc(
-            basex+40 + cannon_widthFOV / 4,
-            basey+cannon_heightFOV/2,
+            basex + 40 + cannon_widthFOV / 4,
+            basey + cannon_heightFOV / 2,
             (playerSize * FOV * 40) / 4,
             0,
             2 * Math.PI,

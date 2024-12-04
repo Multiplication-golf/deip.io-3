@@ -9,7 +9,7 @@ const crypto = require("crypto");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-//TODO: fix upgrade for multi-level upgrade tank choice
+//TODO: fix upgrade for multi-level upgrade tank choice//
 
 app.use(express.static(path.join(__dirname, "public")));
 var port = process.env.PORT;
@@ -20,6 +20,7 @@ let cors_taken = [];
 let leader_board = { shown: [], hidden: [] };
 let autocannons = [];
 let bullet_intervals = [];
+let hidden_broswers = [];
 let ColorUpgrades = [
   "#f54242",
   "#fa8050",
@@ -143,19 +144,19 @@ const tankmeta = {
     fov: 1,
     "BodyDamage-m": 1,
     "reaload-m": 1,
-    upgradeLevel: 15,
+
     upgrades: {
-      twin: 1,
-      flank: 2,
-      sniper: 3,
-      "mechiane gun": 4,
-      spreader: 5,
-      rammer: 6,
-      traper: 7,
-      directer: 8,
-      autobasic: 9,
-      autoduo: 10,
-      autoShooter: 11,
+      twin: { img: 1, level: 15 },
+      flank: { img: 2, level: 15 },
+      sniper: { img: 3, level: 15 },
+      "mechiane gun": { img: 4, level: 15 },
+      spreader: { img: 5, level: 15 },
+      rammer: { img: 6, level: 15 },
+      traper: { img: 7, level: 15 },
+      directer: { img: 8, level: 15 },
+      autobasic: { img: 9, level: 15 },
+      autoduo: { img: 10, level: 15 },
+      autoShooter: { img: 11, level: 30 },
     },
     cannons: [
       {
@@ -262,6 +263,7 @@ const tankmeta = {
     "BodyDamage-m": 1,
     "regen-m": 1,
     "reaload-m": 1.5,
+    upgrades: {},
     cannons: [
       {
         type: "basicCannon",
@@ -568,6 +570,7 @@ const tankmeta = {
 };
 
 var levelmultiplyer = 1.2;
+
 function getRandomInt(min, max) {
   const minCeiled = Math.ceil(min);
   const maxFloored = Math.floor(max);
@@ -927,6 +930,7 @@ for (let i = 0; i < getRandomInt(50, 75); i++) {
   food_squares.push(fooditem);
 }
 
+console.log(food_squares.length);
 function generateRandomNumber(min, max) {
   return Math.random() * (max - min) + min;
 }
@@ -939,6 +943,20 @@ function rearrange() {
     return a.score - b.score;
   });
   leader_board.shown.reverse(); // huh
+}
+
+function confirmplayerradia(_x, _y) {
+  let trueorfalse = true;
+  for (const player in players) {
+    var player_ = players[player];
+    if (
+      between(player_.x, _x - (player_.size + 50), _x + (player_.size + 50)) ||
+      between(player_.y, _y - (player_.size + 50), _y + (player_.size + 50))
+    ) {
+      trueorfalse = false;
+    }
+  }
+  return trueorfalse;
 }
 
 var angle = 0;
@@ -995,6 +1013,8 @@ function moveCannonAngle(cannon) {
   });
 }
 
+function checkforPlayer(x, y, range) {}
+
 wss.on("connection", (socket) => {
   let connection = { socket: socket, playerId: null };
   let handshaked = false;
@@ -1006,6 +1026,12 @@ wss.on("connection", (socket) => {
     if (type === "newPlayer") {
       players[data.id] = data;
       connection.playerId = data.id; // bind call
+      connections.forEach((con) => {
+        if (con.socket === connection.socket) {
+          con.playerId = data.id;
+          console.log("con.playerId", con.playerId);
+        }
+      });
       console.log(players);
       emit("playerJoined", data); // Emit playerJoined event to notify all clients
       emit("FoodUpdate", food_squares); // Emit FoodUpdate event to update food squares
@@ -1056,6 +1082,90 @@ wss.on("connection", (socket) => {
 
     if (type === "updatePlayer") {
       emit("playerUpdated", data); // Emit playerUpdated event if needed
+      return;
+    }
+
+    if (type === "browserHidden") {
+      var autoAngle = data.autoAngle;
+      var turnhide = setInterval(() => {
+        autoAngle += 0.2 / 10;
+        if (359.8 <= autoAngle) {
+          // yes point 8 I can do math kids
+          autoAngle = 0;
+        }
+        let radians = (Math.PI / 180) * autoAngle;
+        var MouseX_ =
+          50 * Math.cos(radians) +
+          (data.canvaswidth / 2 - data.playerSize * data.FOV);
+        var MouseY_ =
+          50 * Math.sin(radians) +
+          (data.canvasheight / 2 - data.playerSize * data.FOV);
+        let angle = Math.atan2(
+          MouseY_ - (data.canvasheight / 2 - data.playerSize * data.FOV),
+          MouseX_ - (data.canvaswidth / 2 - data.playerSize * data.FOV)
+        );
+        if (!players[data.id]) {
+          invaled_requests.push(data.id);
+          return;
+        }
+        players[data.id].cannon_angle = autoAngle;
+        players[data.id].MouseX = MouseX_;
+        players[data.id].MouseY = MouseY_;
+        var data_ = {
+          id: data.id,
+          cannon_angle: autoAngle,
+          MouseX: MouseX_,
+          MouseY: MouseY_,
+        };
+        smartbroadcast("playerCannonUpdated", data_, socket);
+
+        emit("playerCannonUpdatedInactive", {
+          MouseX_: MouseX_,
+          MouseY_: MouseY_,
+        });
+        data.autoIntevals.forEach((Inteval) => {
+          autocannons.forEach((cannon) => {
+            if (cannon.CannonID === Inteval.autoID) {
+              if (cannon._type_ === "SwivelAutoCannon") {
+                var tankdatacannondata =
+                  tankmeta[players[cannon.playerid].__type__].cannons[
+                    cannon.autoindex
+                  ];
+                var offSet_x = tankdatacannondata["offSet-x"];
+                if (tankdatacannondata["offSet-x"] === "playerX") {
+                  offSet_x = players[cannon.playerid].size * 40;
+                }
+                if (tankdatacannondata["offSet-x-multpliyer"]) {
+                  offSet_x *= -1;
+                }
+                var [X, Y] = rotatePointAroundPlayer(offSet_x, 0, data.angle);
+                cannon["x_"] = X;
+                cannon["y_"] = Y;
+              }
+            }
+          });
+        });
+      }, 75);
+      hidden_broswers.push({ interval: turnhide, id: data.id });
+      return;
+    }
+
+    if (type === "browserunHidden") {
+      hidden_broswers.filter((interval) => {
+        if (data.id === interval.id) {
+          clearInterval(interval.interval);
+          return false;
+        }
+        return true;
+      });
+      return;
+    }
+
+    if (type === "windowStateChange") {
+      if (players[data.id] === undefined) return;
+      var truefalse = data.vis === "visible";
+      players[data.id].visible = truefalse;
+      console.log(players[data.id].visible);
       return;
     }
 
@@ -1162,7 +1272,7 @@ wss.on("connection", (socket) => {
         });
       }
       return;
-    } //
+    }
 
     if (type === "auto-x-update") {
       autocannons.forEach((cannon) => {
@@ -1403,6 +1513,7 @@ wss.on("connection", (socket) => {
       if (hasfoodchanged) {
         emit("FoodUpdate", food_squares);
       }
+      emit("playerMovedScreen");
       broadcast("playerMoved", data, socket);
       return;
     }
@@ -1643,7 +1754,7 @@ wss.on("connection", (socket) => {
       players[data.id].cannon_angle = data.cannon_angle;
       players[data.id].MouseX = data.MouseX;
       players[data.id].MouseY = data.MouseY;
-      broadcast("playerCannonUpdated", data, socket);
+      smartbroadcast("playerCannonUpdated", data, socket);
       return;
     }
 
@@ -1831,7 +1942,7 @@ wss.on("connection", (socket) => {
         let auto_cannon = {
           CannonID: autoID,
           playerid: data.uniqueid,
-          angle: 0,
+          angle: 0.000000001,
           _type_: "bulletAuto",
         };
         autocannons.push(auto_cannon);
@@ -1868,7 +1979,8 @@ wss.on("connection", (socket) => {
         function auto_bullet() {
           let maxdistance = 5000;
           let fire_at = null;
-          let cannon = data.cannon;
+          let cannon =
+            tankmeta[players[data.id].__type__]["cannons"][autoindex];
           for (const playerID in players) {
             let player = players[playerID];
             if (playerID !== bullet.id) {
@@ -1907,13 +2019,13 @@ wss.on("connection", (socket) => {
           let speedUP = 0;
           if (fire_at === null) return;
 
-          let cannon_life = cannon["life-time"] || 0;
           if (players[bullet.id].statsTree["Bullet Speed"] !== 1) {
             speedUP =
               players[bullet.id].statsTree["Bullet Speed"] * levelmultiplyer;
           }
+          let cannon_life = 0;
 
-          let bullet_speed__ = data.bullet_speed * cannon["bulletSpeed"];
+          let bullet_speed__ = (data.speed / 1.3) * cannon["bulletSpeed"] * 5;
           var bulletdistance =
             (bullet_speed__ + speedUP) * 100 * (bullet.size / 6);
           var __type = "basic";
@@ -1924,7 +2036,7 @@ wss.on("connection", (socket) => {
             fire_at.x - bullet.x // x difference
           );
 
-          let bullet_size_l = bullet.size * cannon["bulletSize"];
+          let bullet_size_l = (bullet.size * cannon["bulletSize"]) / 1.8;
 
           let randomNumber = generateRandomNumber(-0.2, 0.2);
 
@@ -1935,16 +2047,16 @@ wss.on("connection", (socket) => {
 
           var xxx = bullet.size / 5 - bullet_size_l * 0.2;
           var yyy = bullet.size / 10 - bullet_size_l * 1.2;
-          var angle_ = angle + cannon["offset-angle"];
+          var angle_ = angle;
 
           let rotated_offset_x =
-            (offSet_x + xxx) * Math.cos(angle_) -
-            (cannon["offSet-y"] + yyy) * Math.sin(angle_);
+            (bullet.size + xxx) * Math.cos(angle_) -
+            (bullet.size / 2 + yyy) * Math.sin(angle_);
           let rotated_offset_y =
-            (offSet_x + xxx) * Math.sin(angle_) +
-            (cannon["offSet-y"] + yyy) * Math.cos(angle_);
-          let bullet_start_x = data.playerX + rotated_offset_x;
-          let bullet_start_y = data.playerY + rotated_offset_y;
+            (bullet.size + xxx) * Math.sin(angle_) +
+            (bullet.size / 2 + yyy) * Math.cos(angle_);
+          let bullet_start_x = data.x + rotated_offset_x;
+          let bullet_start_y = data.y + rotated_offset_y;
           // lol
           let identdfire =
             (Date.now() + Math.random()) * Date.now() * 3 * Math.random();
@@ -1978,32 +2090,40 @@ wss.on("connection", (socket) => {
             y: bullet_start_y,
             lifespan: cannon_life,
             health: health,
-            xstart: data.playerX,
-            ystart: data.playerY,
+            xstart: data.x,
+            ystart: data.y,
             id: bullet.id,
             uniqueid: identdfire,
-            Zlevel: 2,
+            Zlevel: 3,
           };
 
           bullets.push(bullet____);
+          var interval__;
           var reload_bullet = setTimeout(() => {
-            let canfire = true
+            let canfire = true;
             bullet_intervals.forEach((intervals) => {
               if (intervals.id === bullet.uniqueid) {
-                canfire = intervals.canfire
+                canfire = intervals.canfire;
+                interval__ = intervals;
               }
-            })
-            if (!canfire) return
+            });
+            if (!canfire) {
+              var index_1 = bullet_intervals.indexOf(interval__);
+              if (index_1 !== -1 && canfire === false) {
+                bullet_intervals.splice(index_1, 1);
+              }
+              return;
+            }
             __reload__ = 1;
             for (
               let i = 0;
               i < players[data.id].statsTree["Bullet Reload"];
               ++i
             ) {
-              __reload__ *= levelmultiplyer;
+              __reload__ /= levelmultiplyer;
             }
             auto_bullet();
-          }, 750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__);
+          }, 750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__ * 2);
         }
         setTimeout(() => {
           __reload__ = 1;
@@ -2012,12 +2132,11 @@ wss.on("connection", (socket) => {
             i < players[data.id].statsTree["Bullet Reload"];
             ++i
           ) {
-            __reload__ *= levelmultiplyer;
+            __reload__ /= levelmultiplyer;
           }
           auto_bullet();
-        }, 750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__);
-        
-        bullet_intervals.push({canfire:true,id:bullet.uniqueid})
+        }, 750 * tankmeta[players[data.id].__type__]["reaload-m"] * cannon["reloadM"] * __reload__ * 2);
+        bullet_intervals.push({ canfire: true, id: bullet.uniqueid });
       }
       emit("bulletUpdate", bullets); // Broadcast to all clients
       return;
@@ -2313,6 +2432,11 @@ setInterval(() => {
         return true;
       });
     }
+    bullet_intervals.forEach((__bullet_) => {
+      if (bullet.uniqueid === __bullet_.id) {
+        __bullet_.canfire = false; // kill in the next tick
+      }
+    });
     return false;
   });
 
@@ -2325,7 +2449,7 @@ setInterval(() => {
         tankmeta[players[cannon.playerid].__type__]["cannons"];
     } else if (cannon._type_ === "bulletAuto") {
       let par_ = findBullet(cannon.playerid);
-      if (par_ == null) return;
+      if (par_ == null || players[par_.id] === undefined) return;
       var tankdatacannon__ = tankmeta[players[par_.id].__type__]["cannons"];
     }
 
@@ -2387,11 +2511,10 @@ setInterval(() => {
             );
           } else if (cannon._type_ === "bulletAuto") {
             let parentBullet = findBullet(cannon.playerid);
-            var distance = Math.atan2(
+            var angle = Math.atan2(
               item.y - parentBullet.y,
               item.x - parentBullet.x
             );
-            console.log(distance);
           } else {
             var angle = Math.atan2(
               item.y - players[cannon.playerid].y, // y difference
@@ -2462,10 +2585,15 @@ setInterval(() => {
           cannon.angle < cannon.targetAngle &&
           Math.abs(cannon.angle - cannon.targetAngle) > 0.1
         ) {
+          if (cannon._type_ === "bulletAuto") {
+            var reload_1 =
+              players[__parentBullet__.id].statsTree["Bullet Reload"] - 1;
+          } else {
+            var reload_1 =
+              players[cannon.playerid].statsTree["Bullet Reload"] - 1;
+          }
           cannon.angle +=
-            Math.abs(cannon.angle - cannon.targetAngle) /
-            (3.5 -
-              (players[cannon.playerid].statsTree["Bullet Reload"] - 1) / 3);
+            Math.abs(cannon.angle - cannon.targetAngle) / (3.5 - reload_1 / 3);
           emit("autoCannonUPDATE-ANGLE", {
             angle: cannon.angle,
             cannon_ID: cannon.CannonID,
@@ -2474,10 +2602,15 @@ setInterval(() => {
           cannon.angle > cannon.targetAngle &&
           Math.abs(cannon.angle - cannon.targetAngle) > 0.1
         ) {
+          if (cannon._type_ === "bulletAuto") {
+            var reload_1 =
+              players[__parentBullet__.id].statsTree["Bullet Reload"] - 1;
+          } else {
+            var reload_1 =
+              players[cannon.playerid].statsTree["Bullet Reload"] - 1;
+          }
           cannon.angle -=
-            Math.abs(cannon.angle - cannon.targetAngle) /
-            (3.5 -
-              (players[cannon.playerid].statsTree["Bullet Reload"] - 1) / 3);
+            Math.abs(cannon.angle - cannon.targetAngle) / (3.5 - reload_1 / 3);
           emit("autoCannonUPDATE-ANGLE", {
             angle: cannon.angle,
             cannon_ID: cannon.CannonID,
@@ -2488,15 +2621,20 @@ setInterval(() => {
       }
     }
     if (fire_at__ !== undefined && fire_at__ !== null) {
-      if (cannon._type_ !== "bulletAuto") {
+      if (cannon._type_ === "SwivelAutoCannon") {
         var angle = Math.atan2(
           fire_at__.y - (players[cannon.playerid].y + cannon["y_"]), // y difference
           fire_at__.x - (players[cannon.playerid].x + cannon["x_"]) // x difference
         );
       } else if (cannon._type_ === "bulletAuto") {
         var angle = Math.atan2(
-          fire_at__.y - (players[__parentBullet__.id].y + cannon["y_"]), // y difference
-          fire_at__.x - (players[__parentBullet__.id].x + cannon["x_"]) // x difference
+          fire_at__.y - __parentBullet__.y, // y difference
+          fire_at__.x - __parentBullet__.x // x difference
+        );
+      } else {
+        var angle = Math.atan2(
+          fire_at__.y - players[cannon.playerid].y, // y difference
+          fire_at__.x - players[cannon.playerid].x // x difference
         );
       }
 
@@ -2514,6 +2652,7 @@ setInterval(() => {
   // Emit updated bullet positions
   emit("bulletUpdate", bullets);
 
+  let tempToPush = [];
   food_squares = food_squares.filter((item, index) => {
     item.x = item.centerX + item.scalarX * Math.cos(angle);
     item.y = item.centerY + item.scalarY * Math.sin(angle);
@@ -2557,6 +2696,204 @@ setInterval(() => {
     if (item.isdead) {
       item.transparency = 1 - (Date.now() - item.deathtime) / 150;
     }
+    for (const playerId in players) {
+      var player = players[playerId];
+      const distanceX = Math.abs(player.x - item.x);
+      const distanceY = Math.abs(player.y - item.y);
+      // for speed
+      let size__ = player.size * 80 + item.size * 1.5;
+      if (!(distanceX < size__ && distanceY < size__)) return true;
+
+      var collisionCheck = isPlayerCollidingWithPolygon(player, item.vertices);
+
+      if (collisionCheck[0]) {
+        let damageplayer = item.body_damage;
+        let damageother = player["bodyDamage"];
+        player.health -= damageplayer;
+
+        if (player.health < 0) {
+          emit("playerDied", {
+            playerID: player.id,
+            rewarder: null,
+            reward: null,
+          });
+          players = Object.entries(players).reduce(
+            (newPlayers, [key, value]) => {
+              if (key !== player.id) {
+                newPlayers[key] = value;
+              }
+              return newPlayers;
+            },
+            {}
+          );
+        }
+
+        emit("bouceBack", { response: collisionCheck, playerID: player.id });
+        if (0 > item.health) {
+          player.score += item.score_add;
+          emit("playerScore", {
+            bulletId: player.id,
+            socrepluse: item.score_add,
+          });
+          leader_board.hidden.forEach((__index__) => {
+            if (__index__.id === player.id) {
+              __index__.score += item.score_add;
+              let isshown = false;
+              leader_board.shown.forEach(() => {
+                if (__index__.id === player.id) {
+                  isshown = true;
+                }
+              });
+              if (leader_board.shown[10]) {
+                if (leader_board.shown[10].score < __index__.score) {
+                  leader_board.shown[10] = __index__;
+                }
+              } else if (!leader_board.shown[10] && !isshown) {
+                leader_board.shown.push(__index__);
+              }
+            }
+          });
+          leader_board.shown.forEach((__index__) => {
+            if (__index__.id === player.id) {
+              __index__.score += item.score_add;
+            }
+          });
+          rearrange();
+          emit("boardUpdate", {
+            leader_board: leader_board.shown,
+          });
+
+          cors_taken.filter((cor) => {
+            if (cor.id === item.randomID) {
+              return false;
+            } else {
+              return true;
+            }
+          });
+
+          let respawnrai = item["respawn-raidis"] || 4500;
+          let x, y;
+          do {
+            x = getRandomInt(-respawnrai, respawnrai);
+            y = getRandomInt(-respawnrai, respawnrai);
+          } while (
+            cors_taken.some(
+              (c) =>
+                between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)
+            )
+          );
+          let randID = Math.random() * index * Date.now();
+
+          cors_taken.push({ x, y, id: randID });
+
+          const valueOp = getRandomInt(1, 15);
+          var type = "";
+          var color = "";
+          var health_max = "";
+          var score_add = 0;
+          var body_damage = 0;
+          if (!item["respawn-raidis"]) {
+            switch (true) {
+              case between(valueOp, 1, 10): // Adjusted to 1-6 for square
+                type = "square";
+                color = "Gold";
+                health_max = 10;
+                score_add = 10;
+                body_damage = 2;
+                break;
+              case between(valueOp, 11, 13): // Adjusted to 7-8 for triangle
+                type = "triangle";
+                color = "Red";
+                health_max = 15;
+                score_add = 15;
+                body_damage = 3.5;
+                break;
+              case between(valueOp, 14, 15): // Adjusted to 9-10 for pentagon
+                type = "pentagon";
+                color = "#579bfa";
+                health_max = 100;
+                score_add = 120;
+                body_damage = 4;
+                break;
+            }
+          } else {
+            const valueOp2 = getRandomInt(1, 10);
+
+            type = "pentagon";
+            color = "#579bfa";
+            health_max = 100;
+            score_add = 120;
+            body_damage = 4;
+            if (valueOp2 === 5) {
+              var size = 150;
+              score_add = 3000;
+              health_max = 1000;
+              body_damage = 9;
+            } else {
+              var size = 50;
+            }
+          }
+          let fooditem = {
+            type: type,
+            health: health_max,
+            maxhealth: health_max,
+            size: size,
+            angle: getRandomInt(0, 180),
+            x: x,
+            y: y,
+            centerX: x,
+            centerY: y,
+            body_damage: body_damage,
+            scalarX: getRandomInt(-100, 100),
+            scalarY: getRandomInt(-100, 100),
+            vertices: null,
+            color: color,
+            score_add: score_add,
+            randomID: randID,
+          };
+          if (type === "square") {
+            const rawvertices = calculateSquareVertices(
+              fooditem.x,
+              fooditem.y,
+              fooditem.size,
+              fooditem.angle
+            );
+            fooditem.vertices = rawvertices;
+          }
+          if (type === "triangle") {
+            const rawvertices = calculateTriangleVertices(
+              fooditem.x,
+              fooditem.y,
+              fooditem.size,
+              fooditem.angle
+            );
+            fooditem.vertices = rawvertices;
+          }
+          if (type === "pentagon") {
+            const rawvertices = calculateRotatedPentagonVertices(
+              fooditem.x,
+              fooditem.y,
+              fooditem.size,
+              fooditem.angle
+            );
+            fooditem.vertices = rawvertices;
+          }
+
+          food_squares.push(fooditem);
+          emit("bulletUpdate", bullets);
+
+          return false;
+        } else {
+          item.health -= damageother;
+        }
+
+        emit("shapeDamage", {
+          PlayerId: player.id,
+          playerDamage: damageplayer,
+          shapes: food_squares,
+        });
+      }
+    }
     bullets.forEach((bullet) => {
       let distance = MathHypotenuse(item.x - bullet.x, item.y - bullet.y);
       if (distance < 400) {
@@ -2574,9 +2911,9 @@ setInterval(() => {
         if (!collisionCheck) return;
         const damage =
           (bullet.bullet_damage * 4) / (item.size / bulletSpeed) +
-          bullet.bullet_pentration;
+          bullet.bullet_pentration; //
 
-        if (damage > item.health) {
+        if (damage >= item.health) {
           if (!players[bullet.id]) {
             console.log(bullet.id);
             console.log(players);
@@ -2633,7 +2970,9 @@ setInterval(() => {
           } while (
             cors_taken.some(
               (c) =>
-                between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)
+                between(x, c.x - 50, c.x + 50) &&
+                between(y, c.y - 50, c.y + 50) &&
+                confirmplayerradia(x, y)
             )
           );
 
@@ -2691,7 +3030,7 @@ setInterval(() => {
               type: type,
               health: health_max,
               maxhealth: health_max,
-              size: 50,
+              size: size,
               angle: getRandomInt(0, 180),
               x: x,
               y: y,
@@ -2755,8 +3094,10 @@ setInterval(() => {
             );
             fooditem__XX.vertices = rawvertices;
           }
+          if (!item.isdead) {
+            tempToPush.push(fooditem__XX);
+          }
 
-          food_squares.push(fooditem__XX);
           bullet.bullet_distance -=
             (bullet.size * 40) / bullet.bullet_pentration +
             bullet.size * 3 +
@@ -2800,7 +3141,7 @@ setInterval(() => {
         }
       }
     });
-    if (return_ === true && !(item.isdead === true)) {
+    if (return_ === true && !item.isdead) {
       return return_;
     }
     if (item.isdead) {
@@ -2812,6 +3153,10 @@ setInterval(() => {
       return true;
     }
   });
+  tempToPush.forEach((item) => {
+    food_squares.push(item);
+  });
+
   emit("FoodUpdate", food_squares);
 }, UPDATE_INTERVAL);
 
@@ -2825,8 +3170,16 @@ function emit(type, data) {
 function broadcast(type, data, senderConn) {
   const message = JSON.stringify({ type, data });
   connections.forEach((conn) => {
-    // Exclude the sender connection if provided
     if (conn.socket !== senderConn) {
+      conn.socket.send(message);
+    }
+  });
+}
+function smartbroadcast(type, data, senderConn) {
+  const message = JSON.stringify({ type, data });
+  connections.forEach((conn) => {
+    if (conn.playerId == null || players[conn.playerId] == undefined) return;
+    if (conn.socket !== senderConn && players[conn.playerId].visible) {
       conn.socket.send(message);
     }
   });
