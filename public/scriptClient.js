@@ -865,6 +865,37 @@
                 data.PlayerId
               );
             }
+          } else if (type === "shapeDamage2") {
+            if (players[data.PlayerId]) {
+              players[data.PlayerId].health -= data.playerDamage;
+
+              if (data.PlayerId == playerId) {
+                state = "damaged";
+                statecycle = 0;
+                send("statechange", {
+                  state: state,
+                  statecycle: statecycle,
+                  playerID: playerId,
+                });
+                setTimeout(() => {
+                  state = "normal";
+                  statecycle = 0;
+                  send("statechange", {
+                    state: state,
+                    statecycle: statecycle,
+                    playerID: playerId,
+                  });
+                }, 1000);
+                playerHealth -= data.playerDamage;
+                playerHealTime = 0;
+                send("playerHealintterupted", { ID: playerId });
+              }
+            } else {
+              console.warn(
+                "Received shapeDamage for an unknown player:",
+                data.PlayerId
+              );
+            }
           } else if (type === "bouceBack") {
             if (data.playerID !== playerId) return;
             canmove = false;
