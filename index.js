@@ -144,7 +144,6 @@ const tankmeta = {
     fov: 1,
     "BodyDamage-m": 1,
     "reaload-m": 1,
-
     upgrades: {
       twin: { img: 1, level: 15 },
       flank: { img: 2, level: 15 },
@@ -2702,7 +2701,7 @@ setInterval(() => {
       const distanceY = Math.abs(player.y - item.y);
       // for speed
       let size__ = player.size * 80 + item.size * 1.5;
-      if (!(distanceX < size__ && distanceY < size__)) return true;
+      if (!(distanceX < size__ && distanceY < size__)) break
 
       var collisionCheck = isPlayerCollidingWithPolygon(player, item.vertices);
 
@@ -2880,14 +2879,13 @@ setInterval(() => {
           }
 
           food_squares.push(fooditem);
-          emit("bulletUpdate", bullets);
 
           return false;
         } else {
           item.health -= damageother;
         }
 
-        emit("shapeDamage", {
+        emit("shapeDamage2", {
           PlayerId: player.id,
           playerDamage: damageplayer,
           shapes: food_squares,
