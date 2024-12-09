@@ -13,18 +13,6 @@
     }
   }
   function ongame() {
-    // TODO:
-    // add pentgons [DONE]
-    // add reciol - [Done]
-    // {added state changes} = [DONE]
-    // fix level-up bug [DONE]
-    // add (e) for atuo fire [DONE]
-    // add (c) for atuo rotaion [DONE]
-    // create new 15 level tank [DONE]
-    // add player shape collsion - {DONE}
-    // add shape-shape collsion - lower pryority
-    // create drone tank - {DONE}
-
     const socket =
       new /*skill issus are comming to my server mohaa ha ha*/ WebSocket(
         "https://deip-io3.glitch.me/"
@@ -276,13 +264,13 @@
       );
     };
     function levelUpgrader(tankdata) {
-      var out = false
-      if (tankdata["upgrades"] == undefined ) return
+      var out = false;
+      if (tankdata["upgrades"] == undefined) return;
       for (let i = 0; i < Object.keys(tankdata["upgrades"]).length; i++) {
-        var KEY = Object.keys(tankdata["upgrades"])[i]
-        console.log(level,tankdata["upgrades"][KEY]["level"])
-        
-        if (level >= tankdata["upgrades"][KEY]["level"]-1) {
+        var KEY = Object.keys(tankdata["upgrades"])[i];
+        console.log(level, tankdata["upgrades"][KEY]["level"]);
+
+        if (level >= tankdata["upgrades"][KEY]["level"] - 1) {
           if (out === false) {
             var tankstiles = document.getElementById("tanktiles");
             tankstiles.style.display = "block";
@@ -291,12 +279,12 @@
             tankstiles.innerHTML = "";
             out = true;
           }
-          
-          var upgrade = tankdata["upgrades"][KEY]
+
+          var upgrade = tankdata["upgrades"][KEY];
 
           var img__ = document.createElement("img");
           var tileImg = upgrade.img;
-          console.log(upgrade,tileImg)
+          console.log(upgrade, tileImg);
           tankstiles.appendChild(img__);
 
           img__.src = "tanktiles/" + tileImg + ".png";
@@ -306,7 +294,7 @@
             event.stopPropagation();
             tankstiles.style.display = "none";
             __type__ = Object.keys(tankdata["upgrades"])[i];
-            console.log(__type__)
+            console.log(__type__);
             players[playerId].__type__ = __type__;
             tankdata = tankmeta[__type__];
             var tankdatacannon__ = tankdata["cannons"];
@@ -615,7 +603,16 @@
             players[data.id].x = data.x;
             players[data.id].y = data.y;
           } else if (type === "playerCannonUpdated") {
-            players[data.id].cannon_angle = data.cannon_angle;
+            try {
+              if (data.receiver) {
+                if (data.receiver === playerId) {
+                  players[data.id].cannon_angle = data.cannon_angle;
+                  
+                }
+              } else {
+                players[data.id].cannon_angle = data.cannon_angle;
+              }
+            } catch {}            
           } else if (type === "playerLeft") {
             let id = data.playerId;
             players = Object.entries(players).reduce(
@@ -1780,6 +1777,7 @@
         });
 
         let __tankdata__ = tankmeta[__type__];
+        
         function autoengine() {
           __tankdata__ = tankmeta[__type__];
           if (!dronetanks.includes(__type__) && autoFiring) {
@@ -1976,778 +1974,7 @@
       return [rotatedX, rotatedY];
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      food_list.forEach((item) => {
-        var realx = item.x - item.size * (FOV - 1);
-        var realy = item.y - item.size * (FOV - 1);
-        if (
-          realx + item.size > 0 + cavansX &&
-          realx < canvas.width + cavansX + item.size &&
-          realy - cavansY > 0 - item.size &&
-          realy - item.size < canvas.height + cavansY &&
-          item.health > 0
-        ) {
-          ctx.save();
-          if (item.transparency) {
-            ctx.globalAlpha = item.transparency;
-            if (item.transparency < 0) {
-              ctx.globalAlpha = 0;
-            }
-          }
-
-          ctx.translate(realx - cavansX, realy - cavansY);
-
-          ctx.rotate(item.angle * pi180);
-
-          if (item.type === "square") {
-            ctx.fillStyle = item.color;
-            ctx.fillRect(
-              -item.size / 2,
-              -item.size / 2,
-              item.size * FOV,
-              item.size * FOV
-            );
-            ctx.strokeStyle = "GoldenRod";
-            ctx.lineWidth = 5;
-            ctx.strokeRect(
-              -item.size / 2,
-              -item.size / 2,
-              item.size * FOV,
-              item.size * FOV
-            );
-
-            ctx.rotate(-item.angle * pi180);
-            if (item.health < item.maxhealth) {
-              ctx.fillStyle = "black";
-              ctx.fillRect(-45, 35, 90 * FOV, 10);
-              const healthWidth = (item.health / item.maxhealth) * 90 * FOV;
-              ctx.fillStyle = "green";
-              ctx.fillRect(-45, 35, healthWidth, 10);
-            }
-          }
-
-          if (item.type === "triangle") {
-            let realitemsize = item.size * FOV;
-            const h = realitemsize * sqrt23;
-
-            ctx.beginPath();
-            ctx.moveTo(0, -h / 2);
-            ctx.lineTo(-realitemsize / 2, h / 2);
-            ctx.lineTo(realitemsize / 2, h / 2);
-            ctx.closePath();
-
-            ctx.fillStyle = item.color;
-            ctx.fill();
-            ctx.strokeStyle = "Darkred";
-            ctx.lineWidth = 5;
-            ctx.stroke();
-
-            ctx.rotate(-item.angle * pi180);
-            if (item.health < item.maxhealth) {
-              ctx.fillStyle = "black";
-              ctx.fillRect(-45, 35, 90 * FOV, 10 * FOV);
-              const healthWidth = (item.health / item.maxhealth) * 90 * FOV;
-              ctx.fillStyle = "green";
-              ctx.fillRect(-45, 35, healthWidth, 10 * FOV);
-            }
-          }
-          if (item.type === "pentagon") {
-            ctx.fillStyle = item.color;
-            const centerX = 0;
-            const centerY = 0;
-            const radius = item.size * FOV;
-            const angle = item.angle * pi180; // Convert angle to radians
-            vertices = [];
-
-            for (let i = 0; i < 5; i++) {
-              const theta = (i * 2 * Math.PI) / 5 + angle; // Divide circle into 5 parts and add rotation angle
-              const x = centerX + radius * Math.cos(theta);
-              const y = centerY + radius * Math.sin(theta);
-              vertices.push({ x, y });
-            }
-
-            // Draw filled pentagon
-            ctx.beginPath();
-            ctx.moveTo(vertices[0].x, vertices[0].y);
-            for (let i = 1; i < vertices.length; i++) {
-              ctx.lineTo(vertices[i].x, vertices[i].y);
-            }
-            ctx.closePath();
-            ctx.fill();
-
-            // Draw pentagon outline
-            ctx.strokeStyle = "#3976cc";
-            ctx.beginPath();
-            ctx.moveTo(vertices[0].x, vertices[0].y);
-            for (let i = 1; i < vertices.length; i++) {
-              ctx.lineTo(vertices[i].x, vertices[i].y);
-            }
-            ctx.closePath();
-            ctx.stroke();
-
-            // Rotate context back to original position (if needed)
-            ctx.rotate(-item.angle * pi180);
-
-            // Draw health bar if health is less than 100%
-            if (item.health < item.maxhealth) {
-              ctx.fillStyle = "black";
-              ctx.fillRect(
-                centerX - 60 * FOV,
-                centerY + (35 + (item.size - 50)) * FOV,
-                (120 + (item.size - 50)) * FOV,
-                10
-              );
-              const healthWidth =
-                (item.health / item.maxhealth) * (120 + (item.size - 50)) * FOV;
-              ctx.fillStyle = "green";
-              ctx.fillRect(
-                centerX - 60 * FOV,
-                centerY + (35 + (item.size - 50)) * FOV,
-                healthWidth,
-                10
-              );
-            }
-          }
-
-          ctx.restore();
-          ctx.globalAlpha = 1;
-        }
-      });
-      let unZbullets = [];
-      bullets.forEach((bullet) => {
-        var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
-        var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
-        if (
-          realx > 0 + cavansX &&
-          realx < canvas.width + cavansX &&
-          realy - cavansY > 0 &&
-          realy < canvas.height + cavansY
-        ) {
-          if (bullet.Zlevel !== 3) {
-            unZbullets.push(bullet);
-            return;
-          }
-          if (bullet.transparency) {
-            ctx.globalAlpha = bullet.transparency;
-          }
-          ctx.beginPath();
-
-          if (bullet.type === "basic") {
-            if (bullet.id === playerId) {
-              ctx.fillStyle = "blue";
-              ctx.strokeStyle = "darkblue";
-            } else {
-              ctx.fillStyle = "red";
-              ctx.strokeStyle = "darkred";
-            }
-            let realsize = bullet.size * FOV;
-
-            ctx.arc(
-              realx - (bullet.xstart - (bullet.xstart - cavansX)),
-              realy - (bullet.ystart - (bullet.ystart - cavansY)),
-              realsize,
-              0,
-              2 * Math.PI
-            );
-            ctx.fill();
-            ctx.lineWidth = 5;
-            ctx.stroke();
-            ctx.closePath();
-          }
-        }
-      });
-      unZbullets.forEach((bullet) => {
-        var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
-        var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
-        if (
-          realx > 0 + cavansX &&
-          realx < canvas.width + cavansX &&
-          realy - cavansY > 0 &&
-          realy < canvas.height + cavansY
-        ) {
-          if (bullet.Zlevel === 2 && bullet.id === playerId) {
-            zlevelbullets.push(bullet);
-            return;
-          }
-          if (bullet.transparency) {
-            ctx.globalAlpha = bullet.transparency;
-          }
-          ctx.beginPath();
-
-          if (bullet.type === "basic") {
-            if (bullet.id === playerId) {
-              ctx.fillStyle = "blue";
-              ctx.strokeStyle = "darkblue";
-            } else {
-              ctx.fillStyle = "red";
-              ctx.strokeStyle = "darkred";
-            }
-            let realsize = bullet.size * FOV;
-
-            ctx.arc(
-              realx - (bullet.xstart - (bullet.xstart - cavansX)),
-              realy - (bullet.ystart - (bullet.ystart - cavansY)),
-              realsize,
-              0,
-              2 * Math.PI
-            );
-            ctx.fill();
-            ctx.lineWidth = 5;
-            ctx.stroke();
-            ctx.closePath();
-          } else if (bullet.type === "trap") {
-            if (bullet.id === playerId) {
-              ctx.fillStyle = "blue";
-              ctx.strokeStyle = "darkblue";
-            } else {
-              ctx.fillStyle = "red";
-              ctx.strokeStyle = "darkred";
-            }
-            let vertices = bullet.vertices;
-
-            let x1 =
-              vertices[2].x - (bullet.xstart - (bullet.xstart - cavansX));
-            let y1 =
-              vertices[2].y - (bullet.ystart - (bullet.ystart - cavansY)); // Top point
-            let x2 =
-              vertices[1].x - (bullet.xstart - (bullet.xstart - cavansX));
-            let y2 =
-              vertices[1].y - (bullet.ystart - (bullet.ystart - cavansY)); // Bottom-left point
-            let x3 =
-              vertices[0].x - (bullet.xstart - (bullet.xstart - cavansX));
-            let y3 =
-              vertices[0].y - (bullet.ystart - (bullet.ystart - cavansY)); // Bottom-right point
-
-            const controlOffset = 5;
-
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-
-            const controlPoint1 = { x: (x1 + x3) / 2, y: (y1 + y3) / 2 };
-
-            // Control point for curve from bottom-left to bottom-right
-            const controlPoint2 = {
-              x: (x2 + x1) / 2,
-              y: (y2 + y3) / 2 + controlOffset,
-            };
-
-            // Control point for curve from bottom-right to top
-            const controlPoint3 = {
-              x: (x1 + x3) / 2 + controlOffset,
-              y: (y1 + y3) / 2,
-            };
-
-            // Draw the curved edge from top to bottom-left
-
-            ctx.quadraticCurveTo(controlPoint1.x, controlPoint1.y, x2, y2);
-
-            // Draw the curved edge from bottom-left to bottom-right
-            ctx.quadraticCurveTo(controlPoint2.x, controlPoint2.y, x3, y3);
-
-            // Draw the curved edge from bottom-right to top
-            ctx.quadraticCurveTo(controlPoint3.x, controlPoint3.y, x1, y1);
-
-            ctx.fill();
-            ctx.lineWidth = 5;
-            ctx.stroke();
-            ctx.closePath();
-          } else if (bullet.type === "directer") {
-            if (bullet.id === playerId) {
-              ctx.fillStyle = "blue";
-              ctx.strokeStyle = "darkblue";
-            } else {
-              ctx.fillStyle = "red";
-              ctx.strokeStyle = "darkred";
-            }
-            ctx.save();
-            ctx.translate(realx - cavansX, realy - cavansY);
-            ctx.rotate(bullet.angle);
-            let realitemsize = bullet.size * 3 * FOV;
-            const h = realitemsize * sqrt23;
-
-            ctx.beginPath();
-            ctx.moveTo(0, -h / 2);
-            ctx.lineTo(-realitemsize / 2, h / 2);
-            ctx.lineTo(realitemsize / 2, h / 2);
-            ctx.closePath();
-
-            ctx.fill();
-            ctx.stroke();
-          } else if (bullet.type === "AutoBullet") {
-            if (bullet.id === playerId) {
-              ctx.fillStyle = "blue";
-              ctx.strokeStyle = "darkblue";
-            } else {
-              ctx.fillStyle = "red";
-              ctx.strokeStyle = "darkred";
-            }
-            let realsize = bullet.size * FOV;
-
-            ctx.arc(
-              realx - (bullet.xstart - (bullet.xstart - cavansX)),
-              realy - (bullet.ystart - (bullet.ystart - cavansY)),
-              realsize,
-              0,
-              2 * Math.PI
-            );
-            ctx.fill();
-            ctx.lineWidth = 5;
-            ctx.stroke();
-            ctx.closePath();
-            let autoCAN_ = null;
-            autocannons.forEach((can) => {
-              if (can.playerid === bullet.uniqueid) {
-                autoCAN_ = can;
-              }
-            });
-            ctx.save();
-            ctx.translate(
-              realx - (bullet.xstart - (bullet.xstart - cavansX)),
-              realy - (bullet.ystart - (bullet.ystart - cavansY))
-            );
-            var cannon_widthFOV = bullet.size / 2;
-            var cannon_heightFOV = bullet.size / 2;
-            ctx.rotate(autoCAN_.angle);
-            let basex = -cannon_widthFOV / 2 + cannon_heightFOV;
-            let basey = -cannon_heightFOV / 2;
-
-            ctx.fillStyle = "#b3b3b3";
-            ctx.fillRect(
-              basex,
-              basey - 5,
-              cannon_widthFOV + 15,
-              cannon_heightFOV + 10
-            );
-
-            ctx.strokeStyle = "lightgrey"; // Set border color
-            ctx.lineWidth = 3; // Set border width
-            ctx.strokeRect(
-              basex,
-              basey - 5,
-              cannon_widthFOV + 15,
-              cannon_heightFOV + 10
-            ); // Draw the border
-            // Restore the previous transformation matrix
-            ctx.rotate(-autoCAN_.angle);
-            ctx.closePath();
-            ctx.beginPath();
-            ctx.arc(0, 0, cannon_widthFOV / 2 + 7, 0, 2 * Math.PI, false);
-            ctx.fill();
-            ctx.lineWidth = 5;
-            ctx.stroke();
-            ctx.closePath();
-          }
-          ctx.restore();
-          ctx.globalAlpha = 1;
-        }
-      });
-      for (let playerId__ in players) {
-        if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
-          let player = players[playerId__];
-
-          let tankdata = tankmeta[player.__type__];
-
-          let tankdatacannon = tankdata["cannons"];
-
-          let playerX = player.x - Math.abs(player.size * 80 * (FOV - 1));
-          let playerY = player.y - Math.abs(player.size * 80 * (FOV - 1));
-
-          let FOVplayerz = player.size * FOV;
-
-          for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
-            ctx.fillStyle = "#b3b3b3";
-            let tankdatacannondata = tankdatacannon[i];
-
-            let cannon_widthFOV =
-              tankdatacannondata["cannon-width"] * FOVplayerz;
-            let cannon_heightFOV =
-              tankdatacannondata["cannon-height"] * FOVplayerz;
-            if (tankdatacannondata["type"] === "basicCannon") {
-              ctx.save();
-              ctx.translate(playerX - cavansX, playerY - cavansY);
-              let angle = player.cannon_angle;
-
-              let angle_offset = tankdatacannondata["offset-angle"];
-              ctx.rotate(angle + angle_offset);
-              // Draw the square
-              let basex =
-                -cannon_widthFOV / 2 +
-                cannon_heightFOV +
-                tankdatacannondata["offSet-x"] -
-                player.cannonW[i];
-              let basey =
-                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
-
-              ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
-
-              // Add a border to the cannon
-              ctx.strokeStyle = "lightgrey"; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV); // Draw the border
-              // Restore the previous transformation matrix
-              ctx.restore();
-            } else if (
-              tankdatacannondata["type"] === "trapezoid" ||
-              tankdatacannondata["type"] === "directer"
-            ) {
-              ctx.save();
-              ctx.translate(playerX - cavansX, playerY - cavansY);
-              let angle = player.cannon_angle;
-
-              let angle_offset = tankdatacannondata["offset-angle"];
-              ctx.rotate(angle + angle_offset);
-              // Draw the square
-              const cannonWidth_bottom =
-                tankdatacannondata["cannon-width-bottom"] * player.size * FOV;
-
-              let basex =
-                cannonWidth_bottom / 2 +
-                cannon_heightFOV +
-                tankdatacannondata["offSet-x"] -
-                player.cannonW[i];
-              let basey =
-                -cannon_heightFOV / 2 +
-                cannon_heightFOV / 2 -
-                tankdatacannondata["offSet-y"];
-
-              const cannonHeight = cannon_heightFOV;
-              const cannonWidth_top =
-                tankdatacannondata["cannon-width-top"] * player.size * FOV;
-
-              var canwB2 = cannonWidth_bottom / 2;
-              var canwH2 = cannonWidth_top / 2;
-              ctx.beginPath();
-              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-              ctx.lineTo(basex, basey + canwH2);
-              ctx.lineTo(basex, basey - canwH2);
-              ctx.closePath(); // Close the path
-              ctx.fill();
-
-              // Add a border to the cannon
-              ctx.strokeStyle = "lightgrey"; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.beginPath();
-              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-              ctx.lineTo(basex, basey + canwH2);
-              ctx.lineTo(basex, basey - canwH2);
-              ctx.closePath(); // Close the path
-              ctx.stroke(); // Draw the border
-              ctx.restore();
-            } else if (tankdatacannondata["type"] === "trap") {
-              let cannonwidth = tankdatacannondata["cannon-width"];
-              let cannonheight = tankdatacannondata["cannon-height"];
-              ctx.save();
-
-              ctx.translate(playerX - cavansX, playerY - cavansY);
-              let angle = player.cannon_angle;
-
-              let angle_offset = tankdatacannondata["offset-angle"];
-              let trapR = tankdatacannondata["trap-to-cannon-ratio"];
-              ctx.rotate(angle + angle_offset);
-              // Draw the square
-              let basex =
-                -cannon_widthFOV / 2 +
-                cannonheight +
-                tankdatacannondata["offSet-x"] -
-                player.cannonW[i];
-              let reH = cannon_widthFOV * (1 - trapR);
-              let basey =
-                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
-              ctx.fillRect(
-                basex,
-                basey,
-                cannon_widthFOV - reH,
-                cannon_heightFOV
-              );
-              // Add a border to the cannon
-
-              ctx.strokeStyle = "lightgrey"; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.strokeRect(
-                basex,
-                basey,
-                cannon_widthFOV - reH,
-                cannon_heightFOV
-              );
-              // Restore the previous transformation matrix
-              const cannonHeight = reH;
-              const cannonWidth_top = cannon_heightFOV * 1.4;
-              const cannonWidth_bottom = cannon_heightFOV;
-
-              basex = basex + (cannon_widthFOV - trapR);
-
-              var canwB2 = cannonWidth_bottom / 2;
-              var canwH2 = cannonWidth_top / 2;
-              basey += canwB2;
-              ctx.beginPath();
-              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-              ctx.lineTo(basex, basey + canwH2);
-              ctx.lineTo(basex, basey - canwH2);
-              ctx.closePath(); // Close the path
-              ctx.fill();
-
-              // Add a border to the cannon
-              ctx.strokeStyle = "lightgrey"; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.beginPath();
-              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
-              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
-              ctx.lineTo(basex, basey + canwH2);
-              ctx.lineTo(basex, basey - canwH2);
-              ctx.closePath(); // Close the path
-              ctx.stroke(); // Draw the border
-              ctx.restore();
-            } else if (tankdatacannondata["type"] === "AutoBulletCannon") {
-              ctx.save();
-              ctx.translate(playerX - cavansX, playerY - cavansY);
-              let angle = player.cannon_angle;
-
-              let angle_offset = tankdatacannondata["offset-angle"];
-              ctx.rotate(angle + angle_offset);
-              // Draw the square
-              ctx.beginPath();
-              ctx.arc(
-                playerX - cavansX + cannon_widthFOV / 5,
-                playerY - cavansY,
-                (player.size * FOV * 40) / 10,
-                0,
-                2 * Math.PI,
-                false
-              );
-              ctx.fill();
-              ctx.lineWidth = 5;
-              ctx.strokeStyle = "lightgrey";
-              ctx.stroke();
-              ctx.closePath();
-
-              let basex =
-                -cannon_widthFOV / 2 +
-                cannon_heightFOV +
-                tankdatacannondata["offSet-x"] -
-                player.cannonW[i];
-              let basey =
-                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
-
-              ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
-
-              // Add a border to the cannon
-              ctx.strokeStyle = "lightgrey"; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV); // Draw the border
-              // Restore the previous transformation matrix
-              ctx.restore();
-            }
-          }
-
-          ctx.beginPath();
-          ctx.fillStyle = squareColor;
-          ctx.arc(
-            playerX - cavansX,
-            playerY - cavansY,
-            player.size * FOV * 40,
-            0,
-            2 * Math.PI,
-            false
-          );
-          let num = player.statecycle % 10;
-          if (
-            num === 0 &&
-            (player.state === "start" || player.state === "damaged")
-          ) {
-            ctx.fillStyle = "white";
-          } else {
-            ctx.fillStyle = "red";
-          }
-
-          ctx.fill();
-          ctx.lineWidth = 5;
-          ctx.strokeStyle = "darkred";
-          ctx.stroke();
-          ctx.closePath();
-
-          // Draw background bar
-          ctx.fillStyle = "black";
-          ctx.fillRect(
-            playerX - cavansX - 50 * FOV,
-            playerY - cavansY + 55 * FOV,
-            90 * FOV,
-            10 * player.size * FOV
-          );
-
-          // Draw health bar
-          const healthWidth =
-            (player.health / player.maxhealth) * 90 * player.size * FOV;
-          ctx.fillStyle = "green";
-          ctx.fillRect(
-            playerX - cavansX - 50 * FOV,
-            playerY - cavansY + 55 * FOV,
-            healthWidth,
-            10 * player.size * FOV
-          );
-          ctx.closePath();
-          // cannons on top of player
-          for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
-            ctx.fillStyle = "#b3b3b3";
-
-            let tankdatacannondata = tankdatacannon[i];
-            let cannon_widthFOV =
-              tankdatacannondata["cannon-width"] * FOVplayerz;
-            let cannon_heightFOV =
-              tankdatacannondata["cannon-height"] * FOVplayerz;
-            let cannonangle;
-            autocannons.forEach((cannonA) => {
-              if (cannonA.playerid === playerId__ && cannonA.autoindex === i) {
-                cannonangle = cannonA.angle;
-              }
-            });
-            if (tankdatacannondata["type"] === "autoCannon") {
-              ctx.save();
-              var [x, y] = rotatePointAroundPlayer();
-              ctx.translate(playerX - cavansX, playerY - cavansY);
-              let angle = cannonangle;
-
-              let angle_offset = tankdatacannondata["offset-angle"];
-              ctx.rotate(angle + angle_offset);
-              // Draw the square
-
-              var offSet_x = tankdatacannondata["offSet-x"];
-              if (tankdatacannondata["offSet-x"] === "playerX") {
-                offSet_x = player.size * FOV * 2;
-              }
-
-              let basex =
-                -cannon_widthFOV / 2 +
-                cannon_heightFOV +
-                offSet_x -
-                player.cannonW[i];
-              let basey =
-                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
-
-              ctx.beginPath();
-              ctx.fillRect(
-                basex - 5,
-                basey - 2.5,
-                cannon_widthFOV + 10,
-                cannon_heightFOV + 5
-              );
-
-              ctx.strokeStyle = "lightgrey"; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.strokeRect(
-                basex - 5,
-                basey - 2.5,
-                cannon_widthFOV + 10,
-                cannon_heightFOV + 5
-              ); // Draw the border
-              // Restore the previous transformation matrix
-              ctx.rotate(-(angle + angle_offset));
-              ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
-
-              ctx.fill();
-              ctx.stroke();
-              ctx.closePath();
-              ctx.restore();
-            }
-            if (tankdatacannondata["type"] === "SwivelAutoCannon") {
-              ctx.save();
-              let cannonangle;
-              autocannons.forEach((cannonA) => {
-                if (cannonA.playerid === player.id && cannonA.autoindex === i) {
-                  cannonangle = cannonA.angle;
-                }
-              });
-              var offSet_x = tankdatacannondata["offSet-x"];
-              if (tankdatacannondata["offSet-x"] === "playerX") {
-                offSet_x = playerSize * 40 * FOV;
-              }
-              if (tankdatacannondata["offSet-x-multpliyer"]) {
-                offSet_x *= -1;
-              }
-              let angle0 = player.cannon_angle;
-              var [x, y] = rotatePointAroundPlayer(
-                offSet_x,
-                0,
-                angle0 * (180 / Math.PI)
-              );
-
-              ctx.translate(canW / 2 + x, y + canH / 2);
-
-              let angle = cannonangle;
-
-              let angle_offset = tankdatacannondata["offset-angle"];
-              ctx.rotate(angle + angle_offset);
-              // Draw the square
-
-              let basex =
-                -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
-              let basey =
-                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
-
-              ctx.beginPath();
-              ctx.fillRect(
-                basex - 5,
-                basey - 2.5,
-                cannon_widthFOV + 10,
-                cannon_heightFOV + 5
-              );
-
-              ctx.strokeStyle = "lightgrey"; // Set border color
-              ctx.lineWidth = 3; // Set border width
-              ctx.strokeRect(
-                basex - 5,
-                basey - 2.5,
-                cannon_widthFOV + 10,
-                cannon_heightFOV + 5
-              ); // Draw the border
-              // Restore the previous transformation matrix
-              ctx.rotate(-(angle + angle_offset));
-              ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
-
-              ctx.fill();
-              ctx.stroke();
-              ctx.closePath();
-              ctx.restore();
-            }
-          }
-
-          ctx.strokeStyle = "black";
-          ctx.fillStyle = "white";
-          ctx.textAlign = "center";
-          ctx.font = "bold 20px Geneva";
-          ctx.strokeText(
-            player.score,
-            playerX - cavansX,
-            playerY - cavansY - 55
-          );
-          ctx.fillText(player.score, playerX - cavansX, playerY - cavansY - 55);
-
-          ctx.strokeText(
-            player.username,
-            playerX - cavansX,
-            playerY - cavansY - 75
-          );
-          ctx.fillText(
-            player.username,
-            playerX - cavansX,
-            playerY - cavansY - 75
-          );
-
-          // Draw border
-          ctx.lineWidth = 1;
-          ctx.strokeStyle = "grey";
-          ctx.strokeRect(
-            playerX - cavansX - 50,
-            playerY - cavansY + 55,
-            90 * player.size * FOV,
-            10 * player.size * FOV
-          );
-        }
-      }
-
+    function drawself() {
       ctx.fillStyle = squareColor;
 
       let angle = Math.atan2(
@@ -2994,6 +2221,121 @@
           ctx.closePath();
           ctx.restore();
         }
+        zlevelbullets.forEach((NEW_bullet__) => {
+          var realx =
+            NEW_bullet__.x - Math.abs(NEW_bullet__.size * 2 * (FOV - 1));
+          var realy =
+            NEW_bullet__.y - Math.abs(NEW_bullet__.size * 2 * (FOV - 1));
+          if (NEW_bullet__.transparency) {
+            ctx.globalAlpha = NEW_bullet__.transparency;
+          }
+          ctx.beginPath();
+          if (NEW_bullet__.type === "basic") {
+            if (NEW_bullet__.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let realsize = NEW_bullet__.size * FOV;
+
+            ctx.arc(
+              realx - (NEW_bullet__.xstart - (NEW_bullet__.xstart - cavansX)),
+              realy - (NEW_bullet__.ystart - (NEW_bullet__.ystart - cavansY)),
+              realsize,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+          }
+          ctx.globalAlpha = 1;
+        });
+
+        for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
+          ctx.fillStyle = "#b3b3b3";
+          let tankdatacannondata = tankdatacannon[i];
+          let cannon_widthFOV = tankdatacannondata["cannon-width"] * FOVplayerz;
+          let cannon_heightFOV =
+            tankdatacannondata["cannon-height"] * FOVplayerz;
+          let cannonangle;
+          autocannons.forEach((cannonA) => {
+            if (cannonA.playerid === playerId && cannonA.autoindex === i) {
+              cannonangle = cannonA.angle;
+            }
+          });
+          if (tankdatacannondata["type"] === "autoCannon") {
+            ctx.save();
+            var offSet_x = tankdatacannondata["offSet-x"];
+            if (tankdatacannondata["offSet-x"] === "playerX") {
+              offSet_x = playerSize * 40 * FOV;
+            }
+            if (tankdatacannondata["offSet-x-multpliyer"]) {
+              offSet_x *= -1;
+            }
+            let angle0 = Math.atan2(
+              Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+              Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
+            );
+            var [x, y] = rotatePointAroundPlayer(
+              offSet_x,
+              0,
+              angle0 * (180 / Math.PI)
+            );
+
+            ctx.translate(canW / 2 + x, y + canH / 2);
+
+            let angle = cannonangle;
+
+            let angle_offset = tankdatacannondata["offset-angle"];
+            ctx.rotate(angle + angle_offset);
+            // Draw the square
+
+            let basex =
+              -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
+            let basey = -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+            ctx.beginPath();
+            ctx.fillRect(
+              basex - 5,
+              basey - 2.5,
+              cannon_widthFOV + 10,
+              cannon_heightFOV + 5
+            );
+
+            ctx.strokeStyle = "lightgrey"; // Set border color
+            ctx.lineWidth = 3; // Set border width
+            ctx.strokeRect(
+              basex - 5,
+              basey - 2.5,
+              cannon_widthFOV + 10,
+              cannon_heightFOV + 5
+            ); // Draw the border
+            // Restore the previous transformation matrix
+            ctx.rotate(-(angle + angle_offset));
+            ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
+
+            ctx.fill();
+            ctx.stroke();
+            ctx.closePath();
+            ctx.restore();
+          }
+        }
+
+        zlevelbullets = [];
+
+        // Draw border
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "grey";
+        ctx.strokeRect(
+          canvas.width / 2 - 50 * FOV,
+          canvas.height / 2 + 55 * FOV,
+          90 * FOV,
+          10 * FOV
+        );
       }
 
       ctx.beginPath();
@@ -3044,120 +2386,795 @@
         healthWidth,
         10 * FOV
       );
-      zlevelbullets.forEach((NEW_bullet__) => {
-        var realx =
-          NEW_bullet__.x - Math.abs(NEW_bullet__.size * 2 * (FOV - 1));
-        var realy =
-          NEW_bullet__.y - Math.abs(NEW_bullet__.size * 2 * (FOV - 1));
-        if (NEW_bullet__.transparency) {
-          ctx.globalAlpha = NEW_bullet__.transparency;
-        }
-        ctx.beginPath();
-        if (NEW_bullet__.type === "basic") {
-          if (NEW_bullet__.id === playerId) {
-            ctx.fillStyle = "blue";
-            ctx.strokeStyle = "darkblue";
-          } else {
-            ctx.fillStyle = "red";
-            ctx.strokeStyle = "darkred";
-          }
-          let realsize = NEW_bullet__.size * FOV;
+    }
 
-          ctx.arc(
-            realx - (NEW_bullet__.xstart - (NEW_bullet__.xstart - cavansX)),
-            realy - (NEW_bullet__.ystart - (NEW_bullet__.ystart - cavansY)),
-            realsize,
-            0,
-            2 * Math.PI
-          );
-          ctx.fill();
-          ctx.lineWidth = 5;
-          ctx.stroke();
-          ctx.closePath();
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      food_list.forEach((item) => {
+        var realx = item.x - item.size * (FOV - 1);
+        var realy = item.y - item.size * (FOV - 1);
+        if (
+          realx + item.size > 0 + cavansX &&
+          realx < canvas.width + cavansX + item.size &&
+          realy - cavansY > 0 - item.size &&
+          realy - item.size < canvas.height + cavansY &&
+          item.health > 0
+        ) {
+          ctx.save();
+          if (item.transparency) {
+            ctx.globalAlpha = item.transparency;
+            if (item.transparency < 0) {
+              ctx.globalAlpha = 0;
+            }
+          }
+
+          ctx.translate(realx - cavansX, realy - cavansY);
+
+          ctx.rotate(item.angle * pi180);
+
+          if (item.type === "square") {
+            ctx.fillStyle = item.color;
+            ctx.fillRect(
+              -item.size / 2,
+              -item.size / 2,
+              item.size * FOV,
+              item.size * FOV
+            );
+            ctx.strokeStyle = "GoldenRod";
+            ctx.lineWidth = 5;
+            ctx.strokeRect(
+              -item.size / 2,
+              -item.size / 2,
+              item.size * FOV,
+              item.size * FOV
+            );
+
+            ctx.rotate(-item.angle * pi180);
+            if (item.health < item.maxhealth) {
+              ctx.fillStyle = "black";
+              ctx.fillRect(-45, 35, 90 * FOV, 10);
+              const healthWidth = (item.health / item.maxhealth) * 90 * FOV;
+              ctx.fillStyle = "green";
+              ctx.fillRect(-45, 35, healthWidth, 10);
+            }
+          }
+
+          if (item.type === "triangle") {
+            let realitemsize = item.size * FOV;
+            const h = realitemsize * sqrt23;
+
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2);
+            ctx.lineTo(-realitemsize / 2, h / 2);
+            ctx.lineTo(realitemsize / 2, h / 2);
+            ctx.closePath();
+
+            ctx.fillStyle = item.color;
+            ctx.fill();
+            ctx.strokeStyle = "Darkred";
+            ctx.lineWidth = 5;
+            ctx.stroke();
+
+            ctx.rotate(-item.angle * pi180);
+            if (item.health < item.maxhealth) {
+              ctx.fillStyle = "black";
+              ctx.fillRect(-45, 35, 90 * FOV, 10 * FOV);
+              const healthWidth = (item.health / item.maxhealth) * 90 * FOV;
+              ctx.fillStyle = "green";
+              ctx.fillRect(-45, 35, healthWidth, 10 * FOV);
+            }
+          }
+          if (item.type === "pentagon") {
+            ctx.fillStyle = item.color;
+            const centerX = 0;
+            const centerY = 0;
+            const radius = item.size * FOV;
+            const angle = item.angle * pi180; // Convert angle to radians
+            vertices = [];
+
+            for (let i = 0; i < 5; i++) {
+              const theta = (i * 2 * Math.PI) / 5 + angle; // Divide circle into 5 parts and add rotation angle
+              const x = centerX + radius * Math.cos(theta);
+              const y = centerY + radius * Math.sin(theta);
+              vertices.push({ x, y });
+            }
+
+            // Draw filled pentagon
+            ctx.beginPath();
+            ctx.moveTo(vertices[0].x, vertices[0].y);
+            for (let i = 1; i < vertices.length; i++) {
+              ctx.lineTo(vertices[i].x, vertices[i].y);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw pentagon outline
+            ctx.strokeStyle = "#3976cc";
+            ctx.beginPath();
+            ctx.moveTo(vertices[0].x, vertices[0].y);
+            for (let i = 1; i < vertices.length; i++) {
+              ctx.lineTo(vertices[i].x, vertices[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Rotate context back to original position (if needed)
+            ctx.rotate(-item.angle * pi180);
+
+            // Draw health bar if health is less than 100%
+            if (item.health < item.maxhealth) {
+              ctx.fillStyle = "black";
+              ctx.fillRect(
+                centerX - 60 * FOV,
+                centerY + (35 + (item.size - 50)) * FOV,
+                (120 + (item.size - 50)) * FOV,
+                10
+              );
+              const healthWidth =
+                (item.health / item.maxhealth) * (120 + (item.size - 50)) * FOV;
+              ctx.fillStyle = "green";
+              ctx.fillRect(
+                centerX - 60 * FOV,
+                centerY + (35 + (item.size - 50)) * FOV,
+                healthWidth,
+                10
+              );
+            }
+          }
+
+          ctx.restore();
+          ctx.globalAlpha = 1;
         }
-        ctx.globalAlpha = 1;
       });
 
-      for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
-        ctx.fillStyle = "#b3b3b3";
-        let tankdatacannondata = tankdatacannon[i];
-        let cannon_widthFOV = tankdatacannondata["cannon-width"] * FOVplayerz;
-        let cannon_heightFOV = tankdatacannondata["cannon-height"] * FOVplayerz;
-        let cannonangle;
-        autocannons.forEach((cannonA) => {
-          if (cannonA.playerid === playerId && cannonA.autoindex === i) {
-            cannonangle = cannonA.angle;
+      let unZbullets = [];
+
+      bullets.forEach((bullet) => {
+        var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
+        var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
+        if (
+          realx > 0 + cavansX &&
+          realx < canvas.width + cavansX &&
+          realy - cavansY > 0 &&
+          realy < canvas.height + cavansY
+        ) {
+          if (bullet.Zlevel !== 3) {
+            unZbullets.push(bullet);
+            return;
           }
-        });
-        if (tankdatacannondata["type"] === "autoCannon") {
-          ctx.save();
-          var offSet_x = tankdatacannondata["offSet-x"];
-          if (tankdatacannondata["offSet-x"] === "playerX") {
-            offSet_x = playerSize * 40 * FOV;
+          if (bullet.transparency) {
+            ctx.globalAlpha = bullet.transparency;
           }
-          if (tankdatacannondata["offSet-x-multpliyer"]) {
-            offSet_x *= -1;
+          ctx.beginPath();
+
+          if (bullet.type === "basic") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let realsize = bullet.size * FOV;
+
+            ctx.arc(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY)),
+              realsize,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
           }
-          let angle0 = Math.atan2(
-            Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
-            Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
-          );
-          var [x, y] = rotatePointAroundPlayer(
-            offSet_x,
-            0,
-            angle0 * (180 / Math.PI)
-          );
+        }
+      });
 
-          ctx.translate(canW / 2 + x, y + canH / 2);
+      unZbullets.forEach((bullet) => {
+        var realx = bullet.x - Math.abs(bullet.size * 2 * (FOV - 1));
+        var realy = bullet.y - Math.abs(bullet.size * 2 * (FOV - 1));
+        if (
+          realx > 0 + cavansX &&
+          realx < canvas.width + cavansX &&
+          realy - cavansY > 0 &&
+          realy < canvas.height + cavansY
+        ) {
+          if (bullet.Zlevel === 2 && bullet.id === playerId) {
+            zlevelbullets.push(bullet);
+            return;
+          }
+          if (bullet.transparency) {
+            ctx.globalAlpha = bullet.transparency;
+          }
+          ctx.beginPath();
 
-          let angle = cannonangle;
+          if (bullet.type === "basic") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let realsize = bullet.size * FOV;
 
-          let angle_offset = tankdatacannondata["offset-angle"];
-          ctx.rotate(angle + angle_offset);
-          // Draw the square
+            ctx.arc(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY)),
+              realsize,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+          } else if (bullet.type === "trap") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let vertices = bullet.vertices;
 
-          let basex =
-            -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
-          let basey = -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+            let x1 =
+              vertices[2].x - (bullet.xstart - (bullet.xstart - cavansX));
+            let y1 =
+              vertices[2].y - (bullet.ystart - (bullet.ystart - cavansY)); // Top point
+            let x2 =
+              vertices[1].x - (bullet.xstart - (bullet.xstart - cavansX));
+            let y2 =
+              vertices[1].y - (bullet.ystart - (bullet.ystart - cavansY)); // Bottom-left point
+            let x3 =
+              vertices[0].x - (bullet.xstart - (bullet.xstart - cavansX));
+            let y3 =
+              vertices[0].y - (bullet.ystart - (bullet.ystart - cavansY)); // Bottom-right point
+
+            const controlOffset = 5;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+
+            const controlPoint1 = { x: (x1 + x3) / 2, y: (y1 + y3) / 2 };
+
+            // Control point for curve from bottom-left to bottom-right
+            const controlPoint2 = {
+              x: (x2 + x1) / 2,
+              y: (y2 + y3) / 2 + controlOffset,
+            };
+
+            // Control point for curve from bottom-right to top
+            const controlPoint3 = {
+              x: (x1 + x3) / 2 + controlOffset,
+              y: (y1 + y3) / 2,
+            };
+
+            // Draw the curved edge from top to bottom-left
+
+            ctx.quadraticCurveTo(controlPoint1.x, controlPoint1.y, x2, y2);
+
+            // Draw the curved edge from bottom-left to bottom-right
+            ctx.quadraticCurveTo(controlPoint2.x, controlPoint2.y, x3, y3);
+
+            // Draw the curved edge from bottom-right to top
+            ctx.quadraticCurveTo(controlPoint3.x, controlPoint3.y, x1, y1);
+
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+          } else if (bullet.type === "directer") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            ctx.save();
+            ctx.translate(realx - cavansX, realy - cavansY);
+            ctx.rotate(bullet.angle);
+            let realitemsize = bullet.size * 3 * FOV;
+            const h = realitemsize * sqrt23;
+
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2);
+            ctx.lineTo(-realitemsize / 2, h / 2);
+            ctx.lineTo(realitemsize / 2, h / 2);
+            ctx.closePath();
+
+            ctx.fill();
+            ctx.stroke();
+          } else if (bullet.type === "AutoBullet") {
+            if (bullet.id === playerId) {
+              ctx.fillStyle = "blue";
+              ctx.strokeStyle = "darkblue";
+            } else {
+              ctx.fillStyle = "red";
+              ctx.strokeStyle = "darkred";
+            }
+            let realsize = bullet.size * FOV;
+
+            ctx.arc(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY)),
+              realsize,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+            let autoCAN_ = null;
+            autocannons.forEach((can) => {
+              if (can.playerid === bullet.uniqueid) {
+                autoCAN_ = can;
+              }
+            });
+            ctx.save();
+            ctx.translate(
+              realx - (bullet.xstart - (bullet.xstart - cavansX)),
+              realy - (bullet.ystart - (bullet.ystart - cavansY))
+            );
+            var cannon_widthFOV = bullet.size / 2;
+            var cannon_heightFOV = bullet.size / 2;
+            ctx.rotate(autoCAN_.angle);
+            let basex = -cannon_widthFOV / 2 + cannon_heightFOV;
+            let basey = -cannon_heightFOV / 2;
+
+            ctx.fillStyle = "#b3b3b3";
+            ctx.fillRect(
+              basex,
+              basey - 5,
+              cannon_widthFOV + 15,
+              cannon_heightFOV + 10
+            );
+
+            ctx.strokeStyle = "lightgrey"; // Set border color
+            ctx.lineWidth = 3; // Set border width
+            ctx.strokeRect(
+              basex,
+              basey - 5,
+              cannon_widthFOV + 15,
+              cannon_heightFOV + 10
+            ); // Draw the border
+            // Restore the previous transformation matrix
+            ctx.rotate(-autoCAN_.angle);
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.arc(0, 0, cannon_widthFOV / 2 + 7, 0, 2 * Math.PI, false);
+            ctx.fill();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.closePath();
+          }
+          ctx.restore();
+          ctx.globalAlpha = 1;
+        }
+      });
+
+      for (let playerId__ in players) {
+        if (players.hasOwnProperty(playerId__) && playerId__ != playerId) {
+          let player = players[playerId__];
+
+          let tankdata = tankmeta[player.__type__];
+
+          let tankdatacannon = tankdata["cannons"];
+
+          let playerX = player.x - Math.abs(player.size * 80 * (FOV - 1));
+          let playerY = player.y - Math.abs(player.size * 80 * (FOV - 1));
+
+          let FOVplayerz = player.size * FOV;
+
+          for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
+            ctx.fillStyle = "#b3b3b3";
+            let tankdatacannondata = tankdatacannon[i];
+
+            let cannon_widthFOV =
+              tankdatacannondata["cannon-width"] * FOVplayerz;
+            let cannon_heightFOV =
+              tankdatacannondata["cannon-height"] * FOVplayerz;
+            if (tankdatacannondata["type"] === "basicCannon") {
+              ctx.save();
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+              let angle = player.cannon_angle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+              let basex =
+                -cannon_widthFOV / 2 +
+                cannon_heightFOV +
+                tankdatacannondata["offSet-x"] -
+                player.cannonW[i];
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+              ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
+
+              // Add a border to the cannon
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV); // Draw the border
+              // Restore the previous transformation matrix
+              ctx.restore();
+            } else if (
+              tankdatacannondata["type"] === "trapezoid" ||
+              tankdatacannondata["type"] === "directer"
+            ) {
+              ctx.save();
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+              let angle = player.cannon_angle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+              const cannonWidth_bottom =
+                tankdatacannondata["cannon-width-bottom"] * player.size * FOV;
+
+              let basex =
+                cannonWidth_bottom / 2 +
+                cannon_heightFOV +
+                tankdatacannondata["offSet-x"] -
+                player.cannonW[i];
+              let basey =
+                -cannon_heightFOV / 2 +
+                cannon_heightFOV / 2 -
+                tankdatacannondata["offSet-y"];
+
+              const cannonHeight = cannon_heightFOV;
+              const cannonWidth_top =
+                tankdatacannondata["cannon-width-top"] * player.size * FOV;
+
+              var canwB2 = cannonWidth_bottom / 2;
+              var canwH2 = cannonWidth_top / 2;
+              ctx.beginPath();
+              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+              ctx.lineTo(basex, basey + canwH2);
+              ctx.lineTo(basex, basey - canwH2);
+              ctx.closePath(); // Close the path
+              ctx.fill();
+
+              // Add a border to the cannon
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.beginPath();
+              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+              ctx.lineTo(basex, basey + canwH2);
+              ctx.lineTo(basex, basey - canwH2);
+              ctx.closePath(); // Close the path
+              ctx.stroke(); // Draw the border
+              ctx.restore();
+            } else if (tankdatacannondata["type"] === "trap") {
+              let cannonwidth = tankdatacannondata["cannon-width"];
+              let cannonheight = tankdatacannondata["cannon-height"];
+              ctx.save();
+
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+              let angle = player.cannon_angle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              let trapR = tankdatacannondata["trap-to-cannon-ratio"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+              let basex =
+                -cannon_widthFOV / 2 +
+                cannonheight +
+                tankdatacannondata["offSet-x"] -
+                player.cannonW[i];
+              let reH = cannon_widthFOV * (1 - trapR);
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+              ctx.fillRect(
+                basex,
+                basey,
+                cannon_widthFOV - reH,
+                cannon_heightFOV
+              );
+              // Add a border to the cannon
+
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(
+                basex,
+                basey,
+                cannon_widthFOV - reH,
+                cannon_heightFOV
+              );
+              // Restore the previous transformation matrix
+              const cannonHeight = reH;
+              const cannonWidth_top = cannon_heightFOV * 1.4;
+              const cannonWidth_bottom = cannon_heightFOV;
+
+              basex = basex + (cannon_widthFOV - trapR);
+
+              var canwB2 = cannonWidth_bottom / 2;
+              var canwH2 = cannonWidth_top / 2;
+              basey += canwB2;
+              ctx.beginPath();
+              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+              ctx.lineTo(basex, basey + canwH2);
+              ctx.lineTo(basex, basey - canwH2);
+              ctx.closePath(); // Close the path
+              ctx.fill();
+
+              // Add a border to the cannon
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.beginPath();
+              ctx.moveTo(basex - cannonHeight, basey - canwB2); // Move to the top-left corner
+              ctx.lineTo(basex - cannonHeight, basey + canwB2); // Draw to the bottom-left corner
+              ctx.lineTo(basex, basey + canwH2);
+              ctx.lineTo(basex, basey - canwH2);
+              ctx.closePath(); // Close the path
+              ctx.stroke(); // Draw the border
+              ctx.restore();
+            } else if (tankdatacannondata["type"] === "AutoBulletCannon") {
+              ctx.save();
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+              let angle = player.cannon_angle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+
+              let basex =
+                -cannon_widthFOV / 2 +
+                cannon_heightFOV +
+                tankdatacannondata["offSet-x"] -
+                player.cannonW[i];
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+              ctx.fillRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
+
+              // Add a border to the cannon
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(basex, basey, cannon_widthFOV, cannon_heightFOV);
+
+              ctx.beginPath();
+              ctx.arc(
+                basex + 40 + cannon_widthFOV / 4,
+                basey + cannon_heightFOV / 2,
+                (playerSize * FOV * 40) / 4,
+                0,
+                2 * Math.PI,
+                false
+              );
+              ctx.fill();
+              ctx.lineWidth = 5;
+              ctx.strokeStyle = "lightgrey";
+              ctx.stroke();
+              ctx.closePath();
+              ctx.restore();
+            }
+          }
 
           ctx.beginPath();
-          ctx.fillRect(
-            basex - 5,
-            basey - 2.5,
-            cannon_widthFOV + 10,
-            cannon_heightFOV + 5
+          ctx.fillStyle = squareColor;
+          ctx.arc(
+            playerX - cavansX,
+            playerY - cavansY,
+            player.size * FOV * 40,
+            0,
+            2 * Math.PI,
+            false
           );
-
-          ctx.strokeStyle = "lightgrey"; // Set border color
-          ctx.lineWidth = 3; // Set border width
-          ctx.strokeRect(
-            basex - 5,
-            basey - 2.5,
-            cannon_widthFOV + 10,
-            cannon_heightFOV + 5
-          ); // Draw the border
-          // Restore the previous transformation matrix
-          ctx.rotate(-(angle + angle_offset));
-          ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
+          let num = player.statecycle % 10;
+          if (
+            num === 0 &&
+            (player.state === "start" || player.state === "damaged")
+          ) {
+            ctx.fillStyle = "white";
+          } else {
+            ctx.fillStyle = "red";
+          }
 
           ctx.fill();
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = "darkred";
           ctx.stroke();
           ctx.closePath();
-          ctx.restore();
+
+          // Draw background bar
+          ctx.fillStyle = "black";
+          ctx.fillRect(
+            playerX - cavansX - 50 * FOV,
+            playerY - cavansY + 55 * FOV,
+            90 * FOV,
+            10 * player.size * FOV
+          );
+
+          // Draw health bar
+          const healthWidth =
+            (player.health / player.maxhealth) * 90 * player.size * FOV;
+          ctx.fillStyle = "green";
+          ctx.fillRect(
+            playerX - cavansX - 50 * FOV,
+            playerY - cavansY + 55 * FOV,
+            healthWidth,
+            10 * player.size * FOV
+          );
+          ctx.closePath();
+          // cannons on top of player
+          for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
+            ctx.fillStyle = "#b3b3b3";
+
+            let tankdatacannondata = tankdatacannon[i];
+            let cannon_widthFOV =
+              tankdatacannondata["cannon-width"] * FOVplayerz;
+            let cannon_heightFOV =
+              tankdatacannondata["cannon-height"] * FOVplayerz;
+            let cannonangle;
+            autocannons.forEach((cannonA) => {
+              if (cannonA.playerid === playerId__ && cannonA.autoindex === i) {
+                cannonangle = cannonA.angle;
+              }
+            });
+            if (tankdatacannondata["type"] === "autoCannon") {
+              ctx.save();
+              var [x, y] = rotatePointAroundPlayer();
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+              let angle = cannonangle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+
+              var offSet_x = tankdatacannondata["offSet-x"];
+              if (tankdatacannondata["offSet-x"] === "playerX") {
+                offSet_x = player.size * FOV * 2;
+              }
+
+              let basex =
+                -cannon_widthFOV / 2 +
+                cannon_heightFOV +
+                offSet_x -
+                player.cannonW[i];
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+              ctx.beginPath();
+              ctx.fillRect(
+                basex - 5,
+                basey - 2.5,
+                cannon_widthFOV + 10,
+                cannon_heightFOV + 5
+              );
+
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(
+                basex - 5,
+                basey - 2.5,
+                cannon_widthFOV + 10,
+                cannon_heightFOV + 5
+              ); // Draw the border
+              // Restore the previous transformation matrix
+              ctx.rotate(-(angle + angle_offset));
+              ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
+
+              ctx.fill();
+              ctx.stroke();
+              ctx.closePath();
+              ctx.restore();
+            } else if (tankdatacannondata["type"] === "SwivelAutoCannon") {
+              ctx.save();
+              let cannonangle;
+              autocannons.forEach((cannonA) => {
+                if (cannonA.playerid === player.id && cannonA.autoindex === i) {
+                  cannonangle = cannonA.angle;
+                }
+              });
+              var offSet_x = tankdatacannondata["offSet-x"];
+              if (tankdatacannondata["offSet-x"] === "playerX") {
+                offSet_x = playerSize * 40 * FOV;
+              }
+              if (tankdatacannondata["offSet-x-multpliyer"]) {
+                offSet_x *= -1;
+              }
+              let angle0 = Math.atan2(
+                Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+                Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
+              );
+              var [x, y] = rotatePointAroundPlayer(
+                offSet_x,
+                0,
+                angle0 * (180 / Math.PI)
+              );
+
+              ctx.translate(playerX - cavansX, playerY - cavansY);
+
+              let angle = cannonangle;
+
+              let angle_offset = tankdatacannondata["offset-angle"];
+              ctx.rotate(angle + angle_offset);
+              // Draw the square
+
+              let basex =
+                -cannon_widthFOV / 2 + cannon_heightFOV + 0 - cannonWidth[i];
+              let basey =
+                -cannon_heightFOV / 2 + tankdatacannondata["offSet-y"];
+
+              ctx.beginPath();
+              ctx.fillRect(
+                basex - 5,
+                basey - 2.5,
+                cannon_widthFOV + 10,
+                cannon_heightFOV + 5
+              );
+
+              ctx.strokeStyle = "lightgrey"; // Set border color
+              ctx.lineWidth = 3; // Set border width
+              ctx.strokeRect(
+                basex - 5,
+                basey - 2.5,
+                cannon_widthFOV + 10,
+                cannon_heightFOV + 5
+              ); // Draw the border
+              // Restore the previous transformation matrix
+              ctx.rotate(-(angle + angle_offset));
+              ctx.arc(0, 0, cannon_widthFOV / 2, 0, 2 * Math.PI, false);
+
+              ctx.fill();
+              ctx.stroke();
+              ctx.closePath();
+              ctx.restore();
+            }
+          }
+
+          ctx.strokeStyle = "black";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.font = "bold 20px Geneva";
+          ctx.strokeText(
+            player.score,
+            playerX - cavansX,
+            playerY - cavansY - 55
+          );
+          ctx.fillText(player.score, playerX - cavansX, playerY - cavansY - 55);
+
+          ctx.strokeText(
+            player.username,
+            playerX - cavansX,
+            playerY - cavansY - 75
+          );
+          ctx.fillText(
+            player.username,
+            playerX - cavansX,
+            playerY - cavansY - 75
+          );
+
+          // Draw border
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "grey";
+          ctx.strokeRect(
+            playerX - cavansX - 50,
+            playerY - cavansY + 55,
+            90 * player.size * FOV,
+            10 * player.size * FOV
+          );
         }
       }
 
-      zlevelbullets = [];
+      ctx.fillStyle = squareColor;
 
-      // Draw border
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "grey";
-      ctx.strokeRect(
-        canvas.width / 2 - 50 * FOV,
-        canvas.height / 2 + 55 * FOV,
-        90 * FOV,
-        10 * FOV
+      let angle = Math.atan2(
+        Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
+        Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
       );
+      drawself();
+
       ctx.strokeStyle = "black";
       ctx.lineWidth = 5;
       ctx.beginPath();
@@ -3234,6 +3251,7 @@
       ctx.font = "bold 30px Geneva";
       ctx.fillStyle = "white";
       ctx.fillText("leaderboard", canvas.width - 125, 25);
+
       try {
         leader_board["leader_board"].forEach((entre, i) => {
           var totalwidth;

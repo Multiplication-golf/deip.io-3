@@ -9,8 +9,6 @@ const crypto = require("crypto");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-//TODO: fix upgrade for multi-level upgrade tank choice//
-
 app.use(express.static(path.join(__dirname, "public")));
 var port = process.env.PORT;
 let players = {};
@@ -1157,6 +1155,7 @@ wss.on("connection", (socket) => {
         }
         return true;
       });
+
       return;
     }
 
@@ -1164,7 +1163,22 @@ wss.on("connection", (socket) => {
       if (players[data.id] === undefined) return;
       var truefalse = data.vis === "visible";
       players[data.id].visible = truefalse;
-      console.log(players[data.id].visible);
+      if (truefalse) {
+        for (const player in players) {
+          if (data.id === player) return
+          var player_ = players[player];
+          smartemit(
+            "playerCannonUpdated",
+            {
+              id: player_.id,
+              cannon_angle: player_.cannon_angle,
+              receiver: data.id,
+            },
+            socket
+          );
+          return;
+        }
+      }
       return;
     }
 
@@ -2148,17 +2162,21 @@ wss.on("connection", (socket) => {
         }
         return newPlayers;
       }, {});
-      leader_board.shown.forEach((__index__) => {
-        if (__index__.id === data.id) {
-          leader_board.shown.splice(leader_board.shown.indexOf(__index__));
-        }
-      });
-      leader_board.hidden.forEach((__index__) => {
-        if (__index__.id === data.id) {
-          leader_board.hidden.splice(leader_board.hidden.indexOf(__index__));
-        }
-      });
-      emit("leader_board_update", leader_board.shown);
+      try {
+        leader_board.shown.forEach((__index__) => {
+          if (__index__.id === connection.playerId) {
+            leader_board.shown.splice(leader_board.shown.indexOf(__index__));
+          }
+        });
+        leader_board.hidden.forEach((__index__) => {
+          if (__index__.id === connection.playerId) {
+            leader_board.hidden.splice(leader_board.hidden.indexOf(__index__));
+          }
+        });
+        emit("leader_board_update", leader_board.shown);
+      } catch (e) {
+        console.log(e);
+      }
       emit("playerLeft", data.id);
       return;
     }
@@ -2175,17 +2193,22 @@ wss.on("connection", (socket) => {
     if (index !== -1) {
       connections.splice(index, 1); // Remove the connection from the list
     }
-    leader_board.shown.forEach((__index__) => {
-      if (__index__.id === connection.playerId) {
-        leader_board.shown.splice(leader_board.shown.indexOf(__index__));
-      }
-    });
-    leader_board.hidden.forEach((__index__) => {
-      if (__index__.id === connection.playerId) {
-        leader_board.hidden.splice(leader_board.hidden.indexOf(__index__));
-      }
-    });
-    emit("leader_board_update", leader_board.shown);
+    try {
+      leader_board.shown.forEach((__index__) => {
+        if (__index__.id === connection.playerId) {
+          leader_board.shown.splice(leader_board.shown.indexOf(__index__));
+        }
+      });
+      leader_board.hidden.forEach((__index__) => {
+        if (__index__.id === connection.playerId) {
+          leader_board.hidden.splice(leader_board.hidden.indexOf(__index__));
+        }
+      });
+      emit("leader_board_update", leader_board.shown);
+    } catch (e) {
+      console.log(e);
+    }
+
     players = Object.entries(players).reduce((newPlayers, [key, value]) => {
       if (key !== connection.playerId) {
         newPlayers[key] = value;
@@ -2371,6 +2394,25 @@ setInterval(() => {
             rewarder: bullet.id,
             reward: reward,
           });
+          try {
+            leader_board.shown.forEach((__index__) => {
+              if (__index__.id === player.id) {
+                leader_board.shown.splice(
+                  leader_board.shown.indexOf(__index__)
+                );
+              }
+            });
+            leader_board.hidden.forEach((__index__) => {
+              if (__index__.id === player.id) {
+                leader_board.hidden.splice(
+                  leader_board.hidden.indexOf(__index__)
+                );
+              }
+            });
+            emit("leader_board_update", leader_board.shown);
+          } catch (e) {
+            console.log(e);
+          }
           leader_board.hidden.forEach((__index__) => {
             if (__index__.id === bullet.id) {
               __index__.score += reward;
@@ -2444,6 +2486,7 @@ setInterval(() => {
     let fire_at__ = null;
     let target_enity_type = null;
     if (cannon._type_ !== "bulletAuto") {
+      if (players[cannon.playerid] == undefined) return;
       var tankdatacannon__ =
         tankmeta[players[cannon.playerid].__type__]["cannons"];
     } else if (cannon._type_ === "bulletAuto") {
@@ -2701,7 +2744,7 @@ setInterval(() => {
       const distanceY = Math.abs(player.y - item.y);
       // for speed
       let size__ = player.size * 80 + item.size * 1.5;
-      if (!(distanceX < size__ && distanceY < size__)) break
+      if (!(distanceX < size__ && distanceY < size__)) break;
 
       var collisionCheck = isPlayerCollidingWithPolygon(player, item.vertices);
 
@@ -3173,11 +3216,22 @@ function broadcast(type, data, senderConn) {
     }
   });
 }
+
 function smartbroadcast(type, data, senderConn) {
   const message = JSON.stringify({ type, data });
   connections.forEach((conn) => {
     if (conn.playerId == null || players[conn.playerId] == undefined) return;
     if (conn.socket !== senderConn && players[conn.playerId].visible) {
+      conn.socket.send(message);
+    }
+  });
+}
+
+function smartemit(type, data) {
+  const message = JSON.stringify({ type, data });
+  connections.forEach((conn) => {
+    if (conn.playerId == null || players[conn.playerId] == undefined) return;
+    if (players[conn.playerId].visible) {
       conn.socket.send(message);
     }
   });
