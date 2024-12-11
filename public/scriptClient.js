@@ -165,7 +165,10 @@
     var colorUpgrades = [];
     var upgradePoints = 0;
     var maxUP = 8;
+    var container = document.getElementById("container");
     var errors = 0;
+    var hidden = false;
+    var pi = Math.pi;
     var levels = {
       0: 15,
       1: 28,
@@ -262,7 +265,8 @@
         Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
         Math.abs(MouseX_) - (canvas.width / 2 - playerSize * FOV)
       );
-    };
+    }
+  
     function levelUpgrader(tankdata) {
       var out = false;
       if (tankdata["upgrades"] == undefined) return;
@@ -467,11 +471,11 @@
         }
       }
     }
-    /*function decompressData(r){try{let e=JSON.parse(pako.inflate(r,{to:"string"}));return e}catch(t){console.error("Decompression or JSON Parsing failed:",t)}}*/
 
     function generateUniquePlayerId() {
       return "player-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     }
+  
     function levelHANDLER() {
       let tonextlevel = levels[level] - levels[level - 1];
       progress =
@@ -542,7 +546,6 @@
           },
         };
 
-        // setup
         send("newPlayer", playerData);
 
         send("getFood", {});
@@ -951,7 +954,7 @@
           });
         };
 
-        let healer = setInterval(() => {
+        const healer = setInterval(() => {
           playerHealTime += 1;
           send("AddplayerHealTime", {
             playerHealTime: playerHealTime,
@@ -1337,8 +1340,7 @@
             playerMovementX = 0;
           }
         });
-
-        var container = document.getElementById("container");
+        
         document.addEventListener("mousemove", (evt) => {
           if (autoRotating) return;
           if (lockautoRotating) return;
@@ -1356,8 +1358,7 @@
             MouseY: MouseY_,
           });
         });
-        let hidden = false;
-        let pi = Math.pi;
+        
         setInterval(() => {
           if (!autoRotating && !lockautoRotating) return;
           if (!document.hidden) {
@@ -1826,8 +1827,8 @@
             canFire2 = true;
           }
         });
-        var start;
-        start = setInterval(() => {
+
+        var start = setInterval(() => {
           statecycle += 1;
           send("statechange", {
             state: state,

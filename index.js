@@ -770,6 +770,7 @@ for (let i = 0; i < getRandomInt(400, 500); i++) {
   var health_max = "";
   var score_add = 0;
   var body_damage = 0;
+  var weight = 0;
   switch (true) {
     case between(valueOp__A, 1, 9): // Adjusted to 1-6 for square
       type = "square";
@@ -777,6 +778,7 @@ for (let i = 0; i < getRandomInt(400, 500); i++) {
       health_max = 10;
       score_add = 10;
       body_damage = 2;
+      weight = 3;
       break;
     case between(valueOp__A, 10, 13): // Adjusted to 7-8 for triangle
       type = "triangle";
@@ -784,6 +786,7 @@ for (let i = 0; i < getRandomInt(400, 500); i++) {
       health_max = 15;
       score_add = 15;
       body_damage = 3.5;
+      weight = 5;
       break;
     case between(valueOp__A, 14, 15): // Adjusted to 9-10 for pentagon
       type = "pentagon";
@@ -791,6 +794,7 @@ for (let i = 0; i < getRandomInt(400, 500); i++) {
       health_max = 100;
       score_add = 120;
       body_damage = 4;
+      weight = 10;
       break;
   }
   let fooditem = {
@@ -803,6 +807,7 @@ for (let i = 0; i < getRandomInt(400, 500); i++) {
     y: y,
     centerX: x,
     centerY: y,
+    weight: weight,
     body_damage: body_damage,
     scalarX: getRandomInt(-100, 100),
     scalarY: getRandomInt(-100, 100),
@@ -862,6 +867,7 @@ for (let i = 0; i < getRandomInt(50, 75); i++) {
   var health_max = "";
   var score_add = 0;
   var body_damage = 0;
+  var weight = 0;
 
   type = "pentagon";
   color = "#579bfa";
@@ -873,8 +879,10 @@ for (let i = 0; i < getRandomInt(50, 75); i++) {
     score_add = 3000;
     health_max = 1000;
     body_damage = 9;
+    var weight = 300;
   } else {
     var size = 50;
+    var weight = 10;
   }
 
   let fooditem = {
@@ -887,6 +895,7 @@ for (let i = 0; i < getRandomInt(50, 75); i++) {
     y: y,
     centerX: x,
     centerY: y,
+    weight: weight,
     body_damage: body_damage,
     scalarX: getRandomInt(-100, 100),
     scalarY: getRandomInt(-100, 100),
@@ -943,17 +952,16 @@ function rearrange() {
 }
 
 function confirmplayerradia(_x, _y) {
-  let trueorfalse = true;
   for (const player in players) {
-    var player_ = players[player];
+    let player_ = players[player];
     if (
-      between(player_.x, _x - (player_.size + 50), _x + (player_.size + 50)) ||
+      between(player_.x, _x - (player_.size + 50), _x + (player_.size + 50)) &&
       between(player_.y, _y - (player_.size + 50), _y + (player_.size + 50))
     ) {
-      trueorfalse = false;
+      return false; // Overlap detected
     }
   }
-  return trueorfalse;
+  return true; // No overlap
 }
 
 var angle = 0;
@@ -1165,7 +1173,7 @@ wss.on("connection", (socket) => {
       players[data.id].visible = truefalse;
       if (truefalse) {
         for (const player in players) {
-          if (data.id === player) return
+          if (data.id === player) return;
           var player_ = players[player];
           smartemit(
             "playerCannonUpdated",
@@ -1420,6 +1428,7 @@ wss.on("connection", (socket) => {
             var health_max = "";
             var score_add = 0;
             var body_damage = 0;
+            var weight = 0;
             if (!item["respawn-raidis"]) {
               switch (true) {
                 case between(valueOp, 1, 10): // Adjusted to 1-6 for square
@@ -1428,6 +1437,7 @@ wss.on("connection", (socket) => {
                   health_max = 10;
                   score_add = 10;
                   body_damage = 2;
+                  weight = 3;
                   break;
                 case between(valueOp, 11, 13): // Adjusted to 7-8 for triangle
                   type = "triangle";
@@ -1435,6 +1445,7 @@ wss.on("connection", (socket) => {
                   health_max = 15;
                   score_add = 15;
                   body_damage = 3.5;
+                  weight = 5;
                   break;
                 case between(valueOp, 14, 15): // Adjusted to 9-10 for pentagon
                   type = "pentagon";
@@ -1442,6 +1453,7 @@ wss.on("connection", (socket) => {
                   health_max = 100;
                   score_add = 120;
                   body_damage = 4;
+                  weight = 10;
                   break;
               }
             } else {
@@ -1457,8 +1469,10 @@ wss.on("connection", (socket) => {
                 score_add = 3000;
                 health_max = 1000;
                 body_damage = 9;
+                weight = 300;
               } else {
                 var size = 50;
+                weight = 10;
               }
             }
             let fooditem = {
@@ -1471,6 +1485,7 @@ wss.on("connection", (socket) => {
               y: y,
               centerX: x,
               centerY: y,
+              weight: weight,
               body_damage: body_damage,
               scalarX: getRandomInt(-100, 100),
               scalarY: getRandomInt(-100, 100),
@@ -2834,6 +2849,7 @@ setInterval(() => {
           var health_max = "";
           var score_add = 0;
           var body_damage = 0;
+          var weight = 0;
           if (!item["respawn-raidis"]) {
             switch (true) {
               case between(valueOp, 1, 10): // Adjusted to 1-6 for square
@@ -2842,6 +2858,7 @@ setInterval(() => {
                 health_max = 10;
                 score_add = 10;
                 body_damage = 2;
+                weight = 3;
                 break;
               case between(valueOp, 11, 13): // Adjusted to 7-8 for triangle
                 type = "triangle";
@@ -2849,6 +2866,7 @@ setInterval(() => {
                 health_max = 15;
                 score_add = 15;
                 body_damage = 3.5;
+                weight = 5;
                 break;
               case between(valueOp, 14, 15): // Adjusted to 9-10 for pentagon
                 type = "pentagon";
@@ -2856,6 +2874,7 @@ setInterval(() => {
                 health_max = 100;
                 score_add = 120;
                 body_damage = 4;
+                weight = 10;
                 break;
             }
           } else {
@@ -2871,7 +2890,9 @@ setInterval(() => {
               score_add = 3000;
               health_max = 1000;
               body_damage = 9;
+              weight = 300;
             } else {
+              weight = 10;
               var size = 50;
             }
           }
@@ -2886,6 +2907,7 @@ setInterval(() => {
             centerX: x,
             centerY: y,
             body_damage: body_damage,
+            weight: weight,
             scalarX: getRandomInt(-100, 100),
             scalarY: getRandomInt(-100, 100),
             vertices: null,
@@ -3011,10 +3033,9 @@ setInterval(() => {
           } while (
             cors_taken.some(
               (c) =>
-                between(x, c.x - 50, c.x + 50) &&
-                between(y, c.y - 50, c.y + 50) &&
-                confirmplayerradia(x, y)
-            )
+                between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)
+            ) ||
+            !confirmplayerradia(x, y)
           );
 
           cors_taken.push({ x, y, id: randID });
@@ -3025,6 +3046,7 @@ setInterval(() => {
           var health_max = "";
           var score_add = 0;
           var body_damage = 0;
+          var weight = 0;
           if (!item["respawn-raidis"]) {
             switch (true) {
               case between(valueOp, 1, 10): // Adjusted to 1-6 for square
@@ -3033,6 +3055,7 @@ setInterval(() => {
                 health_max = 10;
                 score_add = 10;
                 body_damage = 2;
+                weight = 3;
                 break;
               case between(valueOp, 11, 13): // Adjusted to 7-8 for triangle
                 type = "triangle";
@@ -3040,6 +3063,7 @@ setInterval(() => {
                 health_max = 15;
                 score_add = 15;
                 body_damage = 3.5;
+                weight = 5;
                 break;
               case between(valueOp, 14, 15): // Adjusted to 9-10 for pentagon
                 type = "pentagon";
@@ -3047,6 +3071,7 @@ setInterval(() => {
                 health_max = 100;
                 score_add = 120;
                 body_damage = 4;
+                weight = 10;
                 break;
             }
           } else {
@@ -3062,8 +3087,10 @@ setInterval(() => {
               score_add = 3000;
               health_max = 1000;
               body_damage = 9;
+              weight = 300;
             } else {
               var size = 50;
+              weight = 10;
             }
           }
           if (!item["respawn-raidis"]) {
@@ -3077,6 +3104,7 @@ setInterval(() => {
               y: y,
               centerX: x,
               centerY: y,
+              weight: weight,
               body_damage: body_damage,
               scalarX: getRandomInt(-100, 100),
               scalarY: getRandomInt(-100, 100),
@@ -3097,6 +3125,7 @@ setInterval(() => {
               y: y,
               centerX: x,
               centerY: y,
+              weight: weight,
               body_damage: body_damage,
               scalarX: getRandomInt(-100, 100),
               scalarY: getRandomInt(-100, 100),
@@ -3107,6 +3136,20 @@ setInterval(() => {
               "respawn-raidis": 1000,
             };
           }
+          let recoilX =
+            ((bullet.size / item.weight) *
+              bullet.speed *
+              Math.cos(bullet.angle)) /
+            4;
+          let recoilY =
+            ((bullet.size / item.weight) *
+              bullet.speed *
+              Math.sin(bullet.angle)) /
+            4;
+          item.x += recoilX;
+          item.y += recoilY;
+          item.centerX += recoilX;
+          item.centerY += recoilY;
 
           if (type === "triangle") {
             const rawvertices = calculateTriangleVertices(
@@ -3159,6 +3202,20 @@ setInterval(() => {
           return_ = false;
         } else {
           item.health -= damage;
+          let recoilX =
+            ((bullet.size / item.weight) *
+              bullet.speed *
+              Math.cos(bullet.angle)) /
+            4;
+          let recoilY =
+            ((bullet.size / item.weight) *
+              bullet.speed *
+              Math.sin(bullet.angle)) /
+            4;
+          item.x += recoilX;
+          item.y += recoilY;
+          item.centerX += recoilX;
+          item.centerY += recoilY;
 
           if (bullet.bullet_pentration > item.size) {
             if (bullet.type === "triangle") {
@@ -3217,21 +3274,21 @@ function broadcast(type, data, senderConn) {
   });
 }
 
-function smartbroadcast(type, data, senderConn) {
-  const message = JSON.stringify({ type, data });
-  connections.forEach((conn) => {
-    if (conn.playerId == null || players[conn.playerId] == undefined) return;
-    if (conn.socket !== senderConn && players[conn.playerId].visible) {
-      conn.socket.send(message);
-    }
-  });
-}
-
 function smartemit(type, data) {
   const message = JSON.stringify({ type, data });
   connections.forEach((conn) => {
     if (conn.playerId == null || players[conn.playerId] == undefined) return;
     if (players[conn.playerId].visible) {
+      conn.socket.send(message);
+    }
+  });
+}
+
+function smartbroadcast(type, data, senderConn) {
+  const message = JSON.stringify({ type, data });
+  connections.forEach((conn) => {
+    if (conn.playerId == null || players[conn.playerId] == undefined) return;
+    if (conn.socket !== senderConn && players[conn.playerId].visible) {
       conn.socket.send(message);
     }
   });
