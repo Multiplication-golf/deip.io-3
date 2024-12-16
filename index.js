@@ -8,6 +8,7 @@ const WebSocket = require("ws");
 const crypto = require("crypto");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+const fs = require("fs");
 
 app.use(express.static(path.join(__dirname, "public")));
 var port = process.env.PORT;
@@ -154,6 +155,7 @@ const tankmeta = {
       autobasic: { img: 9, level: 15 },
       autoduo: { img: 10, level: 15 },
       autoShooter: { img: 11, level: 30 },
+      rocketer: { img: 12, level: 30 },
     },
     cannons: [
       {
@@ -564,6 +566,34 @@ const tankmeta = {
       },
     ],
   },
+  rocketer: {
+    "size-m": 1,
+    "speed-m": 1,
+    "damage-m": 1,
+    "health-m": 1,
+    "regen-m": 1,
+    fov: 1,
+    "BodyDamage-m": 1,
+    "reaload-m": 1,
+    upgradeLevel: 30,
+    upgrades: {},
+    cannons: [
+      {
+        type: "rocketer",
+        "cannon-width-top": 30,
+        "cannon-height": 50,
+        "cannon-width-bottom": 50,
+        "offSet-x": 0,
+        "offSet-y": 0,
+        "offset-angle": 0,
+        bulletSize: 0.8,
+        bulletSpeed: 2,
+        delay: 0,
+        reloadM: 1.3,
+        bullet_pentration: 1,
+      },
+    ],
+  },
 };
 
 var levelmultiplyer = 1.2;
@@ -936,10 +966,9 @@ for (let i = 0; i < getRandomInt(50, 75); i++) {
   food_squares.push(fooditem);
 }
 
-console.log(food_squares.length);
 function generateRandomNumber(min, max) {
   return Math.random() * (max - min) + min;
-}
+} //
 
 function rearrange() {
   if (leader_board.shown.length <= 1) {
@@ -1043,6 +1072,20 @@ wss.on("connection", (socket) => {
       emit("autoCannonUPDATE-ADD", autocannons);
       emit("colorUpgrades", ColorUpgrades);
       emit("Levels", levels);
+      let x, y;
+      do {
+        x = getRandomInt(-5000, 5000);
+        y = getRandomInt(-5000, 5000);
+      } while (
+        cors_taken.some(
+          (c) =>
+            between(x, c.x - 50, c.x + 50) && between(y, c.y - 50, c.y + 50)
+        ) ||
+        !confirmplayerradia(x, y)
+      );
+      emit("new_X_Y", {x:x, y:y});
+      players[data.id].x = x
+      players[data.id].y = y
       leader_board.hidden.push({ id: data.id, score: 0, name: data.username });
       if (!leader_board.shown[10]) {
         leader_board.shown.push({ id: data.id, score: 0, name: data.username });
@@ -1173,18 +1216,13 @@ wss.on("connection", (socket) => {
       players[data.id].visible = truefalse;
       if (truefalse) {
         for (const player in players) {
-          if (data.id === player) return;
           var player_ = players[player];
-          smartemit(
-            "playerCannonUpdated",
-            {
-              id: player_.id,
-              cannon_angle: player_.cannon_angle,
-              receiver: data.id,
-            },
-            socket
-          );
-          return;
+          //if (data.id === player_.id) return;
+          emit("playerCannonUpdated", {
+            id: player_.id,
+            cannon_angle: player_.cannon_angle,
+            receiver: data.id,
+          });
         }
       }
       return;
@@ -3119,7 +3157,7 @@ setInterval(() => {
               type: type,
               health: health_max,
               maxhealth: health_max,
-              size: 50,
+              size: size,
               angle: getRandomInt(0, 180),
               x: x,
               y: y,
