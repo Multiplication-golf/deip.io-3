@@ -1,4 +1,4 @@
-// lol you little kids can't mess with my game
+// LOL, you little kids can't mess with my game
 (function () {
   var username = "Unamed tank";
   for (let i = 0; i < 125; i++) {
@@ -72,7 +72,7 @@
           },
         ],
       },
-    }; // over right
+    }
     var grid = document.getElementById("grid");
     var types = [
       "basic",
@@ -129,6 +129,7 @@
     var current_angle = 0;
     var MouseX_ = 0;
     var MouseY_ = 0;
+    var typedtext = "";
     var mapLeft = -5000;
     var mapRight = 5000;
     var mapTop = -5000;
@@ -164,11 +165,14 @@
     var zlevelbullets = [];
     var colorUpgrades = [];
     var upgradePoints = 0;
+    var playerMessages = [];
     var maxUP = 8;
     var container = document.getElementById("container");
     var errors = 0;
+    var messaging = false;
     var hidden = false;
     var pi = Math.pi;
+    var pentarotate = 0;
     var levels = {
       0: 15,
       1: 28,
@@ -272,7 +276,6 @@
       if (tankdata["upgrades"] == undefined) return;
       for (let i = 0; i < Object.keys(tankdata["upgrades"]).length; i++) {
         var KEY = Object.keys(tankdata["upgrades"])[i];
-        console.log(level, tankdata["upgrades"][KEY]["level"]);
 
         if (level >= tankdata["upgrades"][KEY]["level"] - 1) {
           if (out === false) {
@@ -288,7 +291,6 @@
 
           var img__ = document.createElement("img");
           var tileImg = upgrade.img;
-          console.log(upgrade, tileImg);
           tankstiles.appendChild(img__);
 
           img__.src = "tanktiles/" + tileImg + ".png";
@@ -298,7 +300,6 @@
             event.stopPropagation();
             tankstiles.style.display = "none";
             __type__ = Object.keys(tankdata["upgrades"])[i];
-            console.log(__type__);
             players[playerId].__type__ = __type__;
             tankdata = tankmeta[__type__];
             var tankdatacannon__ = tankdata["cannons"];
@@ -565,14 +566,34 @@
             players[data.id] = data; // Update the local player data
             console.log("Player updated:", data); // Log the update
           } else if (type === "new_X_Y") {
+            if (data.id !== playerId) return;
             cavansX = data.x;
             playerY += data.y;
             cavansY = data.y;
             playerX += data.x;
-            console.log(data.x,data.y)
           } else if (type === "RETURNtankmeta") {
             tankmeta = data;
             draw();
+          } else if (type === "NewMessages") {
+            playerMessages = data;
+          } else if (type === "playerMessage") {
+            playerMessages.push({
+              text: data.text,
+              exspiretime: data.exspiretime,
+              id: data.id,
+              hidetime: data.hidetime
+            });
+            console.log(playerMessages)
+            let index_ = playerMessages.indexOf({
+              text: data.text,
+              exspiretime: data.exspiretime,
+              id: data.id,
+              hidetime: data.hidetime
+            });
+            setTimeout(() => {
+              playerMessages = playerMessages.splice(0, index_);
+            }, data.exspiretime);
+            console.log(playerMessages)
           } else if (type === "Levels") {
             levels = data;
           } else if (type === "handshake") {
@@ -615,7 +636,6 @@
             try {
               if (data.receiver) {
                 if (data.receiver === playerId) {
-                  console.log("a:", data.cannon_angle, data.id, data.receiver);
                   players[data.id].cannon_angle = data.cannon_angle;
                 }
               } else {
@@ -638,6 +658,7 @@
               document.getElementById("die").style.display = "block";
               document.getElementById("container").style.display = "none";
               document.getElementById("myCanvas").style.display = "none";
+              document.getElementById("tanktiles").style.display = "none";
               clearInterval(healer);
               socket.onmessage = {};
               autoIntevals;
@@ -924,6 +945,7 @@
           } else if (type === "type_Change") {
             players[data.id] = data;
           } else if (type === "statechangeUpdate") {
+            if (!players[data.playerID]) return;
             players[data.playerID].state = data.state;
             players[data.playerID].statecycle = data.statecycle;
           } else if (type === "playerCannonWidthUpdate") {
@@ -1126,182 +1148,201 @@
 
         document.addEventListener("keydown", (event) => {
           keysPressed[event.key] = true;
-          if (keysPressed["]"]) {
-            players[playerId].score += 50;
-            score = players[playerId].score;
-            levelHANDLER();
-          } else if (
-            (keysPressed["ArrowLeft"] && keysPressed["ArrowUp"]) ||
-            (keysPressed["a"] && keysPressed["w"])
-          ) {
-            handleMovement(-1, -1);
-          } else if (
-            (keysPressed["ArrowLeft"] && keysPressed["ArrowDown"]) ||
-            (keysPressed["a"] && keysPressed["s"])
-          ) {
-            handleMovement(-1, 1);
-          } else if (
-            (keysPressed["ArrowRight"] && keysPressed["ArrowUp"]) ||
-            (keysPressed["d"] && keysPressed["w"])
-          ) {
-            handleMovement(1, -1);
-          } else if (
-            (keysPressed["ArrowRight"] && keysPressed["ArrowDown"]) ||
-            (keysPressed["d"] && keysPressed["s"])
-          ) {
-            handleMovement(1, 1);
-          } else if (keysPressed["ArrowUp"] || keysPressed["w"]) {
-            handleMovement(0, -1);
-          } else if (keysPressed["ArrowDown"] || keysPressed["s"]) {
-            handleMovement(0, 1);
-          } else if (keysPressed["ArrowLeft"] || keysPressed["a"]) {
-            handleMovement(-1, 0);
-          } else if (keysPressed["ArrowRight"] || keysPressed["d"]) {
-            handleMovement(1, 0);
-          } else if (keysPressed["-"]) {
-            FOV -= 0.1;
-          } else if (keysPressed["1"]) {
-            if (statsTree["Health"] < maxUP && upgradePoints > 0) {
-              statsTree["Health"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Health",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["2"]) {
-            if (statsTree["Body Damage"] < maxUP && upgradePoints > 0) {
-              statsTree["Body Damage"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Body Damage",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["3"]) {
-            if (statsTree["Regen"] < maxUP && upgradePoints > 0) {
-              statsTree["Regen"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Regen",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["4"]) {
-            if (statsTree["Bullet Pentration"] < maxUP && upgradePoints > 0) {
-              statsTree["Bullet Pentration"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Bullet Pentration",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["5"]) {
-            if (statsTree["Bullet Speed"] < maxUP && upgradePoints > 0) {
-              statsTree["Bullet Speed"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Bullet Speed",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["6"]) {
-            if (statsTree["Bullet Damage"] < maxUP && upgradePoints > 0) {
-              statsTree["Bullet Damage"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Bullet Damage",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["7"]) {
-            if (statsTree["Bullet Reload"] < maxUP && upgradePoints > 0) {
-              statsTree["Bullet Reload"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Bullet Reload",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["8"]) {
-            if (statsTree["Speed"] < maxUP && upgradePoints > 0) {
-              statsTree["Speed"] += 1;
-              upgradePoints -= 1;
-              send("statUpgrade", {
-                Upgradetype: "Speed",
-                UpgradeLevel: 1,
-                id: playerId,
-              });
-            }
-          } else if (keysPressed["="]) {
-            FOV += 0.1;
-          } else if (keysPressed["e"]) {
-            if (lockautoRotating) return;
-            autoFiring = !autoFiring;
-            if (!autoFiring) {
-              canFire = true;
-            }
-          } else if (keysPressed["c"]) {
-            send("browserunHidden", { id: playerId });
-            autoRotating = !autoRotating;
-          } else if (keysPressed["h"]) {
-            __type__ = types[typeindex];
-            typeindex += 1;
-            if (typeindex >= types.length) {
-              typeindex = 0;
-            }
-            players[playerId].type = __type__;
-            let tankdata = tankmeta[__type__];
-            var tankdatacannon__ = tankdata["cannons"];
-            playerSize *= tankdata["size-m"];
-            playerSpeed *= tankdata["speed-m"];
-            bullet_damage *= tankdata["damage-m"];
-            playerReheal *= tankdata["regen-m"];
-            bodyDamage *= tankdata["BodyDamage-m"];
-            maxhealth *= tankdata["health-m"];
-            if (playerHealth > maxhealth) {
-              playerHealth = maxhealth;
-            }
-
-            send("typeChange", {
-              id: playerId,
-              x: playerX,
-              y: playerY,
-              health: playerHealth,
-              speed: playerSpeed,
-              size: playerSize,
-              bodyDamage: bodyDamage,
-              cannonW: cannonWidth,
-              cannonH: 0,
-              __type__: __type__,
-              cannon_angle: getCannonAngle(),
-              score: score,
-              username: username,
-              level: level,
-              state: state,
-              statecycle: statecycle,
-              playerHealTime: playerHealTime,
-              maxhealth: maxhealth,
-              playerReheal: playerReheal,
-              FOV: FOV,
-              MouseX: MouseX_,
-              MouseY: MouseY_,
-              screenWidth: canvas.width,
-              screenHeight: canvas.height,
-            });
-            setTimeout(() => {
-              cannonWidth = [];
-              for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
-                cannonWidth.push(0);
+          if (!messaging) {
+            if (keysPressed["]"]) {
+              players[playerId].score += 50;
+              score = players[playerId].score;
+              levelHANDLER();
+            } else if (
+              (keysPressed["ArrowLeft"] && keysPressed["ArrowUp"]) ||
+              (keysPressed["a"] && keysPressed["w"])
+            ) {
+              handleMovement(-1, -1);
+            } else if (
+              (keysPressed["ArrowLeft"] && keysPressed["ArrowDown"]) ||
+              (keysPressed["a"] && keysPressed["s"])
+            ) {
+              handleMovement(-1, 1);
+            } else if (
+              (keysPressed["ArrowRight"] && keysPressed["ArrowUp"]) ||
+              (keysPressed["d"] && keysPressed["w"])
+            ) {
+              handleMovement(1, -1);
+            } else if (
+              (keysPressed["ArrowRight"] && keysPressed["ArrowDown"]) ||
+              (keysPressed["d"] && keysPressed["s"])
+            ) {
+              handleMovement(1, 1);
+            } else if (keysPressed["ArrowUp"] || keysPressed["w"]) {
+              handleMovement(0, -1);
+            } else if (keysPressed["ArrowDown"] || keysPressed["s"]) {
+              handleMovement(0, 1);
+            } else if (keysPressed["ArrowLeft"] || keysPressed["a"]) {
+              handleMovement(-1, 0);
+            } else if (keysPressed["ArrowRight"] || keysPressed["d"]) {
+              handleMovement(1, 0);
+            } else if (keysPressed["-"]) {
+              FOV -= 0.1;
+            } else if (keysPressed["1"]) {
+              if (statsTree["Health"] < maxUP && upgradePoints > 0) {
+                statsTree["Health"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Health",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
               }
-            }, 100);
+            } else if (keysPressed["2"]) {
+              if (statsTree["Body Damage"] < maxUP && upgradePoints > 0) {
+                statsTree["Body Damage"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Body Damage",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
+              }
+            } else if (keysPressed["3"]) {
+              if (statsTree["Regen"] < maxUP && upgradePoints > 0) {
+                statsTree["Regen"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Regen",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
+              }
+            } else if (keysPressed["4"]) {
+              if (statsTree["Bullet Pentration"] < maxUP && upgradePoints > 0) {
+                statsTree["Bullet Pentration"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Bullet Pentration",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
+              }
+            } else if (keysPressed["5"]) {
+              if (statsTree["Bullet Speed"] < maxUP && upgradePoints > 0) {
+                statsTree["Bullet Speed"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Bullet Speed",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
+              }
+            } else if (keysPressed["6"]) {
+              if (statsTree["Bullet Damage"] < maxUP && upgradePoints > 0) {
+                statsTree["Bullet Damage"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Bullet Damage",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
+              }
+            } else if (keysPressed["7"]) {
+              if (statsTree["Bullet Reload"] < maxUP && upgradePoints > 0) {
+                statsTree["Bullet Reload"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Bullet Reload",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
+              }
+            } else if (keysPressed["8"]) {
+              if (statsTree["Speed"] < maxUP && upgradePoints > 0) {
+                statsTree["Speed"] += 1;
+                upgradePoints -= 1;
+                send("statUpgrade", {
+                  Upgradetype: "Speed",
+                  UpgradeLevel: 1,
+                  id: playerId,
+                });
+              }
+            } else if (keysPressed["="]) {
+              FOV += 0.1;
+            } else if (keysPressed["e"]) {
+              if (lockautoRotating) return;
+              autoFiring = !autoFiring;
+              if (!autoFiring) {
+                canFire = true;
+              }
+            } else if (keysPressed["c"]) {
+              send("browserunHidden", { id: playerId });
+              autoRotating = !autoRotating;
+            } else if (keysPressed["h"]) {
+              __type__ = types[typeindex];
+              typeindex += 1;
+              if (typeindex >= types.length) {
+                typeindex = 0;
+              }
+              players[playerId].type = __type__;
+              let tankdata = tankmeta[__type__];
+              var tankdatacannon__ = tankdata["cannons"];
+              playerSize *= tankdata["size-m"];
+              playerSpeed *= tankdata["speed-m"];
+              bullet_damage *= tankdata["damage-m"];
+              playerReheal *= tankdata["regen-m"];
+              bodyDamage *= tankdata["BodyDamage-m"];
+              maxhealth *= tankdata["health-m"];
+              if (playerHealth > maxhealth) {
+                playerHealth = maxhealth;
+              }
+
+              send("typeChange", {
+                id: playerId,
+                x: playerX,
+                y: playerY,
+                health: playerHealth,
+                speed: playerSpeed,
+                size: playerSize,
+                bodyDamage: bodyDamage,
+                cannonW: cannonWidth,
+                cannonH: 0,
+                __type__: __type__,
+                cannon_angle: getCannonAngle(),
+                score: score,
+                username: username,
+                level: level,
+                state: state,
+                statecycle: statecycle,
+                playerHealTime: playerHealTime,
+                maxhealth: maxhealth,
+                playerReheal: playerReheal,
+                FOV: FOV,
+                MouseX: MouseX_,
+                MouseY: MouseY_,
+                screenWidth: canvas.width,
+                screenHeight: canvas.height,
+              });
+              setTimeout(() => {
+                cannonWidth = [];
+                for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+                  cannonWidth.push(0);
+                }
+              }, 100);
+            }
+          }
+          if (messaging) {
+            if (event.key !== "Backspace" && event.key !== "Delete" || event.key !== "Enter" && typedtext.length > 35) {
+              typedtext += event.key;
+              console.log(event.key)
+            } else {
+              typedtext = typedtext.slice(0, -1);
+            }
+          }
+          if (keysPressed["Enter"]) {
+            if (messaging) {
+              console.log(typedtext)
+              send("playerSend", { id: playerId, text: typedtext });
+              typedtext = "";
+            }
+            console.log(messaging)
+            messaging = !messaging;
           }
         });
 
@@ -1366,6 +1407,10 @@
         });
 
         setInterval(() => {
+          pentarotate += 1;
+          if (359.8 <= pentarotate) {
+            pentarotate = 0;
+          }
           if (!autoRotating && !lockautoRotating) return;
           if (!document.hidden) {
             // do what you need
@@ -1446,7 +1491,6 @@
 
               let randomNumber = generateRandomNumber(-0.2, 0.2);
 
-              console.log(cannon["type"]);
               if (
                 cannon["type"] === "basicCannon" ||
                 cannon["type"] === "trap"
@@ -2016,6 +2060,41 @@
 
       let FOVplayerz = playerSize * FOV;
 
+      if (tankdata.decor) {
+        tankdata.decor.forEach((decor_) => {
+          if (decor_.type === "octaspinner") {
+            ctx.fillStyle = "black";
+            ctx.save();
+            ctx.translate(canW / 2 + decor_.offsetX, canH / 2 + decor_.offsetY);
+            ctx.rotate(angle + decor_.offsetAngle);
+
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+              // calculate the rotation
+              const rotation = ((Math.PI * 2) / 8) * i;
+
+              // for the first point move to
+              if (i === 0) {
+                ctx.moveTo(
+                  decor_.size * Math.cos(rotation),
+                  decor_.size * Math.sin(rotation)
+                );
+              } else {
+                // for the rest draw a line
+                ctx.lineTo(
+                  decor_.size * Math.cos(rotation),
+                  decor_.size * Math.sin(rotation)
+                );
+              }
+            }
+
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        });
+      }
+
       for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
         ctx.fillStyle = "#b3b3b3";
         let tankdatacannondata = tankdatacannon[i];
@@ -2480,6 +2559,130 @@
         healthWidth,
         10 * FOV
       );
+      ctx.save();
+
+      ctx.translate(canW - 150, canH - 150);
+      ctx.fillStyle = "#fcfafa";
+      ctx.beginPath();
+      ctx.roundRect(0, 0, 125, 125, 5);
+      ctx.fill();
+      ctx.moveTo(0, 0);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#e3e3e3";
+      for (let i = 0; i < 13; i++) {
+        ctx.moveTo(i * 10.3, 0);
+        ctx.lineTo(i * 10.3, 125);
+        ctx.stroke();
+      }
+      ctx.closePath();
+      ctx.moveTo(0, 0);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#e3e3e3";
+      for (let i = 0; i < 13; i++) {
+        ctx.moveTo(0, i * 10.3);
+        ctx.lineTo(125, i * 10.3);
+        ctx.stroke();
+      }
+      ctx.closePath();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "grey";
+      ctx.beginPath();
+      ctx.roundRect(0, 0, 125, 125, 5);
+      ctx.stroke();
+      ctx.closePath();
+
+      ctx.textAlign = "center";
+      ctx.strokeText("players: " + Object.keys(players).length, 125 / 2, -25);
+      ctx.fillText("players: " + Object.keys(players).length, 125 / 2, -25);
+
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = "#579bfa";
+      const centerX = 62.5;
+      const centerY = 62.5;
+      const radius = 30 * FOV;
+      const angle_o_0_ = pentarotate; // Convert angle to radians
+      vertices = [];
+
+      for (let i = 0; i < 5; i++) {
+        const theta = (i * 2 * Math.PI) / 5 + angle_o_0_; // Divide circle into 5 parts and add rotation angle
+        const x = centerX + radius * Math.cos(theta);
+        const y = centerY + radius * Math.sin(theta);
+        vertices.push({ x, y });
+      }
+      var _vertices = [];
+      // Draw filled pentagon
+      ctx.beginPath();
+      ctx.moveTo(vertices[0].x, vertices[0].y);
+      for (let i = 1; i < vertices.length; i++) {
+        ctx.lineTo(vertices[i].x, vertices[i].y);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Draw pentagon outline
+      ctx.strokeStyle = "#3976cc";
+      ctx.beginPath();
+      ctx.moveTo(vertices[0].x, vertices[0].y);
+      for (let i = 1; i < vertices.length; i++) {
+        ctx.lineTo(vertices[i].x, vertices[i].y);
+      }
+      ctx.closePath();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.translate((playerX + 2500) / 80 + 35, (playerY + 2500) / 80 + 35);
+      ctx.rotate(angle + (90 * Math.PI) / 180);
+      ctx.arc(
+        (playerX + 2500) / 80 + 35,
+        (playerY + 2500) / 80 + 35,
+        playerSize * FOV * 2,
+        0,
+        2 * Math.PI,
+        false
+      );
+      let realitemsize = playerSize * FOV * 2;
+      let h = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, -h / 2);
+      ctx.lineTo(-realitemsize / 2, h / 2);
+      ctx.lineTo(realitemsize / 2, h / 2);
+      ctx.closePath();
+
+      ctx.fillStyle = "blue";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "darkblue";
+      ctx.stroke();
+      ctx.closePath();
+      ctx.beginPath();
+      ctx.restore();
+      if (messaging) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "#a3a3a3";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.fillStyle = "lightgrey";
+        ctx.strokeStyle = "grey";
+        let boxlen = 300 + typedtext.length * 20;
+        ctx.roundRect(
+          canvas.width / 2 - boxlen / 2,
+          canvas.height / 2 - 25,
+          boxlen,
+          50,
+          5
+        );
+        ctx.fill();
+        ctx.stroke();
+        ctx.textAlign = "left";
+        ctx.font = "bold 30px Geneva";
+        ctx.fillStyle = "darkgrey";
+        ctx.fillText(
+          typedtext,
+          canvas.width / 2 - (boxlen / 2 - 5),
+          canvas.height / 2 + 15
+        );
+        ctx.closePath();
+      }
     }
 
     function draw() {
@@ -2664,6 +2867,7 @@
             ctx.stroke();
             ctx.closePath();
           }
+          ctx.globalAlpha = 1;
         }
       });
 
@@ -2923,6 +3127,45 @@
           let playerY = player.y - Math.abs(player.size * 80 * (FOV - 1));
 
           let FOVplayerz = player.size * FOV;
+
+          if (tankdata.decor) {
+            tankdata.decor.forEach((decor_) => {
+              if (decor_.type === "octaspinner") {
+                ctx.fillStyle = "black";
+                ctx.save();
+                ctx.translate(
+                  playerX - cavansX + decor_.offsetX,
+                  playerY - cavansY + decor_.offsetY
+                );
+                let angle = player.cannon_angle;
+                ctx.rotate(angle + decor_.offsetAngle);
+
+                ctx.beginPath();
+                for (let i = 0; i < 8; i++) {
+                  // calculate the rotation
+                  const rotation = ((Math.PI * 2) / 8) * i;
+
+                  // for the first point move to
+                  if (i === 0) {
+                    ctx.moveTo(
+                      decor_.size * Math.cos(rotation),
+                      decor_.size * Math.sin(rotation)
+                    );
+                  } else {
+                    // for the rest draw a line
+                    ctx.lineTo(
+                      decor_.size * Math.cos(rotation),
+                      decor_.size * Math.sin(rotation)
+                    );
+                  }
+                }
+
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+              }
+            });
+          }
 
           for (let i = 0; i < Object.keys(tankdatacannon).length; i++) {
             ctx.fillStyle = "#b3b3b3";
@@ -3207,6 +3450,33 @@
           ctx.closePath();
 
           // Draw background bar
+          let mymessages = [];
+          playerMessages.forEach((massege) => {
+            if (massege.id === player.id) {
+              mymessages.push(massege);
+            }
+          });
+          mymessages.forEach((message) => {
+            ctx.save();
+            console.log((Date.now()-message.hidetime)/500,Date.now()<message.hidetime)
+            if (message.hidetime < Date.now()) {
+              console.log(1-(Date.now() - message.hidetime)/500)
+              if (1 > 1-(Date.now() - message.hidetime)/500) {
+                ctx.globalAlpha = 1-(Date.now() - message.hidetime)/500
+              }
+              
+            }
+            ctx.translate(
+              playerX - cavansX,
+              (((playerY - cavansY) - (player.size * 40)) - (30 * mymessages.length))-25
+            );
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center";
+            ctx.font = "bold 20px Geneva";
+            ctx.fillText(message.text, 0, 0);
+            ctx.globalAlpha = 1
+            ctx.restore();
+          });
           ctx.fillStyle = "black";
           ctx.fillRect(
             playerX - cavansX - 50 * FOV,
