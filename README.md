@@ -16,3 +16,8 @@ Suggestions wellcome<br>
 {                         }<br>
 {           (----)      }<br>
 \\_\___________/
+
+
+### looking for testers
+
+It is still kind of buggy
