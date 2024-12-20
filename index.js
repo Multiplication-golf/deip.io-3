@@ -2390,17 +2390,14 @@ wss.on("connection", (socket) => {
         return newPlayers;
       }, {});
       try {
-        leader_board.shown.forEach((__index__) => {
-          if (__index__.id === connection.playerId) {
-            leader_board.shown.splice(leader_board.shown.indexOf(__index__));
-          }
-        });
-        leader_board.hidden.forEach((__index__) => {
-          if (__index__.id === connection.playerId) {
-            leader_board.hidden.splice(leader_board.hidden.indexOf(__index__));
-          }
-        });
-        emit("leader_board_update", leader_board.shown);
+        leader_board.shown = leader_board.shown.filter(
+          (__index__) => __index__.id !== connection.playerId
+        );
+        leader_board.hidden = leader_board.hidden.filter(
+          (__index__) => __index__.id !== connection.playerId
+        );
+        console.log(leader_board.shown);
+        emit("boardUpdate", leader_board.shown);
       } catch (e) {
         console.log(e);
       }
@@ -2421,17 +2418,13 @@ wss.on("connection", (socket) => {
       connections.splice(index, 1); // Remove the connection from the list
     }
     try {
-      leader_board.shown.forEach((__index__) => {
-        if (__index__.id === connection.playerId) {
-          leader_board.shown.splice(leader_board.shown.indexOf(__index__));
-        }
-      });
-      leader_board.hidden.forEach((__index__) => {
-        if (__index__.id === connection.playerId) {
-          leader_board.hidden.splice(leader_board.hidden.indexOf(__index__));
-        }
-      });
-      emit("leader_board_update", leader_board.shown);
+      leader_board.shown = leader_board.shown.filter(
+        (__index__) => __index__.id !== connection.playerId
+      );
+      leader_board.hidden = leader_board.hidden.filter(
+        (__index__) => __index__.id !== connection.playerId
+      );
+      emit("boardUpdate", leader_board.shown);
     } catch (e) {
       console.log(e);
     }
@@ -2638,7 +2631,7 @@ setInterval(() => {
                 );
               }
             });
-            emit("leader_board_update", leader_board.shown);
+            emit("boardUpdate", leader_board.shown);
           } catch (e) {
             console.log(e);
           }
@@ -2734,14 +2727,87 @@ setInterval(() => {
         if (tankdatacannon__[cannon.autoindex]["offSet-x-multpliyer"]) {
           offSet_x *= -1;
         }
-        var distance = MathHypotenuse(
-          player.x - (players[cannon.playerid].x + offSet_x),
-          player.y - players[cannon.playerid].y
-        );
+        if (cannon["x_"]) {
+          var distance = MathHypotenuse(
+            player.x - (players[cannon.playerid].x + cannon["x_"]),
+            player.y - (players[cannon.playerid].y + cannon["y_"])
+          );
+        } else if (cannon._type_ === "bulletAuto") {
+          let parentBullet = findBullet(cannon.playerid);
+          var distance = MathHypotenuse(
+            player.x - parentBullet.x,
+            player.y - parentBullet.y
+          );
+        } else {
+          var distance = MathHypotenuse(
+            player.x - (players[cannon.playerid].x + offSet_x),
+            player.y - players[cannon.playerid].y
+          );
+        }
         if (distance < maxdistance) {
-          maxdistance = distance;
-          fire_at__ = player;
-          target_enity_type = "player";
+          if (cannon._type_ === "SwivelAutoCannon") {
+            var angle = Math.atan2(
+              player.y - players[cannon.playerid].y, // y difference
+              player.x - players[cannon.playerid].x // x difference
+            );
+          } else if (cannon._type_ === "bulletAuto") {
+            let parentBullet = findBullet(cannon.playerid);
+            var angle = Math.atan2(
+              player.y - parentBullet.y,
+              player.x - parentBullet.x
+            );
+          } else {
+            var angle = Math.atan2(
+              player.y - players[cannon.playerid].y, // y difference
+              player.x - (players[cannon.playerid].x + offSet_x) // x difference
+            );
+          }
+
+          if (cannon._type_ !== "bulletAuto") {
+            var playerRadangle = (players[cannon.playerid].angle * pi) / 180;
+          }
+          if (cannon._type_ === "bulletAuto") {
+            var playerRadangle =
+              (players[__parentBullet__.id].angle * pi) / 180;
+          }
+
+          if (cannon._type_ === "SwivelAutoCannon") {
+            if (
+              tankmeta[players[cannon.playerid].__type__]["cannons"][
+                cannon.autoindex
+              ]["offSet-x-multpliyer"] === -1
+            ) {
+              if (
+                isTargetInSwivelRange(
+                  players[cannon.playerid].cannon_angle,
+                  angle * (180 / pi),
+                  true,
+                  180
+                )
+              ) {
+                maxdistance = distance;
+                fire_at__ = player;
+                target_enity_type = "player";
+              }
+            } else {
+              if (
+                isTargetInSwivelRange(
+                  players[cannon.playerid].cannon_angle,
+                  angle * (180 / pi),
+                  true,
+                  0
+                )
+              ) {
+                maxdistance = distance;
+                fire_at__ = player;
+                target_enity_type = "player";
+              }
+            }
+          } else {
+            maxdistance = distance;
+            fire_at__ = player;
+            target_enity_type = "player";
+          }
         }
       }
     }

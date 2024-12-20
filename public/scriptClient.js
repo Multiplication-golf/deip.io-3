@@ -72,7 +72,7 @@
           },
         ],
       },
-    }
+    };
     var grid = document.getElementById("grid");
     var types = [
       "basic",
@@ -171,6 +171,7 @@
     var errors = 0;
     var messaging = false;
     var hidden = false;
+    var blinking = false;
     var pi = Math.pi;
     var pentarotate = 0;
     var levels = {
@@ -581,19 +582,19 @@
               text: data.text,
               exspiretime: data.exspiretime,
               id: data.id,
-              hidetime: data.hidetime
+              hidetime: data.hidetime,
             });
-            console.log(playerMessages)
+            console.log(playerMessages);
             let index_ = playerMessages.indexOf({
               text: data.text,
               exspiretime: data.exspiretime,
               id: data.id,
-              hidetime: data.hidetime
+              hidetime: data.hidetime,
             });
             setTimeout(() => {
               playerMessages = playerMessages.splice(0, index_);
             }, data.exspiretime);
-            console.log(playerMessages)
+            console.log(playerMessages);
           } else if (type === "Levels") {
             levels = data;
           } else if (type === "handshake") {
@@ -660,6 +661,7 @@
               document.getElementById("myCanvas").style.display = "none";
               document.getElementById("tanktiles").style.display = "none";
               clearInterval(healer);
+              send("playerDied", {id:playerId})
               socket.onmessage = {};
               autoIntevals;
               autoIntevals.forEach((timeout) => {
@@ -1328,20 +1330,36 @@
             }
           }
           if (messaging) {
-            if (event.key !== "Backspace" && event.key !== "Delete" || event.key !== "Enter" && typedtext.length > 35) {
+            if (
+              event.key !== "Backspace" &&
+              event.key !== "Delete" &&
+              event.key !== "Enter" &&
+              typedtext.length < 35
+            ) {
               typedtext += event.key;
-              console.log(event.key)
+              console.log(event.key);
             } else {
               typedtext = typedtext.slice(0, -1);
             }
           }
           if (keysPressed["Enter"]) {
-            if (messaging) {
-              console.log(typedtext)
+            if (messaging && typedtext !== "") {
               send("playerSend", { id: playerId, text: typedtext });
               typedtext = "";
             }
-            console.log(messaging)
+            if (!messaging) {
+              function blink() {
+                blinking = !blinking;
+                if (messaging) {
+                  setTimeout(() => {
+                    blink();
+                  }, 530);
+                }
+              }
+              setTimeout(() => {
+                blink();
+              }, 530);
+            }
             messaging = !messaging;
           }
         });
@@ -2022,7 +2040,7 @@
         ctx.fillStyle = "white";
         ctx.strokeStyle = "black";
         ctx.textAlign = "center";
-        ctx.font = "bold 40px Comic Sans";
+        ctx.font = "bold 40px Nunito";
         ctx.strokeText(level, canvas.width / 2, canvas.height - 60);
         ctx.fillText(level, canvas.width / 2, canvas.height - 60);
       }
@@ -2543,7 +2561,7 @@
       ctx.strokeStyle = "black";
       ctx.fillStyle = "white";
       ctx.textAlign = "center";
-      ctx.font = "bold 20px Geneva";
+      ctx.font = "bold 20px Nunito";
       ctx.strokeText(score, canvas.width / 2, canvas.height / 2 - 55);
       ctx.fillText(score, canvas.width / 2, canvas.height / 2 - 55);
 
@@ -2659,11 +2677,11 @@
         ctx.globalAlpha = 0.5;
         ctx.fillStyle = "#a3a3a3";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha = 0.8;
         ctx.beginPath();
-        ctx.fillStyle = "lightgrey";
-        ctx.strokeStyle = "grey";
-        let boxlen = 300 + typedtext.length * 20;
+        ctx.fillStyle = "#96ceff";
+        ctx.strokeStyle = "#41a4fa";
+        let boxlen = 300 + typedtext.length * 12;
         ctx.roundRect(
           canvas.width / 2 - boxlen / 2,
           canvas.height / 2 - 25,
@@ -2673,15 +2691,32 @@
         );
         ctx.fill();
         ctx.stroke();
+        ctx.globalAlpha = 1;
         ctx.textAlign = "left";
-        ctx.font = "bold 30px Geneva";
-        ctx.fillStyle = "darkgrey";
+        ctx.font = "bold 30px Nunito";
+        ctx.fillStyle = "black";
         ctx.fillText(
           typedtext,
           canvas.width / 2 - (boxlen / 2 - 5),
           canvas.height / 2 + 15
         );
         ctx.closePath();
+        var textwidth = (ctx.measureText(typedtext).width)+3;
+        if (blinking) {
+          ctx.beginPath();
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "black";
+          ctx.moveTo(
+            (canvas.width / 2 - (boxlen / 2 - 5))+textwidth,
+            (canvas.height / 2 + 15)-30
+          );
+          ctx.lineTo(
+            (canvas.width / 2 - (boxlen / 2 - 5))+textwidth,
+            (canvas.height / 2 + 15)+0
+          );
+          ctx.stroke();
+          ctx.closePath();
+        }
       }
     }
 
@@ -3458,23 +3493,25 @@
           });
           mymessages.forEach((message) => {
             ctx.save();
-            console.log((Date.now()-message.hidetime)/500,Date.now()<message.hidetime)
+            console.log(
+              (Date.now() - message.hidetime) / 500,
+              Date.now() < message.hidetime
+            );
             if (message.hidetime < Date.now()) {
-              console.log(1-(Date.now() - message.hidetime)/500)
-              if (1 > 1-(Date.now() - message.hidetime)/500) {
-                ctx.globalAlpha = 1-(Date.now() - message.hidetime)/500
+              console.log(1 - (Date.now() - message.hidetime) / 500);
+              if (1 > 1 - (Date.now() - message.hidetime) / 500) {
+                ctx.globalAlpha = 1 - (Date.now() - message.hidetime) / 500;
               }
-              
             }
             ctx.translate(
               playerX - cavansX,
-              (((playerY - cavansY) - (player.size * 40)) - (30 * mymessages.length))-25
+              playerY - cavansY - player.size * 40 - 30 * mymessages.length - 25
             );
             ctx.fillStyle = "black";
             ctx.textAlign = "center";
-            ctx.font = "bold 20px Geneva";
+            ctx.font = "bold 20px Nunito";
             ctx.fillText(message.text, 0, 0);
-            ctx.globalAlpha = 1
+            ctx.globalAlpha = 1;
             ctx.restore();
           });
           ctx.fillStyle = "black";
@@ -3626,7 +3663,7 @@
           ctx.strokeStyle = "black";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
-          ctx.font = "bold 20px Geneva";
+          ctx.font = "bold 20px Nunito";
           ctx.strokeText(
             player.score,
             playerX - cavansX,
@@ -3694,7 +3731,7 @@
       );
       let I_ = 0;
       if (upgradePoints > 0) {
-        ctx.font = "26px Geneva";
+        ctx.font = "26px Nunito";
         ctx.strokeStyle = "#89faa7";
         ctx.strokeText(
           `+${upgradePoints}`,
@@ -3702,7 +3739,7 @@
           canvas.height - 34 * 9
         );
         ctx.textAlign = "center";
-        ctx.font = "bold 25px Geneva";
+        ctx.font = "bold 25px Nunito";
         ctx.fillStyle = "#14fc52";
         ctx.fillText(`+${upgradePoints}`, 20 + 145 / 2, canvas.height - 34 * 9);
       }
@@ -3725,7 +3762,7 @@
           false
         );
         ctx.textAlign = "center";
-        ctx.font = "bold 15px Geneva";
+        ctx.font = "bold 15px Nunito";
         ctx.fillStyle = "white";
         ctx.fillText(
           `${stat}:${stat_}`,
@@ -3734,11 +3771,11 @@
         );
         I_++;
       }
-      ctx.font = "bold 30px Geneva";
+      ctx.font = "bold 30px Nunito";
       ctx.strokeStyle = "black";
       ctx.strokeText("leaderboard", canvas.width - 125, 25);
       ctx.textAlign = "center";
-      ctx.font = "bold 30px Geneva";
+      ctx.font = "bold 30px Nunito";
       ctx.fillStyle = "white";
       ctx.fillText("leaderboard", canvas.width - 125, 25);
 
@@ -3765,7 +3802,7 @@
             false
           );
           ctx.textAlign = "center";
-          ctx.font = "bold 28px Geneva";
+          ctx.font = "bold 28px Nunito";
           ctx.fillStyle = "black";
           ctx.fillText(
             `${entre.name} - ${entre.score}`,
@@ -3797,7 +3834,7 @@
           );
 
           ctx.textAlign = "center";
-          ctx.font = "bold 28px Geneva";
+          ctx.font = "bold 28px Nunito";
           ctx.fillStyle = "black";
           ctx.fillText(
             `${entre.name} - ${entre.score}`,
