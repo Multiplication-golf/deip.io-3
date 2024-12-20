@@ -23,4 +23,4 @@ Suggestions wellcome<br>
 It is still kind of buggy
 
 
-![img of game](https://github.com/Multiplication-golf/deip.io-3/blob/mian/image.jpg?raw=true)
+![img of game](https://github.com/Multiplication-golf/deip.io-3/blob/main/game.png?raw=true)
