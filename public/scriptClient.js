@@ -174,6 +174,7 @@
     var blinking = false;
     var pi = Math.pi;
     var pentarotate = 0;
+    var keyevents = [];
     var levels = {
       0: 15,
       1: 28,
@@ -661,7 +662,7 @@
               document.getElementById("myCanvas").style.display = "none";
               document.getElementById("tanktiles").style.display = "none";
               clearInterval(healer);
-              send("playerDied", {id:playerId})
+              send("playerDied", { id: playerId });
               socket.onmessage = {};
               autoIntevals;
               autoIntevals.forEach((timeout) => {
@@ -1004,125 +1005,6 @@
           document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
         }
 
-        const checkCollisions = (dx, dy) => {
-          for (let playerId_ in players) {
-            let player = players[playerId_];
-            let distance = MathHypotenuse(
-              player.x - playerX,
-              player.y - playerY
-            );
-
-            if (
-              distance < player.size * 40 + playerSize * 40 &&
-              playerId_ != playerId
-            ) {
-              send("playerCollided", {
-                id_other: playerId_,
-                damagetaken: player.bodyDamage,
-                damagegiven: bodyDamage,
-                id_self: playerId,
-              });
-              playerHealTime = 0;
-              send("playerHealintterupted", { ID: playerId });
-              canmove = false;
-              setTimeout(() => {
-                canmove = true;
-              }, 10 * playerSpeed);
-              if (player.x < playerX /* left */) {
-                for (let c = 0; c < playerSpeed; c++) {
-                  setTimeout(() => {
-                    movePlayer(-3, 0, c === playerSpeed - 1, c);
-                  }, 50 * c);
-                }
-              }
-              if (player.x > playerX /* right */) {
-                for (let c = 0; c < playerSpeed; c++) {
-                  setTimeout(() => {
-                    movePlayer(3, 0, c === playerSpeed - 1, c);
-                  }, 50 * c);
-                }
-              }
-              if (player.y > playerY /* up */) {
-                for (let c = 0; c < playerSpeed; c++) {
-                  setTimeout(() => {
-                    movePlayer(0, -3, c === playerSpeed - 1, c);
-                  }, 50 * c);
-                }
-              }
-              if (player.y < playerY /* down */) {
-                for (let c = 0; c < playerSpeed; c++) {
-                  setTimeout(() => {
-                    movePlayer(0, 3, c === playerSpeed - 1, c);
-                  }, 50 * c);
-                }
-              }
-              // Reverse the last movement
-            }
-          }
-        };
-
-        const handleMovement = (dx, dy) => {
-          if (
-            playerX + dx > mapLeft &&
-            playerX + dx < mapRight &&
-            playerY + dy > mapTop &&
-            playerY + dy < mapBottom
-          ) {
-            for (let i = 0; i < playerSpeed / 5; i++) {
-              var movement = setTimeout(() => {
-                movePlayer(dx * 5, dy * 5, i === playerSpeed - 1 || i === 0);
-              }, 75 * i);
-              movementTimeouts.push(movement);
-            }
-            checkCollisions(dx, dy);
-          } else if (playerX + dx > mapLeft && dy === 0) {
-            movementTimeouts.forEach((timeout) => {
-              clearTimeout(timeout);
-            });
-            movementTimeouts = [];
-            for (let i = 0; i < playerSpeed / 3; i++) {
-              var movement = setTimeout(() => {
-                movePlayer(-3, 0, i === playerSpeed - 1 || i === 0);
-              }, 75 * i);
-              movementTimeouts.push(movement);
-            }
-          } else if (playerX + dx < mapRight && dy === 0) {
-            movementTimeouts.forEach((timeout) => {
-              clearTimeout(timeout);
-            });
-            movementTimeouts = [];
-            for (let i = 0; i < playerSpeed / 3; i++) {
-              var movement = setTimeout(() => {
-                movePlayer(3, 0, i === playerSpeed - 1 || i === 0);
-              }, 75 * i);
-              movementTimeouts.push(movement);
-            }
-          } else if (playerY > -mapTop) {
-            movementTimeouts.forEach((timeout) => {
-              clearTimeout(timeout);
-            });
-            movementTimeouts = [];
-            for (let i = 0; i < playerSpeed / 3; i++) {
-              var movement = setTimeout(() => {
-                movePlayer(0, -3, i === playerSpeed - 1 || i === 0);
-              }, 75 * i);
-              movementTimeouts.push(movement);
-            }
-          }
-          if (playerY < -mapBottom) {
-            movementTimeouts.forEach((timeout) => {
-              clearTimeout(timeout);
-            });
-            movementTimeouts = [];
-            for (let i = 0; i < playerSpeed / 3; i++) {
-              var movement = setTimeout(() => {
-                movePlayer(0, 3, i === playerSpeed - 1 || i === 0);
-              }, 75 * i);
-              movementTimeouts.push(movement);
-            }
-          }
-        };
-
         function calculateTriangleVertices(cx, cy, size, angle) {
           const height = sqrt23 * size;
           const halfSize = size / 2;
@@ -1150,194 +1032,14 @@
 
         document.addEventListener("keydown", (event) => {
           keysPressed[event.key] = true;
-          if (!messaging) {
-            if (keysPressed["]"]) {
-              players[playerId].score += 50;
-              score = players[playerId].score;
-              levelHANDLER();
-            } else if (
-              (keysPressed["ArrowLeft"] && keysPressed["ArrowUp"]) ||
-              (keysPressed["a"] && keysPressed["w"])
-            ) {
-              handleMovement(-1, -1);
-            } else if (
-              (keysPressed["ArrowLeft"] && keysPressed["ArrowDown"]) ||
-              (keysPressed["a"] && keysPressed["s"])
-            ) {
-              handleMovement(-1, 1);
-            } else if (
-              (keysPressed["ArrowRight"] && keysPressed["ArrowUp"]) ||
-              (keysPressed["d"] && keysPressed["w"])
-            ) {
-              handleMovement(1, -1);
-            } else if (
-              (keysPressed["ArrowRight"] && keysPressed["ArrowDown"]) ||
-              (keysPressed["d"] && keysPressed["s"])
-            ) {
-              handleMovement(1, 1);
-            } else if (keysPressed["ArrowUp"] || keysPressed["w"]) {
-              handleMovement(0, -1);
-            } else if (keysPressed["ArrowDown"] || keysPressed["s"]) {
-              handleMovement(0, 1);
-            } else if (keysPressed["ArrowLeft"] || keysPressed["a"]) {
-              handleMovement(-1, 0);
-            } else if (keysPressed["ArrowRight"] || keysPressed["d"]) {
-              handleMovement(1, 0);
-            } else if (keysPressed["-"]) {
-              FOV -= 0.1;
-            } else if (keysPressed["1"]) {
-              if (statsTree["Health"] < maxUP && upgradePoints > 0) {
-                statsTree["Health"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Health",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["2"]) {
-              if (statsTree["Body Damage"] < maxUP && upgradePoints > 0) {
-                statsTree["Body Damage"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Body Damage",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["3"]) {
-              if (statsTree["Regen"] < maxUP && upgradePoints > 0) {
-                statsTree["Regen"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Regen",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["4"]) {
-              if (statsTree["Bullet Pentration"] < maxUP && upgradePoints > 0) {
-                statsTree["Bullet Pentration"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Bullet Pentration",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["5"]) {
-              if (statsTree["Bullet Speed"] < maxUP && upgradePoints > 0) {
-                statsTree["Bullet Speed"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Bullet Speed",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["6"]) {
-              if (statsTree["Bullet Damage"] < maxUP && upgradePoints > 0) {
-                statsTree["Bullet Damage"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Bullet Damage",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["7"]) {
-              if (statsTree["Bullet Reload"] < maxUP && upgradePoints > 0) {
-                statsTree["Bullet Reload"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Bullet Reload",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["8"]) {
-              if (statsTree["Speed"] < maxUP && upgradePoints > 0) {
-                statsTree["Speed"] += 1;
-                upgradePoints -= 1;
-                send("statUpgrade", {
-                  Upgradetype: "Speed",
-                  UpgradeLevel: 1,
-                  id: playerId,
-                });
-              }
-            } else if (keysPressed["="]) {
-              FOV += 0.1;
-            } else if (keysPressed["e"]) {
-              if (lockautoRotating) return;
-              autoFiring = !autoFiring;
-              if (!autoFiring) {
-                canFire = true;
-              }
-            } else if (keysPressed["c"]) {
-              send("browserunHidden", { id: playerId });
-              autoRotating = !autoRotating;
-            } else if (keysPressed["h"]) {
-              __type__ = types[typeindex];
-              typeindex += 1;
-              if (typeindex >= types.length) {
-                typeindex = 0;
-              }
-              players[playerId].type = __type__;
-              let tankdata = tankmeta[__type__];
-              var tankdatacannon__ = tankdata["cannons"];
-              playerSize *= tankdata["size-m"];
-              playerSpeed *= tankdata["speed-m"];
-              bullet_damage *= tankdata["damage-m"];
-              playerReheal *= tankdata["regen-m"];
-              bodyDamage *= tankdata["BodyDamage-m"];
-              maxhealth *= tankdata["health-m"];
-              if (playerHealth > maxhealth) {
-                playerHealth = maxhealth;
-              }
-
-              send("typeChange", {
-                id: playerId,
-                x: playerX,
-                y: playerY,
-                health: playerHealth,
-                speed: playerSpeed,
-                size: playerSize,
-                bodyDamage: bodyDamage,
-                cannonW: cannonWidth,
-                cannonH: 0,
-                __type__: __type__,
-                cannon_angle: getCannonAngle(),
-                score: score,
-                username: username,
-                level: level,
-                state: state,
-                statecycle: statecycle,
-                playerHealTime: playerHealTime,
-                maxhealth: maxhealth,
-                playerReheal: playerReheal,
-                FOV: FOV,
-                MouseX: MouseX_,
-                MouseY: MouseY_,
-                screenWidth: canvas.width,
-                screenHeight: canvas.height,
-              });
-              setTimeout(() => {
-                cannonWidth = [];
-                for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
-                  cannonWidth.push(0);
-                }
-              }, 100);
-            }
-          }
           if (messaging) {
             if (
-              event.key !== "Backspace" &&
-              event.key !== "Delete" &&
-              event.key !== "Enter" &&
+              !keysPressed["Backspace"] &&
+              !keysPressed["Delete"] &&
+              !keysPressed["Enter"] &&
               typedtext.length < 35
             ) {
               typedtext += event.key;
-              console.log(event.key);
             } else {
               typedtext = typedtext.slice(0, -1);
             }
@@ -1366,44 +1068,6 @@
 
         document.addEventListener("keyup", (event) => {
           delete keysPressed[event.key];
-
-          if (
-            (keysPressed["ArrowLeft"] && keysPressed["ArrowUp"]) ||
-            (keysPressed["a"] && keysPressed["w"])
-          ) {
-            handleMovement(-1, -1);
-          } else if (
-            (keysPressed["ArrowLeft"] && keysPressed["ArrowDown"]) ||
-            (keysPressed["a"] && keysPressed["s"])
-          ) {
-            handleMovement(-1, 1);
-          } else if (
-            (keysPressed["ArrowRight"] && keysPressed["ArrowUp"]) ||
-            (keysPressed["d"] && keysPressed["w"])
-          ) {
-            handleMovement(1, -1);
-          } else if (
-            (keysPressed["ArrowRight"] && keysPressed["ArrowDown"]) ||
-            (keysPressed["d"] && keysPressed["s"])
-          ) {
-            handleMovement(1, 1);
-          } else if (keysPressed["ArrowUp"] || keysPressed["w"]) {
-            handleMovement(0, -1);
-          } else if (keysPressed["ArrowDown"] || keysPressed["s"]) {
-            handleMovement(0, 1);
-          } else if (keysPressed["ArrowLeft"] || keysPressed["a"]) {
-            handleMovement(-1, 0);
-          } else if (keysPressed["ArrowRight"] || keysPressed["d"]) {
-            handleMovement(1, 0);
-          } else if (event.key === "ArrowUp" || event.key === "w") {
-            playerMovementY = 0;
-          } else if (event.key === "ArrowDown" || event.key === "s") {
-            playerMovementY = 0;
-          } else if (event.key === "ArrowLeft" || event.key === "a") {
-            playerMovementX = 0;
-          } else if (event.key === "ArrowRight" || event.key === "d") {
-            playerMovementX = 0;
-          }
         });
 
         document.addEventListener("mousemove", (evt) => {
@@ -1849,7 +1513,6 @@
                     id: playerId,
                     uniqueid: identdfire,
                   };
-                  console.log(bullet);
                   send("bulletFired", bullet);
                 }, tankdatacannondata["delay"] * 1000);
               },
@@ -1943,7 +1606,7 @@
               playerID: playerId,
             });
           }, 300);
-        }, 5000);
+        }, 6000);
       }, 100);
     };
 
@@ -2046,6 +1709,145 @@
       }
     }
 
+    const movePlayer = (dx, dy, last, i) => {
+      movementTimeouts.shift();
+      if (!canmove) return;
+      cavansX += dx;
+      playerY += dy;
+      cavansY += dy;
+      playerX += dx;
+
+      if (i in nolist) return; // just roll with it
+      send("playerMoved", {
+        id: playerId,
+        x: playerX,
+        y: playerY,
+        dx: dx,
+        dy: dy,
+        last: last,
+      });
+    };
+
+    function MathHypotenuse(x, y) {
+      return Math.sqrt(x * x + y * y);
+    }
+
+    const checkCollisions = (dx, dy) => {
+      for (let playerId_ in players) {
+        let player = players[playerId_];
+        let distance = MathHypotenuse(player.x - playerX, player.y - playerY);
+
+        if (
+          distance < player.size * 40 + playerSize * 40 &&
+          playerId_ != playerId
+        ) {
+          send("playerCollided", {
+            id_other: playerId_,
+            damagetaken: player.bodyDamage,
+            damagegiven: bodyDamage,
+            id_self: playerId,
+          });
+          playerHealTime = 0;
+          send("playerHealintterupted", { ID: playerId });
+          canmove = false;
+          setTimeout(() => {
+            canmove = true;
+          }, 10 * playerSpeed);
+          if (player.x < playerX /* left */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(-2, 0, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
+          if (player.x > playerX /* right */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(2, 0, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
+          if (player.y > playerY /* up */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(0, -2, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
+          if (player.y < playerY /* down */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(0, 2, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
+          // Reverse the last movement
+        }
+      }
+    };
+
+    const handleMovement = (dx, dy) => {
+      if (
+        playerX + dx > mapLeft &&
+        playerX + dx < mapRight &&
+        playerY + dy > mapTop &&
+        playerY + dy < mapBottom
+      ) {
+        for (let i = 0; i < playerSpeed / 5; i++) {
+          var movement = setTimeout(() => {
+            movePlayer(dx * 2, dy * 2, i === playerSpeed - 1 || i === 0);
+          }, 75 * i);
+          movementTimeouts.push(movement);
+        }
+        checkCollisions(dx, dy);
+      } else if (playerX + dx > mapLeft && dy === 0) {
+        movementTimeouts.forEach((timeout) => {
+          clearTimeout(timeout);
+        });
+        movementTimeouts = [];
+        for (let i = 0; i < playerSpeed / 3; i++) {
+          var movement = setTimeout(() => {
+            movePlayer(-3, 0, i === playerSpeed - 1 || i === 0);
+          }, 75 * i);
+          movementTimeouts.push(movement);
+        }
+      } else if (playerX + dx < mapRight && dy === 0) {
+        movementTimeouts.forEach((timeout) => {
+          clearTimeout(timeout);
+        });
+        movementTimeouts = [];
+        for (let i = 0; i < playerSpeed / 3; i++) {
+          var movement = setTimeout(() => {
+            movePlayer(3, 0, i === playerSpeed - 1 || i === 0);
+          }, 75 * i);
+          movementTimeouts.push(movement);
+        }
+      } else if (playerY > -mapTop) {
+        movementTimeouts.forEach((timeout) => {
+          clearTimeout(timeout);
+        });
+        movementTimeouts = [];
+        for (let i = 0; i < playerSpeed / 3; i++) {
+          var movement = setTimeout(() => {
+            movePlayer(0, -3, i === playerSpeed - 1 || i === 0);
+          }, 75 * i);
+          movementTimeouts.push(movement);
+        }
+      }
+      if (playerY < -mapBottom) {
+        movementTimeouts.forEach((timeout) => {
+          clearTimeout(timeout);
+        });
+        movementTimeouts = [];
+        for (let i = 0; i < playerSpeed / 3; i++) {
+          var movement = setTimeout(() => {
+            movePlayer(0, 3, i === playerSpeed - 1 || i === 0);
+          }, 75 * i);
+          movementTimeouts.push(movement);
+        }
+      }
+    };
+
     function rotatePointAroundPlayer(
       cannonOffsetX,
       cannonOffsetY,
@@ -2067,6 +1869,186 @@
 
     function drawself() {
       ctx.fillStyle = squareColor;
+
+      if (!messaging) {
+        if (keysPressed["]"]) {
+          players[playerId].score += 50;
+          score = players[playerId].score;
+          levelHANDLER();
+        } else if (
+          (keysPressed["ArrowLeft"] && keysPressed["ArrowUp"]) ||
+          (keysPressed["a"] && keysPressed["w"])
+        ) {
+          handleMovement(-1, -1);
+        } else if (
+          (keysPressed["ArrowLeft"] && keysPressed["ArrowDown"]) ||
+          (keysPressed["a"] && keysPressed["s"])
+        ) {
+          handleMovement(-1, 1);
+        } else if (
+          (keysPressed["ArrowRight"] && keysPressed["ArrowUp"]) ||
+          (keysPressed["d"] && keysPressed["w"])
+        ) {
+          handleMovement(1, -1);
+        } else if (
+          (keysPressed["ArrowRight"] && keysPressed["ArrowDown"]) ||
+          (keysPressed["d"] && keysPressed["s"])
+        ) {
+          handleMovement(1, 1);
+        } else if (keysPressed["ArrowUp"] || keysPressed["w"]) {
+          handleMovement(0, -1);
+        } else if (keysPressed["ArrowDown"] || keysPressed["s"]) {
+          handleMovement(0, 1);
+        } else if (keysPressed["ArrowLeft"] || keysPressed["a"]) {
+          handleMovement(-1, 0);
+        } else if (keysPressed["ArrowRight"] || keysPressed["d"]) {
+          handleMovement(1, 0);
+        } else if (keysPressed["-"]) {
+          FOV -= 0.1;
+        } else if (keysPressed["1"]) {
+          if (statsTree["Health"] < maxUP && upgradePoints > 0) {
+            statsTree["Health"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Health",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["2"]) {
+          if (statsTree["Body Damage"] < maxUP && upgradePoints > 0) {
+            statsTree["Body Damage"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Body Damage",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["3"]) {
+          if (statsTree["Regen"] < maxUP && upgradePoints > 0) {
+            statsTree["Regen"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Regen",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["4"]) {
+          if (statsTree["Bullet Pentration"] < maxUP && upgradePoints > 0) {
+            statsTree["Bullet Pentration"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Bullet Pentration",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["5"]) {
+          if (statsTree["Bullet Speed"] < maxUP && upgradePoints > 0) {
+            statsTree["Bullet Speed"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Bullet Speed",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["6"]) {
+          if (statsTree["Bullet Damage"] < maxUP && upgradePoints > 0) {
+            statsTree["Bullet Damage"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Bullet Damage",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["7"]) {
+          if (statsTree["Bullet Reload"] < maxUP && upgradePoints > 0) {
+            statsTree["Bullet Reload"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Bullet Reload",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["8"]) {
+          if (statsTree["Speed"] < maxUP && upgradePoints > 0) {
+            statsTree["Speed"] += 1;
+            upgradePoints -= 1;
+            send("statUpgrade", {
+              Upgradetype: "Speed",
+              UpgradeLevel: 1,
+              id: playerId,
+            });
+          }
+        } else if (keysPressed["="]) {
+          FOV += 0.1;
+        } else if (keysPressed["e"]) {
+          if (lockautoRotating) return;
+          autoFiring = !autoFiring;
+          if (!autoFiring) {
+            canFire = true;
+          }
+        } else if (keysPressed["c"]) {
+          send("browserunHidden", { id: playerId });
+          autoRotating = !autoRotating;
+        } else if (keysPressed["h"]) {
+          __type__ = types[typeindex];
+          typeindex += 1;
+          if (typeindex >= types.length) {
+            typeindex = 0;
+          }
+          players[playerId].type = __type__;
+          let tankdata = tankmeta[__type__];
+          var tankdatacannon__ = tankdata["cannons"];
+          playerSize *= tankdata["size-m"];
+          playerSpeed *= tankdata["speed-m"];
+          bullet_damage *= tankdata["damage-m"];
+          playerReheal *= tankdata["regen-m"];
+          bodyDamage *= tankdata["BodyDamage-m"];
+          maxhealth *= tankdata["health-m"];
+          if (playerHealth > maxhealth) {
+            playerHealth = maxhealth;
+          }
+
+          send("typeChange", {
+            id: playerId,
+            x: playerX,
+            y: playerY,
+            health: playerHealth,
+            speed: playerSpeed,
+            size: playerSize,
+            bodyDamage: bodyDamage,
+            cannonW: cannonWidth,
+            cannonH: 0,
+            __type__: __type__,
+            cannon_angle: getCannonAngle(),
+            score: score,
+            username: username,
+            level: level,
+            state: state,
+            statecycle: statecycle,
+            playerHealTime: playerHealTime,
+            maxhealth: maxhealth,
+            playerReheal: playerReheal,
+            FOV: FOV,
+            MouseX: MouseX_,
+            MouseY: MouseY_,
+            screenWidth: canvas.width,
+            screenHeight: canvas.height,
+          });
+          setTimeout(() => {
+            cannonWidth = [];
+            for (let i = 0; i < Object.keys(tankdatacannon__).length; i++) {
+              cannonWidth.push(0);
+            }
+          }, 100);
+        }
+      }
 
       let angle = Math.atan2(
         Math.abs(MouseY_) - (canvas.height / 2 - playerSize * FOV),
@@ -2664,7 +2646,6 @@
       ctx.lineTo(-realitemsize / 2, h / 2);
       ctx.lineTo(realitemsize / 2, h / 2);
       ctx.closePath();
-
       ctx.fillStyle = "blue";
       ctx.fill();
       ctx.lineWidth = 2;
@@ -2701,23 +2682,40 @@
           canvas.height / 2 + 15
         );
         ctx.closePath();
-        var textwidth = (ctx.measureText(typedtext).width)+3;
+        var textwidth = ctx.measureText(typedtext).width + 3;
         if (blinking) {
           ctx.beginPath();
           ctx.lineWidth = 1;
           ctx.strokeStyle = "black";
           ctx.moveTo(
-            (canvas.width / 2 - (boxlen / 2 - 5))+textwidth,
-            (canvas.height / 2 + 15)-30
+            canvas.width / 2 - (boxlen / 2 - 5) + textwidth,
+            canvas.height / 2 + 15 - 30
           );
           ctx.lineTo(
-            (canvas.width / 2 - (boxlen / 2 - 5))+textwidth,
-            (canvas.height / 2 + 15)+0
+            canvas.width / 2 - (boxlen / 2 - 5) + textwidth,
+            canvas.height / 2 + 15 + 0
           );
           ctx.stroke();
           ctx.closePath();
         }
       }
+      ctx.lineWidth = 5;
+      ctx.fillStyle = "#45bbff";
+      ctx.strokeStyle = "#0e589d";
+      ctx.beginPath();
+      ctx.roundRect(canvas.width - 475, 10, 200, 100, 5);
+      ctx.fill();
+      ctx.stroke();
+      ctx.closePath();
+      ctx.fillStyle = "#00a0fd";
+      ctx.beginPath();
+      ctx.roundRect(canvas.width - 462.5, 25, 175, 70, 5);
+      ctx.fill();
+      ctx.closePath();
+      ctx.textAlign = "center";
+      ctx.font = "bold 40px Nunito";
+      ctx.fillStyle = "black";
+      ctx.fillText("Teams", canvas.width - 375, 75);
     }
 
     function draw() {
@@ -3719,7 +3717,7 @@
       drawRoundedLevelBar(
         ctx,
         canvas.width / 2 - barWidth / 2,
-        canvas.height - 40,
+        canvas.height - canvas.height * 0.03879728419,
         barWidth,
         barHeight,
         borderRadius,
