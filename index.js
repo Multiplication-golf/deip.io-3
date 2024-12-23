@@ -1437,7 +1437,9 @@ wss.on("connection", (socket) => {
           hasfoodchanged = true;
           let damageplayer = item.body_damage;
           let damageother = player["bodyDamage"];
-          player.health -= damageplayer;
+          if (player.state !== "start") {
+            player.health -= damageplayer;
+          }
 
           if (player.health < 0) {
             emit("playerDied", {
@@ -1623,11 +1625,13 @@ wss.on("connection", (socket) => {
             item.health -= damageother;
           }
 
-          emit("shapeDamage", {
-            PlayerId: player.id,
-            playerDamage: damageplayer,
-            shapes: food_squares,
-          });
+          if (player.state !== "start") {
+            emit("shapeDamage", {
+              PlayerId: player.id,
+              playerDamage: damageplayer,
+              shapes: food_squares,
+            });
+          }
         }
         return true;
       });
@@ -1879,7 +1883,7 @@ wss.on("connection", (socket) => {
         invaled_requests.push(data.playerID);
         return;
       }
-
+      players[data.playerID].state = data.state
       broadcast("statechangeUpdate", data, socket);
       return;
     }
@@ -1947,8 +1951,12 @@ wss.on("connection", (socket) => {
 
     if (type === "playerCollided") {
       try {
-        players[data.id_other].health -= data.damagegiven; // Swap damagegiven and damagetaken
-        players[data.id_self].health -= data.damagetaken;
+        if (players[data.id_other].state !== "start") {
+          players[data.id_other].health -= data.damagegiven;
+        }// Swap damagegiven and damagetaken
+        if (players[data.id_self].state !== "start") {
+          players[data.id_self].health -= data.damagetaken;
+        }
         if (players[data.id_other].health <= 0) {
           let player = players[data.id_other];
           let player2 = players[data.id_self];
@@ -2576,102 +2584,104 @@ setInterval(() => {
       var player = players[playerId];
       var distance = MathHypotenuse(player.x - bullet.x, player.y - bullet.y);
       let player40 = player.size * 40;
+      if (player.state !== "start") {
 
-      let bulletsize = bullet.size;
+        let bulletsize = bullet.size;
 
-      if (distance < player40 + bullet.size && bullet.id !== player.id) {
-        if (bullet.type === "trap") {
-          player.health -=
-            (bullet.bullet_damage - 3.8) / (player.size + 6 / bullet.size + 3);
-          bullet.bullet_distance /=
-            bullet.size / (bullet.bullet_pentration + 10);
-        } else if (bullet.type === "directer") {
-          player.health -=
-            (bullet.bullet_damage - 4.4) / (player.size + 6 / bullet.size + 5);
-          bullet.bullet_distance /=
-            bullet.size / (bullet.bullet_pentration + 10);
-        } else {
-          player.health -=
-            (bullet.bullet_damage - 3.8) / (player.size + 6 / bullet.speed);
-          bullet.bullet_distance -=
-            bullet.size / (bullet.bullet_pentration + 10);
-        }
-
-        emit("bulletDamage", {
-          playerID: player.id,
-          playerHealth: player.health,
-          BULLETS: bullets,
-        });
-        if (player.health <= 0) {
-          try {
-            var reward = Math.round(
-              player.score / (20 + players[bullet.id].score / 10000)
-            );
-          } catch (e) {
-            console.log(bullet.id);
+        if (distance < player40 + bullet.size && bullet.id !== player.id) {
+          if (bullet.type === "trap") {
+            player.health -=
+              (bullet.bullet_damage - 3.8) / (player.size + 6 / bullet.size + 3);
+            bullet.bullet_distance /=
+              bullet.size / (bullet.bullet_pentration + 10);
+          } else if (bullet.type === "directer") {
+            player.health -=
+              (bullet.bullet_damage - 4.4) / (player.size + 6 / bullet.size + 5);
+            bullet.bullet_distance /=
+              bullet.size / (bullet.bullet_pentration + 10);
+          } else {
+            player.health -=
+              (bullet.bullet_damage - 3.8) / (player.size + 6 / bullet.speed);
+            bullet.bullet_distance -=
+              bullet.size / (bullet.bullet_pentration + 10);
           }
-          emit("playerScore", { bulletId: bullet.id, socrepluse: reward });
-          emit("playerDied", {
+
+          emit("bulletDamage", {
             playerID: player.id,
-            rewarder: bullet.id,
-            reward: reward,
+            playerHealth: player.health,
+            BULLETS: bullets,
           });
-          try {
-            leader_board.shown.forEach((__index__) => {
-              if (__index__.id === player.id) {
-                leader_board.shown.splice(
-                  leader_board.shown.indexOf(__index__)
-                );
-              }
+          if (player.health <= 0) {
+            try {
+              var reward = Math.round(
+                player.score / (20 + players[bullet.id].score / 10000)
+              );
+            } catch (e) {
+              console.log(bullet.id);
+            }
+            emit("playerScore", { bulletId: bullet.id, socrepluse: reward });
+            emit("playerDied", {
+              playerID: player.id,
+              rewarder: bullet.id,
+              reward: reward,
             });
-            leader_board.hidden.forEach((__index__) => {
-              if (__index__.id === player.id) {
-                leader_board.hidden.splice(
-                  leader_board.hidden.indexOf(__index__)
-                );
-              }
-            });
-            emit("boardUpdate", leader_board.shown);
-          } catch (e) {
-            console.log(e);
-          }
-          leader_board.hidden.forEach((__index__) => {
-            if (__index__.id === bullet.id) {
-              __index__.score += reward;
-              let isshown = false;
-              leader_board.shown.forEach(() => {
-                if (__index__.id === bullet.id) {
-                  isshown = true;
+            try {
+              leader_board.shown.forEach((__index__) => {
+                if (__index__.id === player.id) {
+                  leader_board.shown.splice(
+                    leader_board.shown.indexOf(__index__)
+                  );
                 }
               });
-              if (leader_board.shown[10]) {
-                if (leader_board.shown[10].score < __index__.score) {
-                  leader_board.shown[10] = __index__;
+              leader_board.hidden.forEach((__index__) => {
+                if (__index__.id === player.id) {
+                  leader_board.hidden.splice(
+                    leader_board.hidden.indexOf(__index__)
+                  );
                 }
-              } else if (!leader_board.shown[10] && !isshown) {
-                leader_board.shown.push(__index__);
-              }
+              });
+              emit("boardUpdate", leader_board.shown);
+            } catch (e) {
+              console.log(e);
             }
-          });
-          leader_board.shown.forEach((__index__) => {
-            if (__index__.id === bullet.id) {
-              __index__.score += reward;
-            }
-          });
-          rearrange();
-          emit("boardUpdate", {
-            leader_board: leader_board.shown,
-          });
-          console.log("player kill --", leader_board);
-          players = Object.entries(players).reduce(
-            (newPlayers, [key, value]) => {
-              if (key !== player.id) {
-                newPlayers[key] = value;
+            leader_board.hidden.forEach((__index__) => {
+              if (__index__.id === bullet.id) {
+                __index__.score += reward;
+                let isshown = false;
+                leader_board.shown.forEach(() => {
+                  if (__index__.id === bullet.id) {
+                    isshown = true;
+                  }
+                });
+                if (leader_board.shown[10]) {
+                  if (leader_board.shown[10].score < __index__.score) {
+                    leader_board.shown[10] = __index__;
+                  }
+                } else if (!leader_board.shown[10] && !isshown) {
+                  leader_board.shown.push(__index__);
+                }
               }
-              return newPlayers;
-            },
-            {}
-          );
+            });
+            leader_board.shown.forEach((__index__) => {
+              if (__index__.id === bullet.id) {
+                __index__.score += reward;
+              }
+            });
+            rearrange();
+            emit("boardUpdate", {
+              leader_board: leader_board.shown,
+            });
+            console.log("player kill --", leader_board);
+            players = Object.entries(players).reduce(
+              (newPlayers, [key, value]) => {
+                if (key !== player.id) {
+                  newPlayers[key] = value;
+                }
+                return newPlayers;
+              },
+              {}
+            );
+          }
         }
       }
     }
@@ -3049,7 +3059,9 @@ setInterval(() => {
         if (collisionCheck[0]) {
           let damageplayer = item.body_damage;
           let damageother = player["bodyDamage"];
-          player.health -= damageplayer;
+          if (player.state !== "start") {
+            player.health -= damageplayer;
+          }
 
           if (player.health < 0) {
             emit("playerDied", {
@@ -3234,11 +3246,13 @@ setInterval(() => {
             item.health -= damageother;
           }
 
-          emit("shapeDamage2", {
-            PlayerId: player.id,
-            playerDamage: damageplayer,
-            shapes: food_squares,
-          });
+          if (player.state !== "start") {
+            emit("shapeDamage2", {
+              PlayerId: player.id,
+              playerDamage: damageplayer,
+              shapes: food_squares,
+            });
+          }
         }
       }
     }
@@ -3501,12 +3515,6 @@ setInterval(() => {
           item.y += recoilY;
           item.centerX += recoilX;
           item.centerY += recoilY;
-
-          if (bullet.bullet_pentration > item.size) {
-            if (bullet.type === "triangle") {
-              bullet.angle *= 5;
-            }
-          }
         }
         bullet.bullet_distance -=
           (bullet.size * 40) / bullet.bullet_pentration + bullet.size * 3 + 40;
