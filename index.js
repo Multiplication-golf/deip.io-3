@@ -1081,8 +1081,6 @@ function moveCannonAngle(cannon) {
   });
 }
 
-function checkforPlayer(x, y, range) {}
-
 wss.on("connection", (socket) => {
   let connection = { socket: socket, playerId: null };
   let handshaked = false;
