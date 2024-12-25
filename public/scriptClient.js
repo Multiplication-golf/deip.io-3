@@ -90,7 +90,7 @@
     var HANDSHAKE = {
       null: [{ null: null }],
       null: [{ null: null }],
-      null: [{ null: null }],
+      null: [{ null: "LOL" }],
     };
 
     var players = {};
@@ -172,9 +172,15 @@
     var messaging = false;
     var hidden = false;
     var blinking = false;
-    var pi = Math.pi;
+    var pi = Math.PI;
     var pentarotate = 0;
     var keyevents = [];
+    var teampanelopen = true;
+    var teamwidth = 300;
+    var teamheight = 400;
+    var innerteamwidth = 275;
+    var innerteamheight = 370;
+    var teamlist = [];
     var levels = {
       0: 15,
       1: 28,
@@ -573,6 +579,8 @@
             playerY += data.y;
             cavansY = data.y;
             playerX += data.x;
+            console.log(data.x);
+            console.log(data.y);
           } else if (type === "RETURNtankmeta") {
             tankmeta = data;
             draw();
@@ -1527,8 +1535,34 @@
           fireOnce(evt, false);
         });
 
+        window.addEventListener("resize", (evt) => {
+          var canW1 = canW;
+          var canH1 = canH;
+          canW = window.innerWidth;
+          canH = window.innerHeight;
+          canvas.width = canW;
+          canvas.height = canH;
+          playerX -= canW1 / 2;
+          playerY -= canH1 / 2;
+          playerX += canW / 2;
+          playerY += canH / 2;
+          playerX -= canW / 2 - canW1 / 2;
+          playerY -= canH / 2 - canH1 / 2;
+          cavansX -= canW / 2 - canW1 / 2;
+          cavansY -= canH / 2 - canH1 / 2;
+          barWidth = 0.3125 * canvas.width;
+          barHeight = 0.02909796314 * canvas.height;
+          send("resize", {
+            id: playerId,
+            screenWidth: canvas.width,
+            screenHeight: canvas.height,
+          });
+        });
+
         document.addEventListener("click", (evt) => {
-          evt.preventDefault();
+          if (!teampanelopen) {
+            evt.preventDefault();
+          }
         });
 
         let __tankdata__ = tankmeta[__type__];
@@ -1568,6 +1602,45 @@
         }, 750 * __tankdata__["reaload-m"] * __reload__);
 
         document.addEventListener("mousedown", (evt) => {
+          if (
+            canvas.width - 475 < MouseX_ &&
+            MouseX_ < canvas.width - 275 &&
+            MouseY_ > 10 &&
+            MouseY_ < 110 &&
+            !teampanelopen
+          ) {
+            teampanelopen = true;
+            send("getTeams", { privet: false });
+            return;
+          }
+          if (teampanelopen) {
+            const textWidth = ctx.measureText("X").width;
+            const textHeight = 16; // Approximate the height of the text (varies by font)
+
+            // Check if mouse is within the text bounding box
+            const withinX =
+              MouseX_ >= canvas.width / 2 + innerteamwidth / 2 - 15 &&
+              MouseX_ <= canvas.width / 2 + innerteamwidth / 2 - 15 + textWidth;
+            const withinY =
+              MouseY_ >=
+                canvas.height / 2 - innerteamheight / 2 + 26 - textHeight &&
+              MouseY_ <= canvas.height / 2 - innerteamheight / 2 + 26;
+            if (withinX && withinY) {
+              teampanelopen = false;
+            }
+
+            const withinX2 =
+              MouseX_ >= canvas.width / 2 + innerteamwidth / 2 - 150 &&
+              MouseX_ <= canvas.width / 2 + innerteamwidth / 2 - 150 + 140;
+            const withinY2 =
+              MouseY_ >= canvas.height / 2 + innerteamheight / 2 - 50 &&
+              MouseY_ <= canvas.height / 2 + innerteamheight / 2 - 50 + 40;
+            if (withinX2 && withinY2) {
+              document.getElementById("teambox").style.display = "block";
+              console.log("ooooo")
+            }
+            return;
+          }
           if (!dronetanks.includes(__type__)) {
             FireIntervale(evt);
           }
@@ -1869,7 +1942,6 @@
 
     function drawself() {
       ctx.fillStyle = squareColor;
-
       if (!messaging) {
         if (keysPressed["]"]) {
           players[playerId].score += 50;
@@ -2699,9 +2771,21 @@
           ctx.closePath();
         }
       }
-      ctx.lineWidth = 5;
+      if (
+        canvas.width - 475 < MouseX_ &&
+        MouseX_ < canvas.width - 275 &&
+        MouseY_ > 10 &&
+        MouseY_ < 110
+      ) {
+        ctx.strokeStyle = "#4fe5ff";
+        ctx.lineWidth = 7;
+      } else {
+        ctx.strokeStyle = "#0e589d";
+        ctx.lineWidth = 5;
+      }
+
       ctx.fillStyle = "#45bbff";
-      ctx.strokeStyle = "#0e589d";
+
       ctx.beginPath();
       ctx.roundRect(canvas.width - 475, 10, 200, 100, 5);
       ctx.fill();
@@ -2716,6 +2800,82 @@
       ctx.font = "bold 40px Nunito";
       ctx.fillStyle = "black";
       ctx.fillText("Teams", canvas.width - 375, 75);
+      if (teampanelopen) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "#a3a3a3";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.roundRect(
+          canvas.width / 2 - teamwidth / 2,
+          canvas.height / 2 - teamheight / 2,
+          teamwidth,
+          teamheight,
+          7.5
+        );
+        ctx.fillStyle = "#45bbff";
+        ctx.strokeStyle = "#4fe5ff";
+        ctx.lineWidth = 5;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.stroke();
+        ctx.closePath();
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        ctx.roundRect(
+          canvas.width / 2 - innerteamwidth / 2,
+          canvas.height / 2 - innerteamheight / 2,
+          innerteamwidth,
+          innerteamheight,
+          5
+        );
+        ctx.fillStyle = "#00a0fd";
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#4f84ff";
+        ctx.roundRect(
+          canvas.width / 2 + innerteamwidth / 2 - 150,
+          canvas.height / 2 + innerteamheight / 2 - 50,
+          140,
+          40,
+          5
+        );
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.fillStyle = "#4f84ff";
+        ctx.roundRect(
+          canvas.width / 2 - innerteamwidth / 2 + 10,
+          canvas.height / 2 + innerteamheight / 2 - 50,
+          80,
+          40,
+          5
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.textAlign = "center";
+        ctx.font = "bold 35px Nunito";
+        ctx.fillStyle = "black";
+        ctx.fillText(
+          "Join",
+          canvas.width / 2 - innerteamwidth / 2 + 50,
+          canvas.height / 2 + innerteamheight / 2 - 17.5
+        );
+        ctx.font = "bold 21px Nunito";
+        ctx.fillText(
+          "Create team",
+          canvas.width / 2 - innerteamwidth / 2 + 195,
+          canvas.height / 2 + innerteamheight / 2 - 22.5
+        );
+        ctx.textAlign = "left";
+        ctx.fillText(
+          "X",
+          canvas.width / 2 + innerteamwidth / 2 - 15,
+          canvas.height / 2 - innerteamheight / 2 + 26
+        );
+      }
     }
 
     function draw() {

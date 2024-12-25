@@ -1,84 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>TankShark.IO</title>
-    <style>
-      body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
-      }
-
-      .container {
-        text-align: center;
-        background: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      input {
-        width: 80%;
-        padding: 10px;
-        margin: 10px 0;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-
-      button {
-        padding: 10px 20px;
-        background-color: #28a745;
-        border: none;
-        border-radius: 4px;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-      }
-
-      button:hover {
-        background-color: #218838;
-      }
-      #grid-container {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-      }
-      #grid {
-        width: 500vw;
-        height: 500vw;
-        position: absolute;
-        top: -250vw;
-        left: -250vw;
-        -khtml-user-select: none;
-        -o-user-select: none;
-        -moz-user-select: none;
-        -webkit-user-select: none;
-        user-select: none;
-      }
-      .image-chunk {
-        width: 125vw; /* Adjusted for 16 chunks in total */
-        height: 125vw;
-        background-color: #f0f0f0; /* Placeholder background */
-        position: absolute;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" /> 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
       rel="stylesheet"
     />
+    <meta
+      name="description"
+      content="A fun open world game were every one is foe. Enjoy lots of fun with loads of new tanks and shapes."
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico" />
   </head>
   <body>
     <div id="start" class="container">
       <h1>Welcome to TankShark!</h1>
-      <input type="text" id="username" placeholder="Enter your username" />
+      <input
+        type="text"
+        id="username"
+        placeholder="Enter your username"
+        autocomplete="given-name"
+      />
       <button id="playButton">Play</button>
     </div>
     <div id="game" style="display: none">
@@ -168,6 +114,37 @@
           z-index: 2000;
         "
       ></div>
+      <div
+        id="teambox"
+        style="
+          text-align: center;
+          background: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          z-index: 9;
+          width: 400px;
+          height: 200px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          display: none;
+          position: absolute;
+          top: calc(50vh - 120px);
+          left: calc(50vw - 220px);
+        "
+      >
+        <h1 style="z-index: 10">Your team name</h1>
+        <label class="switch">
+          <input type="checkbox"/>
+          <span class="slider round"></span>
+        </label>
+        <input
+          type="text"
+          id="teamname"
+          style="z-index: 10"
+          placeholder="Enter your team name"
+          autocomplete="given-name"
+        />
+        <button id="teamButton" style="z-index: 10">Create team</button>
+      </div>
     </div>
     <script src="scriptClient.js"></script>
   </body>

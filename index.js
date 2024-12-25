@@ -21,6 +21,7 @@ let autocannons = [];
 let bullet_intervals = [];
 let hidden_broswers = [];
 let messages = [];
+let teamlist = [];
 let ColorUpgrades = [
   "#f54242",
   "#fa8050",
@@ -1624,7 +1625,9 @@ wss.on("connection", (socket) => {
 
             return false;
           } else {
-            item.health -= damageother;
+            if (player.state !== "start") {
+              item.health -= damageother;
+            }
           }
 
           if (player.state !== "start") {
@@ -1651,7 +1654,7 @@ wss.on("connection", (socket) => {
       let cannon = data.cannon;
       for (const playerID in players) {
         let player = players[playerID];
-        if (playerID !== data.playerId) {
+        if (playerID !== data.playerId && player.state !== "start") {
           var distance = MathHypotenuse(player.x - data.x, player.y - data.y);
           if (distance < maxdistance) {
             let angle = Math.atan2(
@@ -1885,7 +1888,7 @@ wss.on("connection", (socket) => {
         invaled_requests.push(data.playerID);
         return;
       }
-      players[data.playerID].state = data.state
+      players[data.playerID].state = data.state;
       broadcast("statechangeUpdate", data, socket);
       return;
     }
@@ -1903,6 +1906,8 @@ wss.on("connection", (socket) => {
       players[data.playerId].playerReheal = data.playerReheal;
       return;
     }
+    
+    if (type === "CreateTeam") {}
 
     if (type === "AddplayerHealTime") {
       if (!players[data.ID]) {
@@ -1955,7 +1960,7 @@ wss.on("connection", (socket) => {
       try {
         if (players[data.id_other].state !== "start") {
           players[data.id_other].health -= data.damagegiven;
-        }// Swap damagegiven and damagetaken
+        } // Swap damagegiven and damagetaken
         if (players[data.id_self].state !== "start") {
           players[data.id_self].health -= data.damagetaken;
         }
@@ -2392,6 +2397,12 @@ wss.on("connection", (socket) => {
       return;
     }
 
+    if (type === "resize") {
+      players[data.id].screenWidth = data.screenWidth;
+      players[data.id].screenHeight = data.screenHeight;
+      return;
+    }
+
     if (type === "playerDied") {
       players = Object.entries(players).reduce((newPlayers, [key, value]) => {
         if (key !== data.id) {
@@ -2533,7 +2544,9 @@ setInterval(() => {
           bullet.uniqueid !== bullet_.uniqueid &&
           bullet.type === bullet_.type &&
           bullet_speed !== 0 &&
-          bullet_speed !== 0
+          bullet_speed !== 0 &&
+          players[bullet.id] &&
+          players[bullet_.id]
         ) {
           newX__ = bullet.size * -0.9 * Math.sin(bullet.angle - bullet_.angle);
           newY__ = bullet.size * -0.9 * Math.cos(bullet.angle - bullet_.angle);
@@ -2587,18 +2600,19 @@ setInterval(() => {
       var distance = MathHypotenuse(player.x - bullet.x, player.y - bullet.y);
       let player40 = player.size * 40;
       if (player.state !== "start") {
-
         let bulletsize = bullet.size;
 
         if (distance < player40 + bullet.size && bullet.id !== player.id) {
           if (bullet.type === "trap") {
             player.health -=
-              (bullet.bullet_damage - 3.8) / (player.size + 6 / bullet.size + 3);
+              (bullet.bullet_damage - 3.8) /
+              (player.size + 6 / bullet.size + 3);
             bullet.bullet_distance /=
               bullet.size / (bullet.bullet_pentration + 10);
           } else if (bullet.type === "directer") {
             player.health -=
-              (bullet.bullet_damage - 4.4) / (player.size + 6 / bullet.size + 5);
+              (bullet.bullet_damage - 4.4) /
+              (player.size + 6 / bullet.size + 5);
             bullet.bullet_distance /=
               bullet.size / (bullet.bullet_pentration + 10);
           } else {
@@ -2695,6 +2709,7 @@ setInterval(() => {
         bullet.y += newY__;
       }
 
+      //console.log(bullet.bullet_distance, bullet, collied);
       return true;
     }
     if (bullet.type === "directer") {
@@ -2716,7 +2731,7 @@ setInterval(() => {
   });
 
   autocannons.forEach((cannon) => {
-    let maxdistance = 5000;
+    let maxdistance = 2000;
     let fire_at__ = null;
     let target_enity_type = null;
     if (cannon._type_ !== "bulletAuto") {
@@ -2998,9 +3013,6 @@ setInterval(() => {
     }
   });
 
-  // Emit updated bullet positions
-  emit("bulletUpdate", bullets);
-
   let tempToPush = [];
   food_squares = food_squares.filter((item, index) => {
     item.x = item.centerX + item.scalarX * Math.cos(angle);
@@ -3245,7 +3257,9 @@ setInterval(() => {
 
             return false;
           } else {
-            item.health -= damageother;
+            if (player.state !== "start") {
+              item.health -= damageother;
+            }
           }
 
           if (player.state !== "start") {
@@ -3492,7 +3506,6 @@ setInterval(() => {
               bullet.angle *= 5;
             }
           }
-          emit("bulletUpdate", bullets);
           //emit("FoodUpdate", food_squares);
 
           if (!item.isdead) {
@@ -3550,6 +3563,7 @@ setInterval(() => {
     food_squares.push(item);
   });
 
+  emit("bulletUpdate", bullets);
   smartemit("FoodUpdate", food_squares);
 }, UPDATE_INTERVAL);
 
