@@ -1081,6 +1081,8 @@ function moveCannonAngle(cannon) {
   });
 }
 
+function checkforPlayer(x, y, range) {}
+
 wss.on("connection", (socket) => {
   let connection = { socket: socket, playerId: null };
   let handshaked = false;
@@ -1104,6 +1106,13 @@ wss.on("connection", (socket) => {
       emit("colorUpgrades", ColorUpgrades);
       emit("Levels", levels);
       emit("NewMessages", messages);
+      var public_teams = [];
+      teamlist.forEach((team) => {
+        if (!team.private) {
+          public_teams.push(team);
+        }
+      });
+      emit("pubteamlist", public_teams);
       let x, y;
       do {
         x = getRandomInt(-4500, 4500);
@@ -1162,6 +1171,40 @@ wss.on("connection", (socket) => {
 
     if (type === "updatePlayer") {
       emit("playerUpdated", data); // Emit playerUpdated event if needed
+      return;
+    }
+
+    if (type === "newTeamCreated") {
+      data.teamID =
+        Math.floor(Math.random() * 54968) +
+        Date.now() * Math.random() +
+        Date.now() / 489587 +
+        Math.random();
+      console.log(data.teamID);
+      console.log(players[data.owner]);
+      data.players = [
+        { id: data.owner, username: players[data.owner].username },
+      ];
+      teamlist.push(data);
+      players[data.owner].team = data.teamID;
+      emit("playerJoinedTeam", { id: data.owner, teamId: data.teamID });
+      var public_teams = [];
+      teamlist.forEach((team) => {
+        if (!team.private) {
+          public_teams.push(team);
+        }
+      });
+      emit("pubteamlist", public_teams);
+      return;
+    }
+
+    if (type === "playerJoinedTeam") {
+      players[data.id].team = data.teamId;
+      let MYteam = teamlist.find((team) => {
+        return team.teamID === data.teamId;
+      });
+      MYteam.players.push({ username: players[data.id].username, id: data.id });
+      emit("playerJoinedTeam", { id: data.id, teamId: data.teamId });
       return;
     }
 
@@ -1904,8 +1947,6 @@ wss.on("connection", (socket) => {
       players[data.playerId].playerReheal = data.playerReheal;
       return;
     }
-    
-    if (type === "CreateTeam") {}
 
     if (type === "AddplayerHealTime") {
       if (!players[data.ID]) {
@@ -2037,6 +2078,7 @@ wss.on("connection", (socket) => {
 
     if (type === "bulletFired") {
       if (!players[data.id]) return;
+      if (!players[data.id].statsTree) return;
 
       let damageUP = 0;
       if (players[data.id].statsTree["Bullet Damage"] !== 1) {
@@ -2408,6 +2450,16 @@ wss.on("connection", (socket) => {
         }
         return newPlayers;
       }, {});
+      teamlist.forEach((team) => {
+        var teamplayers = team.players;
+        teamplayers = teamplayers.filter((player) => {
+          console.log(player.id, connection.playerId);
+          return player.id !== connection.playerId;
+        });
+        team.players = teamplayers;
+        console.log(teamplayers, teamlist);
+      });
+      console.log(JSON.stringify(teamlist));
       try {
         leader_board.shown = leader_board.shown.filter(
           (__index__) => __index__.id !== connection.playerId
@@ -2447,6 +2499,14 @@ wss.on("connection", (socket) => {
     } catch (e) {
       console.log(e);
     }
+    teamlist.forEach((team) => {
+      var teamplayers = team.players;
+      teamplayers = teamplayers.filter((player) => {
+        console.log(player.id, connection.playerId);
+        return player.id !== connection.playerId;
+      });
+      console.log(teamplayers, teamlist);
+    });
 
     players = Object.entries(players).reduce((newPlayers, [key, value]) => {
       if (key !== connection.playerId) {
