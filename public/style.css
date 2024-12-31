@@ -16,6 +16,12 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.label {
+  color: black;
+  font-size: 18px;
+  font-weight: bold;
+}
+
 input {
   width: 80%;
   padding: 10px;
@@ -37,6 +43,57 @@ button {
 button:hover {
   background-color: #00d2d6;
 }
+
+.container_ {
+  width: 240px;
+  z-index: 9;
+  position: absolute;
+  background-color: #5ce6e6; /* Light blue for the container */
+  border-radius: 10px;
+  padding: 20px 10px;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  overflow-y: auto;
+  display: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+.team {
+  background-color: #32baff; /* Bright blue for the team boxes */
+  color: black;
+  text-align: center;
+  padding: 10px 0;
+  width: 90%;
+  border-radius: 10px;
+  margin:5%;
+  font-weight: bold;
+}
+
+.glow {
+  border: thick double #1bfaf6;
+}
+
+.container_::-webkit-scrollbar {
+  width: 8px; /* Scrollbar width */
+}
+
+.container_::-webkit-scrollbar-track {
+  background: #5ce6e6; /* Scrollbar track color */
+  border-radius: 10px; /* Match container's border radius */
+}
+
+.container_::-webkit-scrollbar-thumb {
+  background: #32baff; /* Scrollbar thumb color */
+  border-radius: 10px; /* Rounded scrollbar thumb */
+  border: 2px solid #5ce6e6; /* Optional: adds spacing and blends with track */
+}
+
+.container_::-webkit-scrollbar-thumb:hover {
+  background: #2a9fe5; /* Slightly darker color on hover */
+}
+
 #grid-container {
   position: relative;
   width: 100vw;
