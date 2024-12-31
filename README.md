@@ -13,7 +13,7 @@ Suggestions wellcome<br>
 {       "O"   "O"   }<br>
 {                         }<br>
 {           (----)      }<br>
-\\_\___________/
+\_________________/
 
 
 ### looking for testers
