@@ -30,8 +30,6 @@
     canvas.style.top = "0";
     canvas.style.left = "0";
 
-    document.getElementsByTagName("body")[0].style.cursor =
-      "url('https://deip-io3.glitch.me/targetpointer1.cur'), auto";
     // 0.() values decrease
     // delay which cannon fires first
     var pi180 = Math.PI / 180;
@@ -100,7 +98,6 @@
     var bullets = [];
     var food_list = [];
     var autocannons = [];
-    var pubteams = [];
     var level = 0;
     var xp = 0;
     var FOV = 1; // senstive
@@ -178,14 +175,12 @@
     var pi = Math.PI;
     var pentarotate = 0;
     var keyevents = [];
-    var teampanelopen = false;
+    var teampanelopen = true;
     var teamwidth = 300;
     var teamheight = 400;
     var innerteamwidth = 275;
     var innerteamheight = 370;
     var teamlist = [];
-    var joinedTeam = false;
-    var selected_class = null;
     var levels = {
       0: 15,
       1: 28,
@@ -630,7 +625,7 @@
               setCookie("player", socket.id, 1000000);
               socket.emit("unSynched Health", {
                 playerId: playerId,
-                "expected Health": data.HEALTH,
+                "expsected Health": data.HEALTH,
                 "actual Health": players[data.ID].health,
               });
             }
@@ -694,7 +689,6 @@
               respawn.style.left = "calc(50vw - 100px)";
               respawn.style.width = "200px";
               respawn.style.height = "100px";
-              document.getElementsByTagName("body")[0].style.cursor = "auto";
               document.getElementById("game").appendChild(respawn);
               respawn.addEventListener("click", () => {
                 window.location.reload();
@@ -845,49 +839,6 @@
             }
           } else if (type === "healerRestart") {
             players[data.id].Regenspeed = data.Regenspeed;
-          } else if (type === "pubteamlist") {
-            pubteams = data;
-            var teamcontainer = document.getElementById("teamcontainer");
-            teamcontainer.innerHTML = "";
-            if (!joinedTeam) {
-              pubteams.forEach((team) => {
-                var teamcontainer = document.getElementById("teamcontainer");
-                var item = document.createElement("div");
-                item.classList.add("team");
-                item.innerText = team.name;
-                teamcontainer.appendChild(item);
-                item.addEventListener("click", () => {
-                  // Remove the "glow" class from all children
-                  Array.from(teamcontainer.children).forEach((child) => {
-                    child.classList.remove("glow");
-                  });
-
-                  // Add the "glow" class to the clicked item
-                  item.classList.add("glow");
-
-                  // Set the selected class
-                  selected_class = team.teamID;
-                });
-              });
-            } else {
-              let MYteam = pubteams.find((team) => {
-                console.log(players[playerId].team, team.teamID);
-                return team.teamID === players[playerId].team;
-              });
-              MYteam.players.forEach((player) => {
-                var teamcontainer = document.getElementById("teamcontainer");
-                var item = document.createElement("div");
-                item.classList.add("team");
-                item.innerText = player.username;
-                teamcontainer.appendChild(item);
-              });
-            }
-          } else if (type === "playerJoinedTeam") {
-            players[data.id].team = data.teamId;
-            console.log(players[data.id]);
-            if (data.id === playerId) {
-              joinedTeam = true;
-            }
           } else if (type === "bulletDamage") {
             if (players[data.playerID]) {
               bullets = data.BULLETS; // Check if the player exists
@@ -1201,24 +1152,6 @@
         function generateRandomNumber(min, max) {
           return Math.random() * (max - min) + min;
         }
-
-        document.getElementById("teamButton").addEventListener("click", () => {
-          var teamname = document.getElementById("teamname").value;
-          var checked;
-          try {
-            var checkedValue = document.querySelector(".null:checked").value;
-            checked = true;
-          } catch {
-            checked = false;
-          }
-
-          document.getElementById("teambox").style.display = "none";
-          send("newTeamCreated", {
-            owner: playerId,
-            private: checked,
-            name: teamname,
-          });
-        });
 
         function fireOnce(evt, directer) {
           let tankdata = tankmeta[__type__];
@@ -1677,50 +1610,7 @@
             !teampanelopen
           ) {
             teampanelopen = true;
-            selected_class = null;
-            document.getElementsByTagName("body")[0].style.cursor = "auto";
-            var teamcontainer = document.getElementById("teamcontainer");
-            teamcontainer.style.display = "block";
-            teamcontainer.style.left =
-              canvas.width / 2 - innerteamwidth / 2 + "px";
-            teamcontainer.style.top =
-              canvas.height / 2 - innerteamheight / 2 + "px";
-            teamcontainer.style.height = innerteamheight - 100 + "px";
-            teamcontainer.innerHTML = "";
-            if (!joinedTeam) {
-              pubteams.forEach((team) => {
-                var teamcontainer = document.getElementById("teamcontainer");
-                var item = document.createElement("div");
-                item.classList.add("team");
-                item.innerText = team.name;
-                teamcontainer.appendChild(item);
-                item.addEventListener("click", () => {
-                  // Remove the "glow" class from all children
-                  Array.from(teamcontainer.children).forEach((child) => {
-                    child.classList.remove("glow");
-                  });
-
-                  // Add the "glow" class to the clicked item
-                  item.classList.add("glow");
-
-                  // Set the selected class
-                  selected_class = team.teamID;
-                });
-              });
-            } else {
-              let MYteam = pubteams.find((team) => {
-                console.log(players[playerId].team, team.teamID);
-                return team.teamID === players[playerId].team;
-              });
-              MYteam.players.forEach((player) => {
-                var teamcontainer = document.getElementById("teamcontainer");
-                var item = document.createElement("div");
-                item.classList.add("team");
-                item.innerText = player.username;
-                teamcontainer.appendChild(item);
-              });
-            }
-
+            send("getTeams", { privet: false });
             return;
           }
           if (teampanelopen) {
@@ -1737,26 +1627,6 @@
               MouseY_ <= canvas.height / 2 - innerteamheight / 2 + 26;
             if (withinX && withinY) {
               teampanelopen = false;
-              var teamcontainer = document.getElementById("teamcontainer");
-              teamcontainer.style.display = "none";
-              document.getElementsByTagName("body")[0].style.cursor =
-                "url('https://deip-io3.glitch.me/targetpointer1.cur'), auto";
-            }
-
-            const withinX3 =
-              MouseX_ >= canvas.width / 2 - innerteamwidth / 2 + 10 &&
-              MouseX_ <= canvas.width / 2 - innerteamwidth / 2 + 10 + 80;
-            const withinY3 =
-              MouseY_ >= canvas.height / 2 + innerteamheight / 2 - 50 &&
-              MouseY_ <= canvas.height / 2 + innerteamheight / 2 - 50 + 40;
-            if (withinX3 && withinY3) {
-              if (selected_class !== null) {
-                send("playerJoinedTeam", {
-                  id: playerId,
-                  teamId: selected_class,
-                });
-                joinedTeam = true;
-              }
             }
 
             const withinX2 =
@@ -1767,6 +1637,7 @@
               MouseY_ <= canvas.height / 2 + innerteamheight / 2 - 50 + 40;
             if (withinX2 && withinY2) {
               document.getElementById("teambox").style.display = "block";
+              console.log("ooooo")
             }
             return;
           }
@@ -2987,26 +2858,14 @@
         ctx.textAlign = "center";
         ctx.font = "bold 35px Nunito";
         ctx.fillStyle = "black";
-        var text_;
-        if (joinedTeam) {
-          text_ = "Leave";
-        } else {
-          text_ = "Join";
-        }
         ctx.fillText(
-          text_,
+          "Join",
           canvas.width / 2 - innerteamwidth / 2 + 50,
           canvas.height / 2 + innerteamheight / 2 - 17.5
         );
         ctx.font = "bold 21px Nunito";
-        var text2;
-        if (joinedTeam) {
-          text2 = "Delete team";
-        } else {
-          text2 = "Create team";
-        }
         ctx.fillText(
-          text2,
+          "Create team",
           canvas.width / 2 - innerteamwidth / 2 + 195,
           canvas.height / 2 + innerteamheight / 2 - 22.5
         );
