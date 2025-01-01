@@ -172,6 +172,7 @@
     var maxUP = 8;
     var container = document.getElementById("container");
     var errors = 0;
+    var Regenspeed = 30
     var messaging = false;
     var hidden = false;
     var blinking = false;
@@ -184,8 +185,10 @@
     var innerteamwidth = 275;
     var innerteamheight = 370;
     var teamlist = [];
+    var teamOn = null;
     var joinedTeam = false;
     var selected_class = null;
+    var owner_of_team = false;
     var levels = {
       0: 15,
       1: 28,
@@ -352,7 +355,7 @@
               playerReheal: playerReheal,
               FOV: FOV,
               MouseX: MouseX_,
-              Regenspeed: 30,
+              Regenspeed: Regenspeed,
               MouseY: MouseY_,
               screenWidth: canvas.width,
               screenHeight: canvas.height,
@@ -366,6 +369,7 @@
                 "Bullet Reload": statsTree["Bullet Reload"],
                 Speed: statsTree.Speed,
               },
+              team:teamOn
             });
 
             setTimeout(() => {
@@ -543,7 +547,7 @@
           playerReheal: playerReheal,
           FOV: FOV,
           MouseX: MouseX_,
-          Regenspeed: 30,
+          Regenspeed: Regenspeed,
           MouseY: MouseY_,
           screenWidth: canvas.width,
           screenHeight: canvas.height,
@@ -558,6 +562,7 @@
             "Bullet Reload": 1,
             Speed: 1,
           },
+          team:teamOn
         };
 
         send("newPlayer", playerData);
@@ -783,7 +788,7 @@
                 playerReheal: playerReheal,
                 FOV: FOV,
                 MouseX: MouseX_,
-                Regenspeed: null,
+                Regenspeed: Regenspeed,
                 MouseY: MouseY_,
                 screenWidth: canvas.width,
                 screenHeight: canvas.height,
@@ -797,6 +802,7 @@
                   "Bullet Reload": 1,
                   Speed: 1,
                 },
+                team:teamOn
               });
             }
             setTimeout(() => {
@@ -845,6 +851,9 @@
             }
           } else if (type === "healerRestart") {
             players[data.id].Regenspeed = data.Regenspeed;
+            if (data.id === playerId) {
+              Regenspeed = data.Regenspeed
+            }
           } else if (type === "pubteamlist") {
             pubteams = data;
             var teamcontainer = document.getElementById("teamcontainer");
@@ -871,7 +880,7 @@
               });
             } else {
               let MYteam = pubteams.find((team) => {
-                console.log(players[playerId].team, team.teamID);
+                console.log(players[playerId], team.teamID);
                 return team.teamID === players[playerId].team;
               });
               MYteam.players.forEach((player) => {
@@ -884,9 +893,14 @@
             }
           } else if (type === "playerJoinedTeam") {
             players[data.id].team = data.teamId;
-            console.log(players[data.id]);
-            if (data.id === playerId) {
+            console.log("team",players[data.id]);
+            if (data.id === playerId && data.teamId !== null) {
               joinedTeam = true;
+              teamOn = data.teamId
+            }
+          } else if (type === "newOwner") {
+            if (data.teamID === teamOn) {
+              owner_of_team = true
             }
           } else if (type === "bulletDamage") {
             if (players[data.playerID]) {
@@ -1214,10 +1228,11 @@
 
           document.getElementById("teambox").style.display = "none";
           send("newTeamCreated", {
-            owner: playerId,
+            owner: { id: playerId, username: username },
             private: checked,
             name: teamname,
           });
+          owner_of_team = true;
         });
 
         function fireOnce(evt, directer) {
@@ -1717,6 +1732,14 @@
                 var item = document.createElement("div");
                 item.classList.add("team");
                 item.innerText = player.username;
+                if (player.id === MYteam.owner.id) {
+                  var crown = document.createElement("img");
+                  crown.src = "assets/crownIcon.png"
+                  item.appendChild(crown);
+                  crown.style.width = "2em"
+                  crown.style.height = "2em"
+                  crown.style.padding
+                }
                 teamcontainer.appendChild(item);
               });
             }
@@ -1739,6 +1762,7 @@
               teampanelopen = false;
               var teamcontainer = document.getElementById("teamcontainer");
               teamcontainer.style.display = "none";
+              document.getElementById("teambox").style.display = "none";
               document.getElementsByTagName("body")[0].style.cursor =
                 "url('https://deip-io3.glitch.me/targetpointer1.cur'), auto";
             }
@@ -1750,12 +1774,24 @@
               MouseY_ >= canvas.height / 2 + innerteamheight / 2 - 50 &&
               MouseY_ <= canvas.height / 2 + innerteamheight / 2 - 50 + 40;
             if (withinX3 && withinY3) {
-              if (selected_class !== null) {
-                send("playerJoinedTeam", {
+              if (!joinedTeam) {
+                if (selected_class !== null) {
+                  send("playerJoinedTeam", {
+                    id: playerId,
+                    teamId: selected_class,
+                  });
+                  joinedTeam = true;
+                }
+              } else {
+                send("playerLeftTeam", {
                   id: playerId,
-                  teamId: selected_class,
+                  teamId: players[playerId].team,
                 });
-                joinedTeam = true;
+                if (owner_of_team) {
+                  owner_of_team = false
+                }
+                joinedTeam = false;
+                selected_class = null;
               }
             }
 
@@ -2964,13 +3000,25 @@
         ctx.beginPath();
         ctx.globalAlpha = 1;
         ctx.fillStyle = "#4f84ff";
-        ctx.roundRect(
-          canvas.width / 2 + innerteamwidth / 2 - 150,
-          canvas.height / 2 + innerteamheight / 2 - 50,
-          140,
-          40,
-          5
-        );
+        if (joinedTeam) {
+          if (owner_of_team) {
+            ctx.roundRect(
+              canvas.width / 2 + innerteamwidth / 2 - 150,
+              canvas.height / 2 + innerteamheight / 2 - 50,
+              140,
+              40,
+              5
+            );
+          }
+        } else {
+          ctx.roundRect(
+            canvas.width / 2 + innerteamwidth / 2 - 150,
+            canvas.height / 2 + innerteamheight / 2 - 50,
+            140,
+            40,
+            5
+          );
+        }
         ctx.fill();
         ctx.closePath();
         ctx.beginPath();
@@ -2989,8 +3037,10 @@
         ctx.fillStyle = "black";
         var text_;
         if (joinedTeam) {
+          ctx.font = "bold 30px Nunito";
           text_ = "Leave";
         } else {
+          ctx.font = "bold 35px Nunito";
           text_ = "Join";
         }
         ctx.fillText(
@@ -3001,15 +3051,21 @@
         ctx.font = "bold 21px Nunito";
         var text2;
         if (joinedTeam) {
-          text2 = "Delete team";
+          if (owner_of_team) {
+            text2 = "Delete team";
+          } else {
+            text2 = null;
+          }
         } else {
           text2 = "Create team";
         }
-        ctx.fillText(
-          text2,
-          canvas.width / 2 - innerteamwidth / 2 + 195,
-          canvas.height / 2 + innerteamheight / 2 - 22.5
-        );
+        if (text2 !== null) {
+          ctx.fillText(
+            text2,
+            canvas.width / 2 - innerteamwidth / 2 + 195,
+            canvas.height / 2 + innerteamheight / 2 - 22.5
+          );
+        }
         ctx.textAlign = "left";
         ctx.fillText(
           "X",
@@ -4154,7 +4210,7 @@
       setTimeout(() => {
         document.getElementById("start").style.display = "none";
         document.getElementById("game").style.display = "block";
-        if (username !== "A") {
+        if (username === "A") {
           document.addEventListener("contextmenu", (event) =>
             event.preventDefault()
           );
@@ -4166,9 +4222,9 @@
         username = "unknown";
         document.getElementById("start").style.display = "none";
         document.getElementById("game").style.display = "block";
-        document.addEventListener("contextmenu", (event) =>
+        /*document.addEventListener("contextmenu", (event) =>
           event.preventDefault()
-        );
+        );*/
         ongame();
       }, 100);
     }
