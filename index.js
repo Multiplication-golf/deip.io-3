@@ -1231,7 +1231,7 @@ wss.on("connection", (socket) => {
       );
       if (data.id === MYteam.owner.id) {
         let teamplayers = MYteam.players;
-        console.log(MYteam.players.length)
+        console.log(MYteam.players.length);
         if (teamplayers.length !== 0) {
           console.log(teamplayers[0]);
           MYteam.owner = teamplayers[0];
@@ -1243,12 +1243,30 @@ wss.on("connection", (socket) => {
           teamplayers.forEach((player) => {
             emit("playerJoinedTeam", { id: player.id, teamId: null });
           });
-          teamlist.splice(teamlist.indexOf(MYteam,1));
+          teamlist.splice(teamlist.indexOf(MYteam, 1));
         }
       }
       emit("playerJoinedTeam", { id: data.id, teamId: null });
       console.log(teamlist);
       var public_teams = [];
+      teamlist.forEach((team) => {
+        if (!team.private) {
+          public_teams.push(team);
+        }
+      });
+      emit("pubteamlist", public_teams);
+      return;
+    }
+
+    if (type === "deleteTeam") {
+      let MYteam = teamlist.find((team) => {
+        return team.teamID === data.teamID;
+      });
+      console.log(MYteam);
+      MYteam.players.forEach((player) => {
+        emit("playerJoinedTeam", { id: player.id, teamId: null });
+      });
+      teamlist.splice(teamlist.indexOf(MYteam, 1));
       teamlist.forEach((team) => {
         if (!team.private) {
           public_teams.push(team);
@@ -1744,7 +1762,15 @@ wss.on("connection", (socket) => {
       let cannon = data.cannon;
       for (const playerID in players) {
         let player = players[playerID];
-        if (playerID !== data.playerId && player.state !== "start") {
+        var sameTeam =
+          player.team === players[data.playerId].team &&
+          player.team !== null &&
+          players[data.playerId].team !== null;
+        if (
+          playerID !== data.playerId &&
+          player.state !== "start" &&
+          !sameTeam
+        ) {
           var distance = MathHypotenuse(player.x - data.x, player.y - data.y);
           if (distance < maxdistance) {
             let angle = Math.atan2(
@@ -2203,7 +2229,11 @@ wss.on("connection", (socket) => {
             tankmeta[players[data.id].__type__]["cannons"][autoindex];
           for (const playerID in players) {
             let player = players[playerID];
-            if (playerID !== bullet.id) {
+            var sameTeam =
+              player.team === players[data.id].team &&
+              player.team !== null &&
+              players[data.id].team !== null;
+            if (playerID !== bullet.id && !sameTeam) {
               var distance = MathHypotenuse(
                 player.x - bullet.x,
                 player.y - bullet.y
@@ -2523,6 +2553,13 @@ wss.on("connection", (socket) => {
         }
         return true;
       });
+      var public_teams = [];
+      teamlist.forEach((team) => {
+        if (!team.private) {
+          public_teams.push(team);
+        }
+      });
+      emit("pubteamlist", public_teams);
       console.log(JSON.stringify(teamlist));
       try {
         leader_board.shown = leader_board.shown.filter(
@@ -2587,6 +2624,13 @@ wss.on("connection", (socket) => {
       return true;
     });
     console.log("Dis", JSON.stringify(teamlist));
+    var public_teams = [];
+    teamlist.forEach((team) => {
+      if (!team.private) {
+        public_teams.push(team);
+      }
+    });
+    emit("pubteamlist", public_teams);
 
     players = Object.entries(players).reduce((newPlayers, [key, value]) => {
       if (key !== connection.playerId) {
@@ -2623,7 +2667,7 @@ setInterval(() => {
         bullet.angle = angle;
       } catch (e) {
         // delet bad bullets
-        console.log(e)
+        console.log(e);
         return false;
       }
     }
@@ -2659,7 +2703,12 @@ setInterval(() => {
 
         if (
           distance < bullet.size * 2 + bullet_.size * 2 &&
-          bullet.id !== bullet_.id
+          bullet.id !== bullet_.id &&
+          !(
+            players[bullet.id].team === players[bullet_.id].team &&
+            players[bullet.id].team !== null &&
+            players[bullet_.id].team !== null
+          )
         ) {
           if (
             bullet_speed !== 0 &&
@@ -2685,7 +2734,12 @@ setInterval(() => {
           bullet_speed !== 0 &&
           bullet_speed !== 0 &&
           players[bullet.id] &&
-          players[bullet_.id]
+          players[bullet_.id] &&
+          !(
+            players[bullet.id].team === players[bullet_.id].team &&
+            players[bullet.id].team !== null &&
+            players[bullet_.id].team !== null
+          )
         ) {
           newX__ = bullet.size * -0.9 * Math.sin(bullet.angle - bullet_.angle);
           newY__ = bullet.size * -0.9 * Math.cos(bullet.angle - bullet_.angle);
@@ -2712,15 +2766,20 @@ setInterval(() => {
         if (distance > 50) return;
         var bullet_speed = bullet.speed || 10;
 
+        var sameTeam =
+          players[bullet.id].team === players[bullet_.id].team &&
+          players[bullet.id].team !== null &&
+          players[bullet_.id].team !== null;
         if (
           distance < bullet.size * 2 + bullet_.size * 2 &&
-          bullet.id !== bullet_.id
+          bullet.id !== bullet_.id &&
+          !sameTeam
         ) {
           bullet.bullet_distance -=
             bullet_.speed *
             (bullet_.size / 5 +
               Math.cos(Math.abs(bullet.angle - bullet_.angle)));
-          console.log(bullet.bullet_distance)
+          console.log(bullet.bullet_distance);
         }
       });
     }
@@ -2739,7 +2798,11 @@ setInterval(() => {
       var player = players[playerId];
       var distance = MathHypotenuse(player.x - bullet.x, player.y - bullet.y);
       let player40 = player.size * 40;
-      if (player.state !== "start") {
+      var sameTeam =
+        players[bullet.id].team === players[playerId].team &&
+        players[bullet.id].team !== null &&
+        players[playerId].team !== null;
+      if (player.state !== "start" && !sameTeam) {
         let bulletsize = bullet.size;
 
         if (distance < player40 + bullet.size && bullet.id !== player.id) {
@@ -2757,7 +2820,8 @@ setInterval(() => {
               bullet.size / (bullet.bullet_pentration + 10);
           } else {
             player.health -=
-              (bullet.bullet_damage - 3.8) / ((player.size + 12) / bullet.speed);
+              (bullet.bullet_damage - 3.8) /
+              ((player.size + 12) / bullet.speed);
             bullet.bullet_distance -=
               bullet.size / (bullet.bullet_pentration + 10);
           }
@@ -2886,7 +2950,15 @@ setInterval(() => {
 
     for (const playerID in players) {
       let player = players[playerID];
-      if (playerID !== cannon.playerid && players[cannon.playerid]) {
+      if (
+        playerID !== cannon.playerid &&
+        players[cannon.playerid] &&
+        !(
+          players[playerID].team === players[cannon.playerid].team &&
+          players[playerID].team !== null &&
+          players[cannon.playerid].team !== null
+        )
+      ) {
         var offSet_x = tankdatacannon__[cannon.autoindex]["offSet-x"];
         if (tankdatacannon__[cannon.autoindex]["offSet-x"] === "playerX") {
           offSet_x = players[cannon.playerid].size * 40;

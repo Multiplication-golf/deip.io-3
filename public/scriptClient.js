@@ -172,7 +172,7 @@
     var maxUP = 8;
     var container = document.getElementById("container");
     var errors = 0;
-    var Regenspeed = 30
+    var Regenspeed = 30;
     var messaging = false;
     var hidden = false;
     var blinking = false;
@@ -369,7 +369,7 @@
                 "Bullet Reload": statsTree["Bullet Reload"],
                 Speed: statsTree.Speed,
               },
-              team:teamOn
+              team: teamOn,
             });
 
             setTimeout(() => {
@@ -562,7 +562,7 @@
             "Bullet Reload": 1,
             Speed: 1,
           },
-          team:teamOn
+          team: teamOn,
         };
 
         send("newPlayer", playerData);
@@ -802,7 +802,7 @@
                   "Bullet Reload": 1,
                   Speed: 1,
                 },
-                team:teamOn
+                team: teamOn,
               });
             }
             setTimeout(() => {
@@ -852,7 +852,7 @@
           } else if (type === "healerRestart") {
             players[data.id].Regenspeed = data.Regenspeed;
             if (data.id === playerId) {
-              Regenspeed = data.Regenspeed
+              Regenspeed = data.Regenspeed;
             }
           } else if (type === "pubteamlist") {
             pubteams = data;
@@ -880,27 +880,48 @@
               });
             } else {
               let MYteam = pubteams.find((team) => {
-                console.log(players[playerId], team.teamID);
+                console.log(players[playerId].team, team.teamID);
                 return team.teamID === players[playerId].team;
               });
               MYteam.players.forEach((player) => {
                 var teamcontainer = document.getElementById("teamcontainer");
                 var item = document.createElement("div");
                 item.classList.add("team");
-                item.innerText = player.username;
+                if (player.id === MYteam.owner.id) {
+                  item.innerText = player.username + " -";
+                } else {
+                  item.innerText = player.username;
+                }
+                console.log(MYteam.owner.id, player.id);
+                if (player.id === MYteam.owner.id) {
+                  var crown = document.createElement("img");
+                  crown.src = "assets/crownIcon.png";
+                  item.appendChild(crown);
+                  crown.style.width = "1.6em";
+                  crown.style.height = "1.3em";
+                  crown.style["margin-left"] = "5px";
+                  crown.style["margin-top"] = "0px";
+                  crown.style["margin-bottom"] = "-5px";
+                  //
+                }
                 teamcontainer.appendChild(item);
               });
             }
           } else if (type === "playerJoinedTeam") {
             players[data.id].team = data.teamId;
-            console.log("team",players[data.id]);
+            console.log("team", players[data.id]);
             if (data.id === playerId && data.teamId !== null) {
               joinedTeam = true;
-              teamOn = data.teamId
+              teamOn = data.teamId;
+            }
+            if (data.id === playerId && data.teamId === null) {
+              joinedTeam = false;
+              owner_of_team = true;
+              teamOn = null;
             }
           } else if (type === "newOwner") {
             if (data.teamID === teamOn) {
-              owner_of_team = true
+              owner_of_team = true;
             }
           } else if (type === "bulletDamage") {
             if (players[data.playerID]) {
@@ -1731,14 +1752,22 @@
                 var teamcontainer = document.getElementById("teamcontainer");
                 var item = document.createElement("div");
                 item.classList.add("team");
-                item.innerText = player.username;
+                if (player.id === MYteam.owner.id) {
+                  item.innerText = player.username + " -";
+                } else {
+                  item.innerText = player.username;
+                }
+                console.log(MYteam.owner.id, player.id);
                 if (player.id === MYteam.owner.id) {
                   var crown = document.createElement("img");
-                  crown.src = "assets/crownIcon.png"
+                  crown.src = "assets/crownIcon.png";
                   item.appendChild(crown);
-                  crown.style.width = "2em"
-                  crown.style.height = "2em"
-                  crown.style.padding
+                  crown.style.width = "1.6em";
+                  crown.style.height = "1.3em";
+                  crown.style["margin-left"] = "5px";
+                  crown.style["margin-top"] = "0px";
+                  crown.style["margin-bottom"] = "-5px";
+                  //
                 }
                 teamcontainer.appendChild(item);
               });
@@ -1788,7 +1817,7 @@
                   teamId: players[playerId].team,
                 });
                 if (owner_of_team) {
-                  owner_of_team = false
+                  owner_of_team = false;
                 }
                 joinedTeam = false;
                 selected_class = null;
@@ -1802,7 +1831,11 @@
               MouseY_ >= canvas.height / 2 + innerteamheight / 2 - 50 &&
               MouseY_ <= canvas.height / 2 + innerteamheight / 2 - 50 + 40;
             if (withinX2 && withinY2) {
-              document.getElementById("teambox").style.display = "block";
+              if (!owner_of_team) {
+                document.getElementById("teambox").style.display = "block";
+              } else if (owner_of_team && joinedTeam) {
+                send("deleteTeam", { teamID: teamOn });
+              }
             }
             return;
           }
@@ -1977,7 +2010,12 @@
 
         if (
           distance < player.size * 40 + playerSize * 40 &&
-          playerId_ != playerId
+          playerId_ !== playerId &&
+          !(
+            players[playerId_].team === players[playerId].team &&
+            players[playerId_].team !== null &&
+            players[playerId].team !== null
+          )
         ) {
           send("playerCollided", {
             id_other: playerId_,
@@ -2020,6 +2058,42 @@
             }
           }
           // Reverse the last movement
+        } else if (
+          distance < player.size * 40 + playerSize * 40 &&
+          playerId_ !== playerId
+        ) {
+          canmove = false;
+          setTimeout(() => {
+            canmove = true;
+          }, 10 * playerSpeed);
+          if (player.x < playerX /* left */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(-2, 0, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
+          if (player.x > playerX /* right */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(2, 0, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
+          if (player.y > playerY /* up */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(0, -2, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
+          if (player.y < playerY /* down */) {
+            for (let c = 0; c < playerSpeed; c++) {
+              setTimeout(() => {
+                movePlayer(0, 2, c === playerSpeed - 1, c);
+              }, 50 * c);
+            }
+          }
         }
       }
     };
@@ -3236,7 +3310,12 @@
           ctx.beginPath();
 
           if (bullet.type === "basic") {
-            if (bullet.id === playerId) {
+            var sameTeam =
+              players[bullet.id].team === players[playerId].team &&
+              players[bullet.id].team !== null &&
+              players[playerId].team !== null;
+
+            if (bullet.id === playerId || sameTeam) {
               ctx.fillStyle = "blue";
               ctx.strokeStyle = "darkblue";
             } else {
@@ -3280,7 +3359,11 @@
           ctx.beginPath();
 
           if (bullet.type === "basic") {
-            if (bullet.id === playerId) {
+            var sameTeam =
+              players[bullet.id].team === players[playerId].team &&
+              players[bullet.id].team !== null &&
+              players[playerId].team !== null;
+            if (bullet.id === playerId || sameTeam) {
               ctx.fillStyle = "blue";
               ctx.strokeStyle = "darkblue";
             } else {
@@ -3301,7 +3384,11 @@
             ctx.stroke();
             ctx.closePath();
           } else if (bullet.type === "trap") {
-            if (bullet.id === playerId) {
+            var sameTeam =
+              players[bullet.id].team === players[playerId].team &&
+              players[bullet.id].team !== null &&
+              players[playerId].team !== null;
+            if (bullet.id === playerId || sameTeam) {
               ctx.fillStyle = "blue";
               ctx.strokeStyle = "darkblue";
             } else {
@@ -3357,7 +3444,11 @@
             ctx.stroke();
             ctx.closePath();
           } else if (bullet.type === "directer") {
-            if (bullet.id === playerId) {
+            var sameTeam =
+              players[bullet.id].team === players[playerId].team &&
+              players[bullet.id].team !== null &&
+              players[playerId].team !== null;
+            if (bullet.id === playerId || sameTeam) {
               ctx.fillStyle = "blue";
               ctx.strokeStyle = "darkblue";
             } else {
@@ -3379,7 +3470,11 @@
             ctx.fill();
             ctx.stroke();
           } else if (bullet.type === "AutoBullet") {
-            if (bullet.id === playerId) {
+            var sameTeam =
+              players[bullet.id].team === players[playerId].team &&
+              players[bullet.id].team !== null &&
+              players[playerId].team !== null;
+            if (bullet.id === playerId || sameTeam) {
               ctx.fillStyle = "blue";
               ctx.strokeStyle = "darkblue";
             } else {
@@ -3478,7 +3573,11 @@
             ctx.closePath(); // Close the path
             ctx.stroke();
             ctx.restore();
-            if (bullet.id === playerId) {
+            var sameTeam =
+              players[bullet.id].team === players[playerId].team &&
+              players[bullet.id].team !== null &&
+              players[playerId].team !== null;
+            if (bullet.id === playerId || sameTeam) {
               ctx.fillStyle = "blue";
               ctx.strokeStyle = "darkblue";
             } else {
@@ -3824,18 +3923,26 @@
             false
           );
           let num = player.statecycle % 10;
+          var sameTeam =
+            players[player.id].team === players[playerId].team &&
+            players[player.id].team !== null &&
+            players[playerId].team !== null;
           if (
             num === 0 &&
             (player.state === "start" || player.state === "damaged")
           ) {
             ctx.fillStyle = "white";
-          } else {
+            ctx.strokeStyle = "#fafafa";
+          } else if (!sameTeam) {
             ctx.fillStyle = "red";
+            ctx.strokeStyle = "darkred";
+          } else if (sameTeam) {
+            ctx.fillStyle = "blue";
+            ctx.strokeStyle = "darkblue";
           }
 
           ctx.fill();
           ctx.lineWidth = 5;
-          ctx.strokeStyle = "darkred";
           ctx.stroke();
           ctx.closePath();
 
