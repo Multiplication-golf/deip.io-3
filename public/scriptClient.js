@@ -1,5 +1,8 @@
 // LOL, you little kids can't mess with my game
 (function () {
+  function generateRandomNumber(min, max) {
+    return Math.random() * (max - min) + min;
+  }
   var username = "Unamed tank";
   for (let i = 0; i < 125; i++) {
     for (let j = 0; j < 125; j++) {
@@ -490,9 +493,9 @@
       }
     }
 
-    function generateUniquePlayerId() {
+    const generateUniquePlayerId = () => {
       return "player-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-    }
+    };
 
     function levelHANDLER() {
       let tonextlevel = levels[level] - levels[level - 1];
@@ -523,7 +526,11 @@
 
     socket.onopen = function () {
       setTimeout(() => {
-        playerId = generateUniquePlayerId();
+        (function () {
+          (function a() {
+            playerId = generateUniquePlayerId();
+          })();
+        })();
 
         const playerData = {
           id: playerId,
@@ -1767,9 +1774,31 @@
                   crown.style["margin-left"] = "5px";
                   crown.style["margin-top"] = "0px";
                   crown.style["margin-bottom"] = "-5px";
-                  //
                 }
+
                 teamcontainer.appendChild(item);
+                if (
+                  MYteam.owner.id === playerId &&
+                  player.id !== MYteam.owner.id
+                ) {
+                  item.addEventListener("mouseover", () => {
+                    var kick = document.createElement("img");
+                    kick.src = "assets/kickButton.png";
+                    kick.style.width = "1em";
+                    kick.style.height = "1em";
+                    kick.style["text-align"] = "left";
+                    kick.addEventListener("click", () => {
+                      send("kickplayer", {
+                        id: player.id,
+                        team: MYteam.teamID,
+                      });
+                    });
+                    item.appendChild(kick);
+                    item.addEventListener("mouseout", () => {
+                      item.children[0].remove();
+                    });
+                  });
+                }
               });
             }
 
@@ -1834,7 +1863,7 @@
               if (!owner_of_team) {
                 document.getElementById("teambox").style.display = "block";
               } else if (owner_of_team && joinedTeam) {
-                send("deleteTeam", { teamID: teamOn });
+                send("deleteTeam", { teamID: teamOn, playerId: playerId });
               }
             }
             return;
@@ -1971,7 +2000,7 @@
       ctx.fill();
 
       if (filllevel) {
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "#0228c2";
         ctx.strokeStyle = "black";
         ctx.textAlign = "center";
         ctx.font = "bold 40px Nunito";
@@ -4187,7 +4216,7 @@
         borderRadius,
         progress + 0.05,
         "black",
-        "#9c8c03",
+        "#00f7ff",
         false,
         true
       );
@@ -4238,7 +4267,7 @@
       ctx.strokeText("leaderboard", canvas.width - 125, 25);
       ctx.textAlign = "center";
       ctx.font = "bold 30px Nunito";
-      ctx.fillStyle = "white";
+      ctx.fillStyle = "#00f7ff";
       ctx.fillText("leaderboard", canvas.width - 125, 25);
 
       try {
@@ -4258,13 +4287,13 @@
             25,
             borderRadius,
             entre.score / leader_board["leader_board"][0].score,
-            "#9dff73",
-            "#4cf59e",
+            "#23badb",
+            "#4eddfc",
             "#242424",
             false
           );
           ctx.textAlign = "center";
-          ctx.font = "bold 28px Nunito";
+          ctx.font = "bold 23px Nunito";
           ctx.fillStyle = "black";
           ctx.fillText(
             `${entre.name} - ${entre.score}`,
@@ -4289,14 +4318,14 @@
             25,
             borderRadius,
             entre.score / leader_board[0].score,
-            "#9dff73",
-            "#4cf59e",
+            "#23badb",
+            "#4eddfc",
             "#242424",
             false
           );
 
           ctx.textAlign = "center";
-          ctx.font = "bold 28px Nunito";
+          ctx.font = "bold 23px Nunito";
           ctx.fillStyle = "black";
           ctx.fillText(
             `${entre.name} - ${entre.score}`,
@@ -4326,7 +4355,10 @@
       }, 100);
     } else {
       setTimeout(() => {
-        username = "unknown";
+        function generateRandomNumber(min, max) {
+          return Math.random() * (max - min) + min;
+        }
+        username = "unknown-"+Math.round(generateRandomNumber(0,100));
         document.getElementById("start").style.display = "none";
         document.getElementById("game").style.display = "block";
         /*document.addEventListener("contextmenu", (event) =>

@@ -1248,7 +1248,7 @@ wss.on("connection", (socket) => {
       }
       emit("playerJoinedTeam", { id: data.id, teamId: null });
       console.log(teamlist);
-      var public_teams = [];
+      let public_teams = [];
       teamlist.forEach((team) => {
         if (!team.private) {
           public_teams.push(team);
@@ -1262,11 +1262,19 @@ wss.on("connection", (socket) => {
       let MYteam = teamlist.find((team) => {
         return team.teamID === data.teamID;
       });
+      if (
+        players[data.playerId].team !== data.teamID ||
+        players[data.playerId].team !== MYteam.teamID ||
+        data.playerId !== MYteam.owner.id
+      ) {
+        socket.close();
+      }
       console.log(MYteam);
       MYteam.players.forEach((player) => {
         emit("playerJoinedTeam", { id: player.id, teamId: null });
       });
       teamlist.splice(teamlist.indexOf(MYteam, 1));
+      let public_teams = []
       teamlist.forEach((team) => {
         if (!team.private) {
           public_teams.push(team);
@@ -1274,6 +1282,28 @@ wss.on("connection", (socket) => {
       });
       emit("pubteamlist", public_teams);
       return;
+    }
+    
+    if (type === "kickplayer") {
+      let MYteam = teamlist.find((team) => {
+        return team.teamID === players[data.id].team;
+      });
+      players[data.id].team = null;
+      MYteam.players.splice(
+        MYteam.players.indexOf({
+          username: players[data.id].username,
+          id: data.id,
+        }),
+        1
+      );
+      emit("playerJoinedTeam", { id: data.id, teamId: null });
+      let public_teams = []
+      teamlist.forEach((team) => {
+        if (!team.private) {
+          public_teams.push(team);
+        }
+      });
+      emit("pubteamlist", public_teams);
     }
 
     if (type === "browserHidden") {
@@ -2705,9 +2735,9 @@ setInterval(() => {
           distance < bullet.size * 2 + bullet_.size * 2 &&
           bullet.id !== bullet_.id &&
           !(
-            players[bullet.id].team === players[bullet_.id].team &&
-            players[bullet.id].team !== null &&
-            players[bullet_.id].team !== null
+            players[bullet?.id]?.team === players[bullet_?.id]?.team &&
+            players[bullet?.id]?.team !== null &&
+            players[bullet_?.id]?.team !== null
           )
         ) {
           if (
@@ -2736,9 +2766,9 @@ setInterval(() => {
           players[bullet.id] &&
           players[bullet_.id] &&
           !(
-            players[bullet.id].team === players[bullet_.id].team &&
-            players[bullet.id].team !== null &&
-            players[bullet_.id].team !== null
+            players[bullet.id]?.team === players[bullet_.id]?.team &&
+            players[bullet.id]?.team !== null &&
+            players[bullet_.id]?.team !== null
           )
         ) {
           newX__ = bullet.size * -0.9 * Math.sin(bullet.angle - bullet_.angle);
@@ -2767,9 +2797,9 @@ setInterval(() => {
         var bullet_speed = bullet.speed || 10;
 
         var sameTeam =
-          players[bullet.id].team === players[bullet_.id].team &&
-          players[bullet.id].team !== null &&
-          players[bullet_.id].team !== null;
+          players[bullet.id]?.team === players[bullet_.id]?.team &&
+          players[bullet.id]?.team !== null &&
+          players[bullet_.id]?.team !== null;
         if (
           distance < bullet.size * 2 + bullet_.size * 2 &&
           bullet.id !== bullet_.id &&
